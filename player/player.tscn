@@ -1,0 +1,217 @@
+[gd_scene format=3 uid="uid://dfwvskldv0ksq"]
+
+[ext_resource type="Script" uid="uid://b07it7bqu2yli" path="res://player/player.gd" id="1_rkbax"]
+[ext_resource type="Texture2D" uid="uid://bnimjpn2vmy8k" path="res://textures/shadowblob.png" id="3_g1dw6"]
+[ext_resource type="Texture2D" uid="uid://c0xle5rv36ah" path="res://player/spritesheet_gaucho.png" id="4_yw30f"]
+[ext_resource type="Texture2D" uid="uid://c2cykje4by77c" path="res://weapons/facon.png" id="5_qjkh3"]
+[ext_resource type="Texture2D" uid="uid://dertnhcsug7ql" path="res://sprites/cursor.png" id="6_boad6"]
+[ext_resource type="Script" uid="uid://ckxstvo6tgnym" path="res://player/facon_attack_hitbox.gd" id="6_g6k8r"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
+radius = 0.2993164
+height = 1.1818542
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hg6s5"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(0, 400, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8t03j"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(200, 400, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2ieo8"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(400, 400, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ebec5"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(600, 400, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yllr7"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(800, 400, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yw30f"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(0, 0, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qjkh3"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(200, 0, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g6k8r"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(400, 0, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_boad6"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(600, 0, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rgyib"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(800, 0, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kb6p2"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(0, 200, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wodsf"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(200, 200, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_32hag"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(400, 200, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tqiix"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(600, 200, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e7oew"]
+atlas = ExtResource("4_yw30f")
+region = Rect2(800, 200, 200, 200)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_hg6s5"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hg6s5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8t03j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2ieo8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ebec5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yllr7")
+}],
+"loop": false,
+"name": &"Attack",
+"speed": 25.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yw30f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qjkh3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g6k8r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_boad6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rgyib")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kb6p2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wodsf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_32hag")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tqiix")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e7oew")
+}],
+"loop": true,
+"name": &"Walk",
+"speed": 15.0
+}]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yw30f"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 0.21568628)
+albedo_texture = ExtResource("3_g1dw6")
+texture_repeat = false
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_g1dw6"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qjkh3"]
+
+[sub_resource type="Gradient" id="Gradient_qjkh3"]
+colors = PackedColorArray(0.91764706, 0.5254902, 0.12941177, 0.20784314, 1, 1, 1, 0)
+
+[node name="Player" type="CharacterBody3D" unique_id=746990048]
+script = ExtResource("1_rkbax")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2061340717]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -0.011559576, 0.7167245, -0.06719446)
+shape = SubResource("CapsuleShape3D_rkbax")
+
+[node name="Sprites" type="Node3D" parent="." unique_id=166186264]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 0.032826692, 0, 0.044555485)
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Sprites" unique_id=1888602037]
+transform = Transform3D(0.9999667, -0.0029977006, -0.0075933808, 0.0031342707, 0.9998324, 0.01803623, 0.007538036, -0.01805943, 0.9998085, 0, 0.7797992, -0.002997756)
+layers = 2
+pixel_size = 0.008
+billboard = 2
+shaded = true
+alpha_cut = 1
+render_priority = 1
+sprite_frames = SubResource("SpriteFrames_hg6s5")
+animation = &"Attack"
+frame = 4
+frame_progress = 1.0
+
+[node name="ShadowBlob" type="MeshInstance3D" parent="." unique_id=353868600]
+transform = Transform3D(-2.321343e-08, 1.1711669, 1.3113433e-08, 0, -5.119332e-08, 0.3, 0.5310622, 5.1193407e-08, 5.7320657e-16, 0.032826692, 0, 0.044555485)
+layers = 2
+material_override = SubResource("StandardMaterial3D_yw30f")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_g1dw6")
+
+[node name="Cursor" type="Node3D" parent="." unique_id=995533642]
+visible = false
+
+[node name="Sprite3D" type="Sprite3D" parent="Cursor" unique_id=592215944]
+transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, 0.99999994, 0, -0.99999994, -4.3711385e-08, 0, 0.01, 0)
+shaded = true
+texture = ExtResource("6_boad6")
+
+[node name="Weapon" type="Node3D" parent="." unique_id=326247383]
+transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, 0.5925225, 0)
+
+[node name="Grip" type="Node3D" parent="Weapon" unique_id=1618366307]
+
+[node name="Sprite3D" type="Sprite3D" parent="Weapon/Grip" unique_id=280945246]
+transform = Transform3D(0.99904823, -0.043619387, 0, -1.906664e-09, -4.3669786e-08, 1, -0.043619387, -0.99904823, -4.371139e-08, 0, 0, 0)
+layers = 2
+shaded = true
+alpha_cut = 1
+texture = ExtResource("5_qjkh3")
+
+[node name="Tip" type="Marker3D" parent="Weapon/Grip" unique_id=315593578]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.030748412, 0, 1.3525003)
+
+[node name="AttackHitbox" type="Area3D" parent="Weapon" unique_id=546413398]
+monitorable = false
+script = ExtResource("6_g6k8r")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Weapon/AttackHitbox" unique_id=1332808175]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.1981721)
+shape = SubResource("BoxShape3D_qjkh3")
+disabled = true
+debug_color = Color(0.9346362, 0.94212234, 0, 0.41960785)
+
+[node name="Trail" type="Line2D" parent="." unique_id=1756742114]
+width = 12.0
+gradient = SubResource("Gradient_qjkh3")

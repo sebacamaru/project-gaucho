@@ -1,0 +1,76 @@
+[gd_scene format=3 uid="uid://dfwvskldv0ksq"]
+
+[ext_resource type="Script" uid="uid://b07it7bqu2yli" path="res://player/player.gd" id="1_rkbax"]
+[ext_resource type="Texture2D" uid="uid://bifknv0a14xop" path="res://player/player.png" id="2_rkbax"]
+[ext_resource type="Texture2D" uid="uid://bnimjpn2vmy8k" path="res://textures/shadowblob.png" id="3_g1dw6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qjkh3"]
+transparency = 1
+cull_mode = 2
+depth_draw_mode = 1
+albedo_texture = ExtResource("2_rkbax")
+billboard_mode = 2
+billboard_keep_scale = true
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_g1dw6"]
+load_path = "res://.godot/imported/player.png-1ad27fc2a62fa126eae918723933dd6f.s3tc.ctex"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
+radius = 0.2993164
+height = 1.1977539
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_rkbax"]
+radius = 0.4
+height = 1.8
+radial_segments = 24
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g1dw6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yw30f"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 0.21568628)
+albedo_texture = ExtResource("3_g1dw6")
+texture_repeat = false
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_g1dw6"]
+
+[node name="Player" type="CharacterBody3D" unique_id=746990048]
+script = ExtResource("1_rkbax")
+
+[node name="Visual" type="Node3D" parent="." unique_id=166186264]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.655044, 0.106051564, 0.76919174)
+
+[node name="Sprite3D" type="Sprite3D" parent="Visual" unique_id=1684478464]
+transform = Transform3D(0.19999266, 0.0017138923, 0, -0.0017138923, 0.19999266, 0, 0, 0, 0.2, 0.3114335, 0, 0)
+layers = 2
+sorting_offset = 1.0
+material_override = SubResource("StandardMaterial3D_qjkh3")
+cast_shadow = 0
+centered = false
+offset = Vector2(90, 0)
+billboard = 1
+transparent = false
+shaded = true
+double_sided = false
+alpha_cut = 1
+texture = SubResource("CompressedTexture2D_g1dw6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2061340717]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -0.18709415, 0.5478853, 0.79978347)
+shape = SubResource("CapsuleShape3D_rkbax")
+
+[node name="ShadowCaster" type="MeshInstance3D" parent="." unique_id=1805572261]
+transform = Transform3D(0.53705907, 0, 0, 0, 0.79209155, 0, 0, 0, 0.75010675, -0.12679607, 0.6197608, 0.5470724)
+layers = 2
+cast_shadow = 3
+mesh = SubResource("CapsuleMesh_rkbax")
+surface_material_override/0 = SubResource("StandardMaterial3D_g1dw6")
+
+[node name="ShadowBlob" type="MeshInstance3D" parent="." unique_id=353868600]
+transform = Transform3D(-2.321343e-08, 1.1711669, 1.3113433e-08, 0, -5.119332e-08, 0.3, 0.5310622, 5.1193407e-08, 5.7320657e-16, -0.074900985, 0.07211995, 0.7228942)
+layers = 2
+material_override = SubResource("StandardMaterial3D_yw30f")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_g1dw6")

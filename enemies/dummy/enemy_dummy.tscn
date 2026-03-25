@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://cqcjp4ig3nxbv"]
+
+[ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="1_v857q"]
+[ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="2_blackaura"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_aura"]
+render_priority = -1
+shader = ExtResource("2_blackaura")
+shader_parameter/aura_color = Color(0.024422154, 0.0022169384, 0.14289719, 1)
+shader_parameter/flame_speed = 3.10000003874312
+shader_parameter/flame_distortion = 0.10499999765304
+shader_parameter/flame_tip_sharpness = 5.000000074506
+shader_parameter/edge_power = 1.6899999622251198
+shader_parameter/aura_opacity = 0.68999998457712
+shader_parameter/global_alpha = 0.55999998748288
+shader_parameter/edge_fade = 0.3999999910592
+shader_parameter/texture_albedo = ExtResource("1_v857q")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_66vfd"]
+size = Vector3(0.75183105, 1, 1.5721283)
+
+[node name="EnemyDummy" type="Node3D" unique_id=740511559]
+
+[node name="Sprites" type="Node3D" parent="." unique_id=2144784480]
+
+[node name="AuraSprite3D" type="Sprite3D" parent="Sprites" unique_id=123456789]
+transform = Transform3D(0.52, 0, 0, 0, 0.52, 0, 0, 0, 0.52, 0, 1.0577173, 0)
+material_override = SubResource("ShaderMaterial_aura")
+billboard = 2
+alpha_scissor_threshold = 0.12
+texture = ExtResource("1_v857q")
+
+[node name="Sprite3D" type="Sprite3D" parent="Sprites" unique_id=666838440]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0.636142, 0)
+billboard = 2
+shaded = true
+texture = ExtResource("1_v857q")
+
+[node name="Hurtbox" type="Area3D" parent="." unique_id=1558266044]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48982334, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=462607943]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.2909385, 0, 0.044860847)
+shape = SubResource("BoxShape3D_66vfd")

@@ -1,0 +1,260 @@
+[gd_scene format=3 uid="uid://dy352efhy7nbg"]
+
+[ext_resource type="Script" uid="uid://cnadjcpkvxaxo" path="res://objects/fire_light.gd" id="1_script"]
+[ext_resource type="Shader" uid="uid://e3r3le2nl12c" path="res://shaders/heat_shimmer.gdshader" id="3_shimmer"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_glow"]
+size = Vector2(2.5, 2.5)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_glow"]
+
+[sub_resource type="Gradient" id="Gradient_embers"]
+offsets = PackedFloat32Array(0, 0.55, 1)
+colors = PackedColorArray(1, 0.9, 0.4, 1, 1, 0.5, 0.1, 0.85, 0.7, 0.15, 0, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_embers"]
+gradient = SubResource("Gradient_embers")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_embers"]
+direction = Vector3(0, 1, 0)
+spread = 65.0
+initial_velocity_min = 0.15
+initial_velocity_max = 0.55
+gravity = Vector3(0, -0.6, 0)
+scale_min = 0.04
+scale_max = 0.07
+color_ramp = SubResource("GradientTexture1D_embers")
+turbulence_enabled = true
+turbulence_noise_scale = 3.5
+turbulence_influence_max = 0.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_embers"]
+transparency = 1
+blend_mode = 1
+depth_draw_mode = 2
+shading_mode = 2
+albedo_color = Color(1, 0.7, 0.2, 1)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_embers"]
+material = SubResource("StandardMaterial3D_embers")
+size = Vector2(0.08, 0.08)
+
+[sub_resource type="Gradient" id="Gradient_fire"]
+offsets = PackedFloat32Array(0, 0.22, 0.55, 1)
+colors = PackedColorArray(1, 0.92, 0.55, 0.9, 1, 0.65, 0.12, 0.88, 0.95, 0.3, 0.05, 0.55, 0.5, 0.08, 0, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_fire"]
+gradient = SubResource("Gradient_fire")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fire"]
+direction = Vector3(0, 1, 0)
+spread = 18.0
+initial_velocity_min = 1.8
+initial_velocity_max = 2.9
+damping_min = 2.5
+damping_max = 5.0
+scale_min = 0.12
+scale_max = 0.22
+color_ramp = SubResource("GradientTexture1D_fire")
+turbulence_enabled = true
+turbulence_noise_scale = 2.2
+turbulence_noise_speed_random = 0.4
+turbulence_influence_min = 0.2
+turbulence_influence_max = 0.35
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fire"]
+transparency = 1
+blend_mode = 1
+depth_draw_mode = 2
+shading_mode = 2
+albedo_color = Color(1, 0.6, 0.15, 1)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_fire"]
+material = SubResource("StandardMaterial3D_fire")
+size = Vector2(0.18, 0.28)
+
+[sub_resource type="Gradient" id="Gradient_sparks"]
+offsets = PackedFloat32Array(0, 0.35, 0.75, 1)
+colors = PackedColorArray(1, 1, 0.85, 1, 1, 0.8, 0.2, 1, 0.85, 0.3, 0, 0.55, 0.25, 0.05, 0, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_sparks"]
+gradient = SubResource("Gradient_sparks")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sparks"]
+direction = Vector3(0, 1, 0)
+spread = 75.0
+initial_velocity_min = 2.5
+initial_velocity_max = 5.5
+gravity = Vector3(0, -4, 0)
+scale_min = 0.02
+scale_max = 0.042
+color_ramp = SubResource("GradientTexture1D_sparks")
+turbulence_enabled = true
+turbulence_influence_min = 0.3
+turbulence_influence_max = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sparks"]
+transparency = 1
+blend_mode = 1
+depth_draw_mode = 2
+shading_mode = 2
+albedo_color = Color(1, 0.9, 0.5, 1)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_sparks"]
+material = SubResource("StandardMaterial3D_sparks")
+size = Vector2(0.06, 0.06)
+
+[sub_resource type="Gradient" id="Gradient_smoke"]
+offsets = PackedFloat32Array(0, 0.18, 0.6, 1)
+colors = PackedColorArray(0.3, 0.25, 0.2, 0, 0.26, 0.22, 0.18, 0.28, 0.2, 0.18, 0.15, 0.14, 0.14, 0.13, 0.11, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_smoke"]
+gradient = SubResource("Gradient_smoke")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_smoke"]
+direction = Vector3(0, 1, 0)
+spread = 12.0
+initial_velocity_min = 0.35
+initial_velocity_max = 0.75
+gravity = Vector3(0, 0, 0)
+scale_min = 0.1
+scale_max = 0.18
+color_ramp = SubResource("GradientTexture1D_smoke")
+turbulence_enabled = true
+turbulence_noise_scale = 1.8
+turbulence_influence_min = 0.08
+turbulence_influence_max = 0.18
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_smoke"]
+transparency = 1
+depth_draw_mode = 2
+shading_mode = 2
+albedo_color = Color(1, 1, 1, 0.6)
+billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_smoke"]
+material = SubResource("StandardMaterial3D_smoke")
+size = Vector2(0.5, 0.5)
+
+[sub_resource type="QuadMesh" id="QuadMesh_shimmer"]
+size = Vector2(0.7, 1.2)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_shimmer"]
+render_priority = 0
+shader = ExtResource("3_shimmer")
+shader_parameter/time_scale = 1.4
+shader_parameter/intensity = 0.22
+shader_parameter/shimmer_color = Color(1, 0.65, 0.2, 1)
+
+[node name="Bonfire" type="Node3D" unique_id=177662689]
+
+[node name="GlowBase" type="MeshInstance3D" parent="." unique_id=145446155]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0.01, 0)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_glow")
+surface_material_override/0 = SubResource("ShaderMaterial_glow")
+
+[node name="Embers" type="GPUParticles3D" parent="." unique_id=1102554544]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+amount = 24
+lifetime = 0.9
+preprocess = 0.5
+process_material = SubResource("ParticleProcessMaterial_embers")
+draw_pass_1 = SubResource("QuadMesh_embers")
+
+[node name="Embers2" type="GPUParticles3D" parent="." unique_id=921696152]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13926268, 0.12, -0.13055655)
+amount = 24
+lifetime = 0.9
+preprocess = 0.5
+process_material = SubResource("ParticleProcessMaterial_embers")
+draw_pass_1 = SubResource("QuadMesh_embers")
+
+[node name="Embers3" type="GPUParticles3D" parent="." unique_id=851700953]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.21356809, 0.12, 0.13816035)
+amount = 24
+lifetime = 0.9
+preprocess = 0.5
+process_material = SubResource("ParticleProcessMaterial_embers")
+draw_pass_1 = SubResource("QuadMesh_embers")
+
+[node name="Embers7" type="GPUParticles3D" parent="." unique_id=940619079]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19325508, 0.18379343, -0.22947764)
+amount = 24
+lifetime = 0.9
+preprocess = 0.5
+process_material = SubResource("ParticleProcessMaterial_embers")
+draw_pass_1 = SubResource("QuadMesh_embers")
+
+[node name="Embers4" type="GPUParticles3D" parent="." unique_id=1552289517]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.21356809, 0.27627003, 0.008162975)
+amount = 24
+lifetime = 0.9
+preprocess = 0.5
+process_material = SubResource("ParticleProcessMaterial_embers")
+draw_pass_1 = SubResource("QuadMesh_embers")
+
+[node name="Embers5" type="GPUParticles3D" parent="." unique_id=1109054510]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.049640566, 0.28141016, 0.008162975)
+amount = 24
+lifetime = 0.9
+preprocess = 0.5
+process_material = SubResource("ParticleProcessMaterial_embers")
+draw_pass_1 = SubResource("QuadMesh_embers")
+
+[node name="Embers6" type="GPUParticles3D" parent="." unique_id=327796362]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.068199724, 0.16438359, 0.008162975)
+amount = 24
+lifetime = 0.9
+preprocess = 0.5
+process_material = SubResource("ParticleProcessMaterial_embers")
+draw_pass_1 = SubResource("QuadMesh_embers")
+
+[node name="Fire" type="GPUParticles3D" parent="." unique_id=1370605109]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+visible = false
+amount = 24
+lifetime = 0.7
+preprocess = 0.6
+process_material = SubResource("ParticleProcessMaterial_fire")
+draw_pass_1 = SubResource("QuadMesh_fire")
+
+[node name="Sparks" type="GPUParticles3D" parent="." unique_id=1668640727]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+visible = false
+amount = 24
+lifetime = 1.6
+preprocess = 0.2
+explosiveness = 0.05
+process_material = SubResource("ParticleProcessMaterial_sparks")
+draw_pass_1 = SubResource("QuadMesh_sparks")
+
+[node name="Smoke" type="GPUParticles3D" parent="." unique_id=1388542175]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+visible = false
+emitting = false
+amount = 1
+lifetime = 3.2
+preprocess = 1.5
+speed_scale = 0.55
+process_material = SubResource("ParticleProcessMaterial_smoke")
+draw_pass_1 = SubResource("QuadMesh_smoke")
+
+[node name="HeatShimmer" type="MeshInstance3D" parent="." unique_id=1018845977]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+visible = false
+cast_shadow = 0
+mesh = SubResource("QuadMesh_shimmer")
+surface_material_override/0 = SubResource("ShaderMaterial_shimmer")
+
+[node name="FireLight" type="OmniLight3D" parent="." unique_id=1033822666]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+light_color = Color(1, 0.5, 0.14, 1)
+light_energy = 1.8
+light_volumetric_fog_energy = 1.8
+omni_range = 8.0
+omni_attenuation = 1.5
+script = ExtResource("1_script")
