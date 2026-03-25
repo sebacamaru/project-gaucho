@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://cqcjp4ig3nxbv"]
 
+[ext_resource type="Script" uid="uid://c4i2t7ql523d1" path="res://enemies/dummy/enemy_dummy.gd" id="1_cg66v"]
 [ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="1_v857q"]
 [ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="2_blackaura"]
 
@@ -20,6 +21,7 @@ shader_parameter/texture_albedo = ExtResource("1_v857q")
 size = Vector3(0.75183105, 1, 1.5721283)
 
 [node name="EnemyDummy" type="Node3D" unique_id=740511559]
+script = ExtResource("1_cg66v")
 
 [node name="Sprites" type="Node3D" parent="." unique_id=2144784480]
 

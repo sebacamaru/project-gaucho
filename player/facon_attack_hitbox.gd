@@ -1,6 +1,6 @@
 extends Area3D
 
-@export var damage := 10
+@export var damage := 1
 
 var hit_targets := {}
 
