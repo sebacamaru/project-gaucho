@@ -1,75 +1,96 @@
 [gd_scene format=3 uid="uid://dfwvskldv0ksq"]
 
 [ext_resource type="Script" uid="uid://b07it7bqu2yli" path="res://player/player.gd" id="1_rkbax"]
+[ext_resource type="Texture2D" uid="uid://ct77f2q0u8ktk" path="res://player/spritesheet_gaucho_v2.png" id="2_boad6"]
 [ext_resource type="Texture2D" uid="uid://bnimjpn2vmy8k" path="res://textures/shadowblob.png" id="3_g1dw6"]
-[ext_resource type="Texture2D" uid="uid://c0xle5rv36ah" path="res://player/spritesheet_gaucho.png" id="4_yw30f"]
 [ext_resource type="Texture2D" uid="uid://c2cykje4by77c" path="res://weapons/facon.png" id="5_qjkh3"]
 [ext_resource type="Texture2D" uid="uid://dertnhcsug7ql" path="res://sprites/cursor.png" id="6_boad6"]
 [ext_resource type="Script" uid="uid://ckxstvo6tgnym" path="res://player/facon_attack_hitbox.gd" id="6_g6k8r"]
+[ext_resource type="Texture2D" uid="uid://bkipq7gwvoey8" path="res://sprites/lampara.png" id="7_boad6"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
 radius = 0.2993164
 height = 1.1818542
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hg6s5"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(0, 400, 200, 200)
+atlas = ExtResource("2_boad6")
+region = Rect2(0, 400, 300, 200)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_8t03j"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(200, 400, 200, 200)
+atlas = ExtResource("2_boad6")
+region = Rect2(300, 400, 300, 200)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2ieo8"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(400, 400, 200, 200)
+atlas = ExtResource("2_boad6")
+region = Rect2(600, 400, 300, 200)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ebec5"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(600, 400, 200, 200)
+atlas = ExtResource("2_boad6")
+region = Rect2(900, 400, 300, 200)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_yllr7"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(800, 400, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_yw30f"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(0, 0, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_qjkh3"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(200, 0, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_g6k8r"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(400, 0, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_boad6"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(600, 0, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_rgyib"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(800, 0, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_kb6p2"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(0, 200, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_wodsf"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(200, 200, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_32hag"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(400, 200, 200, 200)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_tqiix"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(600, 200, 200, 200)
+atlas = ExtResource("2_boad6")
+region = Rect2(1200, 400, 300, 200)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_e7oew"]
-atlas = ExtResource("4_yw30f")
-region = Rect2(800, 200, 200, 200)
+atlas = ExtResource("2_boad6")
+region = Rect2(0, 1200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bjvpn"]
+atlas = ExtResource("2_boad6")
+region = Rect2(300, 1200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s7qer"]
+atlas = ExtResource("2_boad6")
+region = Rect2(600, 1200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g4c7l"]
+atlas = ExtResource("2_boad6")
+region = Rect2(900, 1200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_knn7v"]
+atlas = ExtResource("2_boad6")
+region = Rect2(1200, 1200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_boad6"]
+atlas = ExtResource("2_boad6")
+region = Rect2(0, 0, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rgyib"]
+atlas = ExtResource("2_boad6")
+region = Rect2(300, 0, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c35mf"]
+atlas = ExtResource("2_boad6")
+region = Rect2(600, 0, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_65viv"]
+atlas = ExtResource("2_boad6")
+region = Rect2(900, 0, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x7c3f"]
+atlas = ExtResource("2_boad6")
+region = Rect2(1200, 0, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g6k8r"]
+atlas = ExtResource("2_boad6")
+region = Rect2(0, 200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kb6p2"]
+atlas = ExtResource("2_boad6")
+region = Rect2(300, 200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wodsf"]
+atlas = ExtResource("2_boad6")
+region = Rect2(600, 200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_32hag"]
+atlas = ExtResource("2_boad6")
+region = Rect2(900, 200, 300, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tqiix"]
+atlas = ExtResource("2_boad6")
+region = Rect2(1200, 200, 300, 200)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_hg6s5"]
 animations = [{
@@ -91,29 +112,52 @@ animations = [{
 }],
 "loop": false,
 "name": &"Attack",
-"speed": 25.0
+"speed": 16.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_yw30f")
+"texture": SubResource("AtlasTexture_e7oew")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_qjkh3")
+"texture": SubResource("AtlasTexture_bjvpn")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_g6k8r")
+"texture": SubResource("AtlasTexture_s7qer")
 }, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g4c7l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_knn7v")
+}],
+"loop": false,
+"name": &"Died",
+"speed": 18.0
+}, {
+"frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_boad6")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_rgyib")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c35mf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_65viv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x7c3f")
 }],
 "loop": true,
 "name": &"Idle",
 "speed": 15.0
 }, {
 "frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g6k8r")
+}, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_kb6p2")
 }, {
@@ -125,9 +169,6 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_tqiix")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_e7oew")
 }],
 "loop": true,
 "name": &"Walk",
@@ -147,10 +188,12 @@ billboard_keep_scale = true
 [sub_resource type="BoxShape3D" id="BoxShape3D_qjkh3"]
 
 [sub_resource type="Gradient" id="Gradient_qjkh3"]
-colors = PackedColorArray(0.91764706, 0.5254902, 0.12941177, 0.20784314, 1, 1, 1, 0)
+offsets = PackedFloat32Array(0, 0.0029239766, 1)
+colors = PackedColorArray(0.91764706, 0.5254902, 0.12941177, 0.20784314, 1, 0.16862746, 0.16470589, 0.2, 1, 1, 1, 0)
 
 [node name="Player" type="CharacterBody3D" unique_id=746990048 groups=["player"]]
 script = ExtResource("1_rkbax")
+weapon_radius = 0.8
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2061340717]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -0.011559576, 0.7167245, -0.06719446)
@@ -158,6 +201,14 @@ shape = SubResource("CapsuleShape3D_rkbax")
 
 [node name="Sprites" type="Node3D" parent="." unique_id=166186264]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 0.032826692, 0, 0.044555485)
+
+[node name="LampPivot" type="Node3D" parent="Sprites" unique_id=504348815]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.89538383, 0.48107594, -0.3591329)
+
+[node name="LightSprite3D" type="Sprite3D" parent="Sprites/LampPivot" unique_id=626710260]
+transform = Transform3D(0.065, 0, 0, 0, 0.065, 0, 0, 0, 0.065, 0, 0, 0)
+layers = 2
+texture = ExtResource("7_boad6")
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Sprites" unique_id=1888602037]
 transform = Transform3D(0.9999667, -0.0029977006, -0.0075933808, 0.0031342707, 0.9998324, 0.01803623, 0.007538036, -0.01805943, 0.9998085, 0, 0.7797992, -0.002997756)
@@ -168,12 +219,10 @@ shaded = true
 alpha_cut = 1
 render_priority = 1
 sprite_frames = SubResource("SpriteFrames_hg6s5")
-animation = &"Attack"
-frame = 4
-frame_progress = 1.0
+animation = &"Died"
 
 [node name="ShadowBlob" type="MeshInstance3D" parent="." unique_id=353868600]
-transform = Transform3D(-2.321343e-08, 1.1711669, 1.3113433e-08, 0, -5.119332e-08, 0.3, 0.5310622, 5.1193407e-08, 5.7320657e-16, 0.032826692, 0, 0.044555485)
+transform = Transform3D(-2.321343e-08, 1.1711669, 1.3113433e-08, 0, -5.119332e-08, 0.3, 0.5310622, 5.1193407e-08, 5.7320657e-16, 0, 0, 0)
 layers = 2
 material_override = SubResource("StandardMaterial3D_yw30f")
 cast_shadow = 0
@@ -191,27 +240,54 @@ texture = ExtResource("6_boad6")
 transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, 0.5925225, 0)
 
 [node name="Grip" type="Node3D" parent="Weapon" unique_id=1618366307]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.279, -0.3)
 
 [node name="Sprite3D" type="Sprite3D" parent="Weapon/Grip" unique_id=280945246]
 transform = Transform3D(0.99904823, -0.043619387, 0, -1.906664e-09, -4.3669786e-08, 1, -0.043619387, -0.99904823, -4.371139e-08, 0, 0, 0)
 layers = 2
 shaded = true
-alpha_cut = 1
 texture = ExtResource("5_qjkh3")
 
 [node name="Tip" type="Marker3D" parent="Weapon/Grip" unique_id=315593578]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.030748412, 0, 1.3525003)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.030748412, 0, 1.1431422)
 
-[node name="AttackHitbox" type="Area3D" parent="Weapon" unique_id=546413398]
+[node name="AttackHitbox" type="Area3D" parent="Weapon/Grip" unique_id=546413398]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27900004, 0.7513554)
 monitorable = false
 script = ExtResource("6_g6k8r")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Weapon/AttackHitbox" unique_id=1332808175]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.1981721)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Weapon/Grip/AttackHitbox" unique_id=1332808175]
 shape = SubResource("BoxShape3D_qjkh3")
 disabled = true
 debug_color = Color(0.9346362, 0.94212234, 0, 0.41960785)
 
 [node name="Trail" type="Line2D" parent="." unique_id=1756742114]
-width = 12.0
+default_color = Color(1, 0, 0.46666667, 1)
 gradient = SubResource("Gradient_qjkh3")
+
+[node name="LightPivot" type="Node3D" parent="." unique_id=1078475222]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.59966755)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="LightPivot" unique_id=162856023]
+light_color = Color(0.9318787, 0.45774436, 0, 1)
+shadow_opacity = 0.18
+shadow_blur = 1.13
+omni_range = 7.109692
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="LightPivot" unique_id=964562754]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1197009, 0.8492935)
+light_color = Color(0.83705765, 0.61059535, 0.5223428, 1)
+light_energy = 0.2
+light_cull_mask = 3
+shadow_enabled = true
+shadow_caster_mask = 4294967293
+omni_range = 3.9415617
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="." unique_id=856661052]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07798672, 0.8553407, 0.29288912)
+light_color = Color(1, 0.78039217, 0.8352941, 1)
+light_energy = 0.05
+light_cull_mask = 3
+shadow_enabled = true
+shadow_caster_mask = 4294967293
+omni_range = 2.1171534

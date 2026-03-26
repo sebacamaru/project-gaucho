@@ -6,7 +6,7 @@
 [ext_resource type="Shader" uid="uid://bn0hatxytwtx8" path="res://shaders/radial_blur.gdshader" id="4_1bvp3"]
 [ext_resource type="Shader" uid="uid://bj68r13tkk4fd" path="res://shaders/wind_tree.gdshader" id="5_272bh"]
 [ext_resource type="Texture2D" uid="uid://vmf83veyijnj" path="res://textures/bush1.png" id="5_lquwl"]
-[ext_resource type="Texture2D" uid="uid://t6jcup36afj6" path="res://textures/tree1.png" id="7_5vw27"]
+[ext_resource type="Texture2D" uid="uid://cg0g2yj1p0say" path="res://textures/Arbol_02.png" id="6_efxa6"]
 [ext_resource type="Script" uid="uid://dnx4n1en4ks0x" path="res://scripts/screen_fx.gd" id="8_4c57u"]
 [ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://objects/bonfire.tscn" id="9_bonfire"]
 [ext_resource type="PackedScene" uid="uid://cqcjp4ig3nxbv" path="res://enemies/dummy/enemy_dummy.tscn" id="9_kek77"]
@@ -46,7 +46,7 @@ shader_parameter/curve_scale = 1.5
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wind_tree"]
 render_priority = 0
 shader = ExtResource("5_272bh")
-shader_parameter/texture_albedo = ExtResource("7_5vw27")
+shader_parameter/texture_albedo = ExtResource("6_efxa6")
 shader_parameter/strength = 0.2999999932944
 shader_parameter/speed = 2.0
 shader_parameter/start_y = 0.0
@@ -61,8 +61,8 @@ shader_parameter/strength = 0.02000000095
 shader_parameter/center = Vector2(0.5, 0.5)
 shader_parameter/focus_radius = 0.14499999675896
 shader_parameter/focus_softness = 0.2999999932944
-shader_parameter/darkness = 0.26999999396496
-shader_parameter/darkness_radius = 0.38999999128272
+shader_parameter/darkness = 0.3999999910592
+shader_parameter/darkness_radius = 0.3999999910592
 shader_parameter/darkness_softness = 0.124999997206
 shader_parameter/samples = 12
 
@@ -79,10 +79,11 @@ surface_material_override/0 = SubResource("StandardMaterial3D_7dm0k")
 environment = ExtResource("3_h2yge")
 
 [node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.275138, 0.02, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.229383, 0.02, 9.489148)
+hp = 3.0
 
 [node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003 groups=["camera"]]
-transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.236555)
+transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.452898)
 environment = ExtResource("3_h2yge")
 v_offset = 3.0
 fov = 40.0
@@ -91,8 +92,9 @@ size = 24.0
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Player" unique_id=1916188350]
 transform = Transform3D(-0.8171615, -0.26122007, 0.51382005, 0.0880969, 0.82434344, 0.5591929, -0.5696366, 0.5022168, -0.6506092, 1.4395924, 1.8004947, 7.6153274)
 light_color = Color(0.21799606, 0.29818037, 0.35680544, 1)
-light_energy = 0.351
-light_volumetric_fog_energy = 4.183
+light_energy = 0.3
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
 shadow_enabled = true
 directional_shadow_max_distance = 50.0
 directional_shadow_pancake_size = 10.0
@@ -101,24 +103,13 @@ sky_mode = 1
 [node name="SpotLight3D" type="SpotLight3D" parent="Player" unique_id=792049639]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -0.104022026, 3.4522276, 1.5746944)
 light_color = Color(0.89336044, 0.7348915, 0.7835873, 1)
-light_energy = 2.423
-light_indirect_energy = 1.635
 light_size = 1.0
 shadow_enabled = true
 shadow_opacity = 0.4
 shadow_blur = 0.935
 shadow_caster_mask = 4294967293
 spot_range = 13.461458
-spot_angle = 66.38809
-
-[node name="OmniLight3D" type="OmniLight3D" parent="Player" unique_id=113130058]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11904049, 1.5807981, 1.0223455)
-light_color = Color(0.83705765, 0.61059535, 0.5223428, 1)
-light_energy = 0.2
-light_cull_mask = 3
-shadow_enabled = true
-shadow_caster_mask = 4294967293
-omni_range = 3.9415617
+spot_angle = 89.99
 
 [node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=1060570751]
 transform = Transform3D(0.9998416, 0, -0.017801404, 0.016209649, 0.41332698, 0.9104384, 0.0073578004, -0.91058266, 0.4132615, 1.9990013, 6.9747105, 6.07423)
@@ -136,13 +127,6 @@ spot_angle_attenuation = 0.45062566
 [node name="OmniLight3D2" type="OmniLight3D" parent="." unique_id=1498490562]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.664172, 2.6297908, -8.078587)
 light_color = Color(1, 0.55441934, 0.435789, 1)
-shadow_enabled = true
-
-[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=73914084]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3641462, 2.8257174, 3.0105748)
-light_color = Color(1, 0.55441934, 0.435789, 1)
-light_energy = 0.581
-light_size = 0.539
 shadow_enabled = true
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=597849092]
@@ -225,12 +209,12 @@ texture = ExtResource("5_lquwl")
 [node name="arbol" type="StaticBody3D" parent="." unique_id=1166250156]
 
 [node name="Sprite3D" type="Sprite3D" parent="arbol" unique_id=1254649239]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.6003649, 0)
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.3256693, 0)
 material_override = SubResource("ShaderMaterial_wind_tree")
 billboard = 2
 shaded = true
 double_sided = false
-texture = ExtResource("7_5vw27")
+texture = ExtResource("6_efxa6")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="arbol" unique_id=1362298513]
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
@@ -240,12 +224,12 @@ shape = SubResource("CylinderShape3D_272bh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2313166, 0, -8.949415)
 
 [node name="Sprite3D" type="Sprite3D" parent="arbol2" unique_id=1578547710]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.6003649, 0)
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2968638, 0)
 material_override = SubResource("ShaderMaterial_wind_tree")
 billboard = 2
 shaded = true
 double_sided = false
-texture = ExtResource("7_5vw27")
+texture = ExtResource("6_efxa6")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="arbol2" unique_id=953500721]
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
@@ -255,12 +239,12 @@ shape = SubResource("CylinderShape3D_272bh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.691779, 0, -2.3981438)
 
 [node name="Sprite3D" type="Sprite3D" parent="arbol3" unique_id=1623729431]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.6003649, 0)
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2491996, 0)
 material_override = SubResource("ShaderMaterial_wind_tree")
 billboard = 2
 shaded = true
 double_sided = false
-texture = ExtResource("7_5vw27")
+texture = ExtResource("6_efxa6")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="arbol3" unique_id=573054011]
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
@@ -270,12 +254,12 @@ shape = SubResource("CylinderShape3D_272bh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.4780583, 0, 2.6263132)
 
 [node name="Sprite3D" type="Sprite3D" parent="arbol5" unique_id=62358795]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.6003649, 0)
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2919338, 0)
 material_override = SubResource("ShaderMaterial_wind_tree")
 billboard = 2
 shaded = true
 double_sided = false
-texture = ExtResource("7_5vw27")
+texture = ExtResource("6_efxa6")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="arbol5" unique_id=1053716353]
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
@@ -285,12 +269,12 @@ shape = SubResource("CylinderShape3D_272bh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.022974, 0, -8.6204195)
 
 [node name="Sprite3D" type="Sprite3D" parent="arbol4" unique_id=959645828]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.6003649, 0)
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.3641026, 0)
 material_override = SubResource("ShaderMaterial_wind_tree")
 billboard = 2
 shaded = true
 double_sided = false
-texture = ExtResource("7_5vw27")
+texture = ExtResource("6_efxa6")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="arbol4" unique_id=1010063107]
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
@@ -361,3 +345,6 @@ can_chase = false
 
 [node name="Enemy2" parent="." unique_id=513251102 instance=ExtResource("9_kek77")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.667225, 0.02, 3.9258153)
+
+[node name="Enemy3" parent="." unique_id=538971288 instance=ExtResource("9_kek77")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.651313, 0.02, -18.980309)
