@@ -1,10 +1,12 @@
 extends CharacterBody3D
 
+@export var hp: float = 10
 @export var speed: float = 6.0
 @export var weapon_radius: float = 1
 @export var swing_arc_deg: float = 180.0
 @export var swing_duration: float = 0.4
 @export var return_duration: float = swing_duration / 10
+@export var knockback_drag: float = 18.0
 
 @onready var camera: Camera3D = get_viewport().get_camera_3d()
 @onready var sprites: Node3D = $Sprites
@@ -27,13 +29,21 @@ var attack_base_angle := 0.0
 var swing_side := 1.0
 var aim_dir := Vector3.ZERO
 var attack_tween: Tween = null
+var knockback_velocity: Vector3 = Vector3.ZERO
+var screen_fx: Node = null
+
+func _ready() -> void:
+	screen_fx = get_tree().get_first_node_in_group("screen_fx")
 
 func _physics_process(delta):
 	var input_dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	var dir := Vector3(input_dir.x, 0.0, input_dir.y)
-	velocity = dir * speed
-
+	var move_velocity := dir * speed
+	
+	velocity = move_velocity + knockback_velocity
 	move_and_slide()
+	
+	knockback_velocity = knockback_velocity.move_toward(Vector3.ZERO, knockback_drag * delta)
 
 	update_cursor()
 
@@ -72,6 +82,14 @@ func handle_flip(dir: Vector3):
 	var facing_left = dir.x < 0.0
 	sprites.scale.x = 1.0 if facing_left else -1.0
 	anim_sprite.flip_h = facing_left
+
+func apply_knockback(dir: Vector3, force: float = 4.5) -> void:
+	dir.y = 0.0
+	
+	if dir.length_squared() <= 0.0001:
+		return
+	
+	knockback_velocity = dir.normalized() * force
 
 func update_weapon_idle():
 	weapon_pivot.rotation.y = aim_angle
@@ -164,3 +182,14 @@ func update_trail():
 func clear_trail():
 	trail_points.clear()
 	trail.points = PackedVector2Array()
+	
+func take_damage(amount: int) -> void:
+	hp -= amount
+	
+	if not is_instance_valid(screen_fx):
+		screen_fx = get_tree().get_first_node_in_group("screen_fx")
+	
+	if screen_fx and screen_fx.has_method("play_damage_feedback"):
+		screen_fx.play_damage_feedback()
+	
+	print("HP:", hp)

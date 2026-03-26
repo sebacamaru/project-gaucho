@@ -18,6 +18,9 @@ func end_attack() -> void:
 func _try_hit(target: Node) -> void:
 	if target == null:
 		return
+		
+	if not target.is_in_group("enemy"):
+		return
 	
 	if hit_targets.has(target):
 		return

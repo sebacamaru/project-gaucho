@@ -149,7 +149,7 @@ billboard_keep_scale = true
 [sub_resource type="Gradient" id="Gradient_qjkh3"]
 colors = PackedColorArray(0.91764706, 0.5254902, 0.12941177, 0.20784314, 1, 1, 1, 0)
 
-[node name="Player" type="CharacterBody3D" unique_id=746990048]
+[node name="Player" type="CharacterBody3D" unique_id=746990048 groups=["player"]]
 script = ExtResource("1_rkbax")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2061340717]

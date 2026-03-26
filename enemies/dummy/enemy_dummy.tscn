@@ -3,6 +3,9 @@
 [ext_resource type="Script" uid="uid://c4i2t7ql523d1" path="res://enemies/dummy/enemy_dummy.gd" id="1_cg66v"]
 [ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="1_v857q"]
 [ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="2_blackaura"]
+[ext_resource type="Texture2D" uid="uid://dyr8f3dvllxlo" path="res://sprites/hpbar_enemy_background.png" id="4_lgqb0"]
+[ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="4_nyy4h"]
+[ext_resource type="Texture2D" uid="uid://brbs4avkx1oba" path="res://sprites/hpbar_enemy_fill.png" id="5_nyy4h"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aura"]
 render_priority = -1
@@ -12,35 +15,92 @@ shader_parameter/flame_speed = 3.10000003874312
 shader_parameter/flame_distortion = 0.10499999765304
 shader_parameter/flame_tip_sharpness = 5.000000074506
 shader_parameter/edge_power = 1.6899999622251198
-shader_parameter/aura_opacity = 0.68999998457712
+shader_parameter/aura_opacity = 0.7999999821184
 shader_parameter/global_alpha = 0.55999998748288
 shader_parameter/edge_fade = 0.3999999910592
 shader_parameter/texture_albedo = ExtResource("1_v857q")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_66vfd"]
-size = Vector3(0.75183105, 1, 1.5721283)
+[sub_resource type="AtlasTexture" id="AtlasTexture_lgqb0"]
+atlas = ExtResource("1_v857q")
+region = Rect2(1800, 0, 600, 400)
 
-[node name="EnemyDummy" type="Node3D" unique_id=740511559]
+[sub_resource type="AtlasTexture" id="AtlasTexture_nyy4h"]
+atlas = ExtResource("1_v857q")
+region = Rect2(1200, 0, 600, 400)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xfst4"]
+atlas = ExtResource("1_v857q")
+region = Rect2(600, 0, 600, 400)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hhner"]
+atlas = ExtResource("1_v857q")
+region = Rect2(0, 0, 600, 400)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_s4okt"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lgqb0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nyy4h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xfst4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hhner")
+}],
+"loop": true,
+"name": &"default",
+"speed": 11.0
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_66vfd"]
+size = Vector3(1.2596436, 1.1567383, 1.9614697)
+
+[node name="Enemy" type="Node3D" unique_id=740511559 groups=["enemy"]]
 script = ExtResource("1_cg66v")
 
-[node name="Sprites" type="Node3D" parent="." unique_id=2144784480]
+[node name="Visual" type="Node3D" parent="." unique_id=1118079420]
 
-[node name="AuraSprite3D" type="Sprite3D" parent="Sprites" unique_id=123456789]
+[node name="Sprites" type="Node3D" parent="Visual" unique_id=2144784480]
+
+[node name="AuraSprite3D" type="Sprite3D" parent="Visual/Sprites" unique_id=123456789]
 transform = Transform3D(0.52, 0, 0, 0, 0.52, 0, 0, 0, 0.52, 0, 1.0577173, 0)
 material_override = SubResource("ShaderMaterial_aura")
 billboard = 2
 alpha_scissor_threshold = 0.12
-texture = ExtResource("1_v857q")
+texture = ExtResource("4_nyy4h")
 
-[node name="Sprite3D" type="Sprite3D" parent="Sprites" unique_id=666838440]
-transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0.636142, 0)
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visual/Sprites" unique_id=1106185488]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0.636, 0)
 billboard = 2
 shaded = true
-texture = ExtResource("1_v857q")
+double_sided = false
+alpha_cut = 1
+sprite_frames = SubResource("SpriteFrames_s4okt")
+autoplay = "default"
+frame_progress = 0.80344236
 
 [node name="Hurtbox" type="Area3D" parent="." unique_id=1558266044]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48982334, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox" unique_id=462607943]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.2909385, 0, 0.044860847)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.21547711, 0.07836914, 0.03912353)
 shape = SubResource("BoxShape3D_66vfd")
+
+[node name="HealthBar" type="Sprite3D" parent="." unique_id=219759427]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18971184, 1.54828, 0)
+billboard = 1
+double_sided = false
+alpha_cut = 1
+
+[node name="Background" type="Sprite3D" parent="HealthBar" unique_id=458944180]
+texture = ExtResource("4_lgqb0")
+
+[node name="FillPivot" type="Node3D" parent="HealthBar" unique_id=1899751098]
+
+[node name="Fill" type="Sprite3D" parent="HealthBar/FillPivot" unique_id=1014971992]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.01)
+texture = ExtResource("5_nyy4h")

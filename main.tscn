@@ -7,6 +7,7 @@
 [ext_resource type="Shader" uid="uid://bj68r13tkk4fd" path="res://shaders/wind_tree.gdshader" id="5_272bh"]
 [ext_resource type="Texture2D" uid="uid://vmf83veyijnj" path="res://textures/bush1.png" id="5_lquwl"]
 [ext_resource type="Texture2D" uid="uid://t6jcup36afj6" path="res://textures/tree1.png" id="7_5vw27"]
+[ext_resource type="Script" uid="uid://dnx4n1en4ks0x" path="res://scripts/screen_fx.gd" id="8_4c57u"]
 [ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://objects/bonfire.tscn" id="9_bonfire"]
 [ext_resource type="PackedScene" uid="uid://cqcjp4ig3nxbv" path="res://enemies/dummy/enemy_dummy.tscn" id="9_kek77"]
 
@@ -80,8 +81,8 @@ environment = ExtResource("3_h2yge")
 [node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.275138, 0.02, 0)
 
-[node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003]
-transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 18)
+[node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003 groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.236555)
 environment = ExtResource("3_h2yge")
 v_offset = 3.0
 fov = 40.0
@@ -333,9 +334,12 @@ texture = ExtResource("5_lquwl")
 [node name="Bonfire" parent="." unique_id=1587422233 instance=ExtResource("9_bonfire")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.28924, 0, 5.37629)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1223706100]
+[node name="ScreenFX" type="Node3D" parent="." unique_id=2061694178 groups=["screen_fx"]]
+script = ExtResource("8_4c57u")
 
-[node name="ColorRect" type="ColorRect" parent="CanvasLayer" unique_id=1289151269]
+[node name="CanvasLayer" type="CanvasLayer" parent="ScreenFX" unique_id=1223706100]
+
+[node name="ColorRect" type="ColorRect" parent="ScreenFX/CanvasLayer" unique_id=1289151269]
 material = SubResource("ShaderMaterial_lquwl")
 anchors_preset = 15
 anchor_right = 1.0
@@ -343,5 +347,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="EnemyDummy" parent="." unique_id=740511559 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.665, 0.02, 1.0224369)
+[node name="DamageRect" type="ColorRect" parent="ScreenFX/CanvasLayer" unique_id=527050869]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0, 0, 1)
+
+[node name="Enemy" parent="." unique_id=740511559 instance=ExtResource("9_kek77")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3140539, 0.02, 2.8836334)
+can_chase = false
+
+[node name="Enemy2" parent="." unique_id=513251102 instance=ExtResource("9_kek77")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.667225, 0.02, 3.9258153)

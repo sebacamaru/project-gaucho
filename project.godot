@@ -23,6 +23,13 @@ window/size/window_width_override=2560
 window/size/window_height_override=1440
 window/stretch/mode="canvas_items"
 
+[global_group]
+
+player=""
+screen_fx=""
+camera=""
+enemy=""
+
 [input]
 
 ui_left={

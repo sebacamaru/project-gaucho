@@ -11,7 +11,7 @@ uniform float dissolve_amount : hint_range(0.0, 1.0) = 0.0;
 uniform float edge_width : hint_range(0.0, 0.25) = 0.09;
 
 /// Color del borde (naranja fuego por defecto)
-uniform vec4 edge_color : source_color = vec4(0.933, 0.0, 0.0, 1.0);
+uniform vec4 edge_color : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 
 /// Intensidad del glow en el borde
 uniform float edge_glow : hint_range(0.0, 8.0) = 3.5;
