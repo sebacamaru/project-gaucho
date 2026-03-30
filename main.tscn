@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://dnx4n1en4ks0x" path="res://scripts/screen_fx.gd" id="8_4c57u"]
 [ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://objects/bonfire.tscn" id="9_bonfire"]
 [ext_resource type="PackedScene" uid="uid://cqcjp4ig3nxbv" path="res://enemies/dummy/enemy_dummy.tscn" id="9_kek77"]
+[ext_resource type="Shader" uid="uid://blyv065bw88rg" path="res://shaders/retro.gdshader" id="10_efxa6"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -66,6 +67,23 @@ shader_parameter/darkness_radius = 0.3999999910592
 shader_parameter/darkness_softness = 0.124999997206
 shader_parameter/samples = 12
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dg77c"]
+shader = ExtResource("10_efxa6")
+shader_parameter/soft_amount = 2.0
+shader_parameter/saturation = 0.798000037905
+shader_parameter/contrast = 1.1200000294499999
+shader_parameter/brightness = 1.0
+shader_parameter/warmth = 0.021000048497499924
+shader_parameter/red_mul = 0.8390000398525
+shader_parameter/green_mul = 0.8510000404225
+shader_parameter/blue_mul = 0.9890000469775
+shader_parameter/red_add = -0.051999978720000006
+shader_parameter/green_add = -0.022999977342499978
+shader_parameter/blue_add = -0.005999976535000007
+shader_parameter/posterize_levels = 24.0000010925
+shader_parameter/dither_amount = 0.03200000152
+shader_parameter/dither_resolution = Vector2(640, 360)
+
 [node name="Main" type="Node3D" unique_id=1046872265]
 
 [node name="Terrain" type="MeshInstance3D" parent="." unique_id=1772764079]
@@ -80,13 +98,13 @@ environment = ExtResource("3_h2yge")
 
 [node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.229383, 0.02, 9.489148)
-hp = 3.0
+hp = 5.0
 
 [node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003 groups=["camera"]]
 transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.452898)
 environment = ExtResource("3_h2yge")
 v_offset = 3.0
-fov = 40.0
+fov = 32.0
 size = 24.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Player" unique_id=1916188350]
@@ -325,6 +343,14 @@ script = ExtResource("8_4c57u")
 
 [node name="ColorRect" type="ColorRect" parent="ScreenFX/CanvasLayer" unique_id=1289151269]
 material = SubResource("ShaderMaterial_lquwl")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shader" type="ColorRect" parent="ScreenFX/CanvasLayer" unique_id=373592998]
+material = SubResource("ShaderMaterial_dg77c")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

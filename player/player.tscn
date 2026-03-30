@@ -152,7 +152,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"Idle",
-"speed": 15.0
+"speed": 10.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -219,7 +219,8 @@ shaded = true
 alpha_cut = 1
 render_priority = 1
 sprite_frames = SubResource("SpriteFrames_hg6s5")
-animation = &"Died"
+animation = &"Idle"
+frame_progress = 0.23386756
 
 [node name="ShadowBlob" type="MeshInstance3D" parent="." unique_id=353868600]
 transform = Transform3D(-2.321343e-08, 1.1711669, 1.3113433e-08, 0, -5.119332e-08, 0.3, 0.5310622, 5.1193407e-08, 5.7320657e-16, 0, 0, 0)

@@ -120,6 +120,9 @@ func _ready() -> void:
 	
 	# Guardar la posición de la rotación de la lámpara
 	lamp_base_rotation = light_sprite.rotation
+	
+	# Arranca en idle
+	anim_sprite.play("Idle")
 
 
 func _physics_process(delta: float) -> void:
