@@ -71,15 +71,15 @@ shader_parameter/samples = 12
 shader = ExtResource("10_efxa6")
 shader_parameter/soft_amount = 2.0
 shader_parameter/saturation = 0.798000037905
-shader_parameter/contrast = 1.1200000294499999
+shader_parameter/contrast = 1.12000002945
 shader_parameter/brightness = 1.0
-shader_parameter/warmth = 0.021000048497499924
+shader_parameter/warmth = 0.02100004849749992
 shader_parameter/red_mul = 0.8390000398525
 shader_parameter/green_mul = 0.8510000404225
 shader_parameter/blue_mul = 0.9890000469775
-shader_parameter/red_add = -0.051999978720000006
-shader_parameter/green_add = -0.022999977342499978
-shader_parameter/blue_add = -0.005999976535000007
+shader_parameter/red_add = -0.05199997872
+shader_parameter/green_add = -0.02299997734249997
+shader_parameter/blue_add = -0.005999976535
 shader_parameter/posterize_levels = 24.0000010925
 shader_parameter/dither_amount = 0.03200000152
 shader_parameter/dither_resolution = Vector2(640, 360)
@@ -370,7 +370,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3140539, 0.02, 2.8836334)
 can_chase = false
 
 [node name="Enemy2" parent="." unique_id=513251102 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.667225, 0.02, 3.9258153)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.674326, 0.02, 2.0326214)
 
 [node name="Enemy3" parent="." unique_id=538971288 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.651313, 0.02, -18.980309)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.24584, 0.02, 8.619416)

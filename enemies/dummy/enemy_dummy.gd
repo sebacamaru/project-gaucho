@@ -6,26 +6,19 @@ extends Node3D
 # - ataque con anticipación y salto
 # - barra de vida animada
 # - feedback visual al recibir daño
+# - visibilidad mínima en runtime mediante shader
 # - dissolve al morir
-# - soporte de shader dinámico para AnimatedSprite3D
 # =========================================================
 
 const ENEMY_DISSOLVE_SHADER = preload("res://shaders/enemy_dissolve.gdshader")
+const ENEMY_VISIBILITY_SHADER = preload("res://shaders/enemy.gdshader")
 
-
-# =========================================================
-# States
-# =========================================================
 enum State {
 	CHASE,
 	ATTACK,
 	DEAD
 }
 
-
-# =========================================================
-# Configuración
-# =========================================================
 @export var max_hp: int = 5
 @export var move_speed: float = 1.8
 @export var attack_range: float = 1.2
@@ -34,27 +27,23 @@ enum State {
 @export var knockback_force: float = 7
 @export var can_chase: bool = true
 
+@export_range(0.0, 1.0, 0.01) var min_visibility: float = 0.2
+@export_range(0.0, 1.0, 0.01) var alpha_cutoff: float = 0.1
 
-# =========================================================
-# Runtime
-# =========================================================
 var hp: int
 var state := State.CHASE
 var player: Node3D = null
-
 var is_dying := false
 var can_attack := true
 
-
-# =========================================================
-# Cached Nodes
-# =========================================================
 @onready var visual_root = $Visual
-@onready var sprites_root = $Visual/Sprites
-
-@onready var sprite = $Visual/Sprites/AnimatedSprite3D
-@onready var aura_sprite = $Visual/Sprites/AuraSprite3D
-
+# Root principal para movimientos de ataque / squash
+@onready var sprites_root = $Visual/SpritesRoot
+# Offset secundario exclusivo para hit reactions
+@onready var hit_offset = $Visual/SpritesRoot/HitOffset
+# Sprites reales
+@onready var sprite = $Visual/SpritesRoot/HitOffset/AnimatedSprite3D
+@onready var aura_sprite = $Visual/SpritesRoot/HitOffset/AuraSprite3D
 @onready var hurtbox = $Hurtbox
 
 @onready var hp_bar_root = $HealthBar
@@ -62,34 +51,55 @@ var can_attack := true
 @onready var hp_bar_background = $HealthBar/Background
 @onready var hp_bar_fill = $HealthBar/FillPivot/Fill
 
-@onready var sprite_material := sprite.material_override as ShaderMaterial
+@export var hit_stun_duration: float = 0.2
+@export var hit_hop_height: float = 0.4
+@export var hit_hop_duration: float = 0.1
 
-
-# =========================================================
-# Tween / UI state
-# =========================================================
+var sprite_material: ShaderMaterial = null
 var hit_tween: Tween
 var hp_bar_tween: Tween
-
 var hp_bar_version := 0
 var hp_bar_alpha := 0.0
+var is_hit_stunned := false
+var hit_reaction_tween: Tween
+var hit_stun_version := 0
 
-
-# =========================================================
-# Lifecycle
-# =========================================================
 func _ready() -> void:
 	hp = max_hp
 
 	initialize_health_bar()
 	cache_player_reference()
 	duplicate_aura_material()
+
+	# En editor: sprite normal, sin shader
+	if Engine.is_editor_hint():
+		sprite.material_override = null
+		return
+
+	setup_runtime_sprite_material()
+
+	# Esperar 1 frame ayuda a que AnimatedSprite3D ya tenga
+	# animación/frame válidos al sincronizar la textura.
+	call_deferred("_finish_runtime_setup")
+
+
+func _finish_runtime_setup() -> void:
+	ensure_valid_animation()
+
 	setup_sprite_shader_sync()
+	_on_frame_changed()
 
 
 func _process(delta: float) -> void:
 	if is_dying:
 		return
+
+	# Refresco defensivo: si por alguna razón el shader arrancó
+	# sin textura, intentamos cargarla.
+	if not Engine.is_editor_hint() and sprite_material != null:
+		var tex = sprite_material.get_shader_parameter("albedo_texture")
+		if tex == null:
+			_on_frame_changed()
 
 	if not is_instance_valid(player):
 		cache_player_reference()
@@ -98,12 +108,10 @@ func _process(delta: float) -> void:
 	match state:
 		State.CHASE:
 			update_facing()
-			if can_chase:
+			if can_chase and not is_hit_stunned:
 				update_chase(delta)
-
 		State.ATTACK:
 			pass
-
 		State.DEAD:
 			pass
 
@@ -127,24 +135,58 @@ func duplicate_aura_material() -> void:
 		aura_sprite.material_override = aura_mat.duplicate()
 
 
+func setup_runtime_sprite_material() -> void:
+	sprite_material = ShaderMaterial.new()
+	sprite_material.shader = ENEMY_VISIBILITY_SHADER
+	sprite_material.set_shader_parameter("min_visibility", min_visibility)
+	sprite_material.set_shader_parameter("alpha_cutoff", alpha_cutoff)
+	sprite.material_override = sprite_material
+
+
+func ensure_valid_animation() -> void:
+	if sprite.sprite_frames == null:
+		return
+
+	if sprite.animation == StringName():
+		var names: PackedStringArray = sprite.sprite_frames.get_animation_names()
+		if names.size() > 0:
+			sprite.animation = names[0]
+
+	# Si no está reproduciendo nada, al menos dejamos un frame válido
+	if sprite.frame < 0:
+		sprite.frame = 0
+
+
 func setup_sprite_shader_sync() -> void:
-	sprite.frame_changed.connect(_on_frame_changed)
-	_on_frame_changed()
+	if not sprite.frame_changed.is_connected(_on_frame_changed):
+		sprite.frame_changed.connect(_on_frame_changed)
 
 
 func _on_frame_changed() -> void:
 	if sprite_material == null:
 		return
+	if sprite.sprite_frames == null:
+		return
+	if sprite.animation == StringName():
+		return
+	if not sprite.sprite_frames.has_animation(sprite.animation):
+		return
 
-	var frame_texture = sprite.sprite_frames.get_frame_texture(
+	var frame_count: int = sprite.sprite_frames.get_frame_count(sprite.animation)
+	if frame_count <= 0:
+		return
+
+	var safe_frame := clampi(sprite.frame, 0, frame_count - 1)
+
+	var frame_texture: Texture2D = sprite.sprite_frames.get_frame_texture(
 		sprite.animation,
-		sprite.frame
+		safe_frame
 	)
 
-	sprite_material.set_shader_parameter(
-		"albedo_texture",
-		frame_texture
-	)
+	if frame_texture == null:
+		return
+
+	sprite_material.set_shader_parameter("albedo_texture", frame_texture)
 
 
 # =========================================================
@@ -181,45 +223,14 @@ func start_attack() -> void:
 	var tween := create_tween()
 	tween.set_parallel(false)
 
-	# Anticipación
-	tween.tween_property(
-		sprites_root,
-		"scale",
-		Vector3(0.90, 1.10, 1.0),
-		0.08
-	)
-
-	# Salto / impacto
-	tween.tween_property(
-		sprites_root,
-		"position",
-		Vector3(direction.x * 0.38, 0.38, direction.z * 0.38),
-		0.08
-	)
-
-	tween.parallel().tween_property(
-		sprites_root,
-		"scale",
-		Vector3(1.28, 0.92, 1.0),
-		0.08
-	)
+	tween.tween_property(sprites_root, "scale", Vector3(0.90, 1.10, 1.0), 0.08)
+	tween.tween_property(sprites_root, "position", Vector3(direction.x * 0.38, 0.38, direction.z * 0.38), 0.08)
+	tween.parallel().tween_property(sprites_root, "scale", Vector3(1.28, 0.92, 1.0), 0.08)
 
 	apply_attack_damage()
 
-	# Recuperación
-	tween.tween_property(
-		sprites_root,
-		"position",
-		Vector3.ZERO,
-		0.10
-	)
-
-	tween.parallel().tween_property(
-		sprites_root,
-		"scale",
-		Vector3.ONE,
-		0.10
-	)
+	tween.tween_property(sprites_root, "position", Vector3.ZERO, 0.10)
+	tween.parallel().tween_property(sprites_root, "scale", Vector3.ONE, 0.10)
 
 	await tween.finished
 
@@ -247,10 +258,7 @@ func apply_attack_damage() -> void:
 			player.take_damage(attack_damage)
 
 		if player.has_method("apply_knockback"):
-			player.apply_knockback(
-				to_player.normalized(),
-				knockback_force
-			)
+			player.apply_knockback(to_player.normalized(), knockback_force)
 
 
 # =========================================================
@@ -264,6 +272,7 @@ func take_damage(amount: int) -> void:
 
 	flash_hit()
 	shake_hit()
+	play_hit_reaction()
 	show_hp_bar()
 
 	if hp <= 0:
@@ -272,62 +281,67 @@ func take_damage(amount: int) -> void:
 
 func flash_hit() -> void:
 	sprite.modulate = Color.BLACK
-
 	await get_tree().create_timer(0.08).timeout
-
 	if is_instance_valid(sprite) and not is_dying:
 		sprite.modulate = Color.WHITE
 
 
+# =========================================================
+# Shake visual al recibir daño
+# Solo mueve HitOffset para no interferir con ataques
+# =========================================================
 func shake_hit() -> void:
 	if hit_tween and hit_tween.is_valid():
 		hit_tween.kill()
 
-	sprites_root.position = Vector3.ZERO
-	sprites_root.scale = Vector3.ONE
+	hit_offset.position = Vector3.ZERO
+	hit_offset.scale = Vector3.ONE
 
 	hit_tween = create_tween()
 	hit_tween.set_parallel(false)
 
-	var strength := 0.16
+	var strength: float = 0.16
 
+	# Primer impacto
 	hit_tween.tween_property(
-		sprites_root,
+		hit_offset,
 		"scale",
 		Vector3(1.08, 0.92, 1.0),
 		0.04
 	)
 
 	hit_tween.parallel().tween_property(
-		sprites_root,
+		hit_offset,
 		"position:x",
 		-strength,
 		0.03
 	)
 
+	# Rebote
 	hit_tween.tween_property(
-		sprites_root,
+		hit_offset,
 		"scale",
 		Vector3(0.96, 1.04, 1.0),
 		0.04
 	)
 
 	hit_tween.parallel().tween_property(
-		sprites_root,
+		hit_offset,
 		"position:x",
 		strength,
 		0.03
 	)
 
+	# Vuelta a reposo
 	hit_tween.tween_property(
-		sprites_root,
+		hit_offset,
 		"scale",
 		Vector3.ONE,
 		0.05
 	)
 
 	hit_tween.parallel().tween_property(
-		sprites_root,
+		hit_offset,
 		"position",
 		Vector3.ZERO,
 		0.05
@@ -345,21 +359,12 @@ func die() -> void:
 	fade_out_hp_bar()
 	sprite.stop()
 
-	var current_texture = sprite.sprite_frames.get_frame_texture(
-		sprite.animation,
-		sprite.frame
-	)
+	var current_texture = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
 
 	var dissolve_material := ShaderMaterial.new()
 	dissolve_material.shader = ENEMY_DISSOLVE_SHADER
-	dissolve_material.set_shader_parameter(
-		"texture_albedo",
-		current_texture
-	)
-	dissolve_material.set_shader_parameter(
-		"dissolve_amount",
-		0.0
-	)
+	dissolve_material.set_shader_parameter("texture_albedo", current_texture)
+	dissolve_material.set_shader_parameter("dissolve_amount", 0.0)
 
 	sprite.material_override = dissolve_material
 	sprite.modulate = Color.WHITE
@@ -368,26 +373,16 @@ func die() -> void:
 	tween.set_parallel(true)
 
 	tween.tween_method(
-		func(v: float):
-			dissolve_material.set_shader_parameter(
-				"dissolve_amount",
-				v
-			),
-		0.0,
-		1.0,
-		0.8
+		func(v: float): dissolve_material.set_shader_parameter("dissolve_amount", v),
+		0.0, 1.0, 0.8
 	)
 
 	var aura_mat := aura_sprite.material_override as ShaderMaterial
 	if aura_mat:
 		var start_alpha: float = aura_mat.get_shader_parameter("global_alpha")
-
 		tween.tween_method(
-			func(v: float):
-				aura_mat.set_shader_parameter("global_alpha", v),
-			start_alpha,
-			0.0,
-			0.4
+			func(v: float): aura_mat.set_shader_parameter("global_alpha", v),
+			start_alpha, 0.0, 0.4
 		)
 
 	await tween.finished
@@ -399,12 +394,7 @@ func fade_out_hp_bar() -> void:
 		hp_bar_tween.kill()
 
 	hp_bar_tween = create_tween()
-	hp_bar_tween.tween_method(
-		set_hp_bar_alpha,
-		hp_bar_alpha,
-		0.0,
-		0.25
-	)
+	hp_bar_tween.tween_method(set_hp_bar_alpha, hp_bar_alpha, 0.0, 0.25)
 
 
 # =========================================================
@@ -414,9 +404,7 @@ func show_hp_bar() -> void:
 	hp_bar_version += 1
 	var version := hp_bar_version
 
-	update_hp_bar_smooth(
-		clampf(hp / float(max_hp), 0.0, 1.0)
-	)
+	update_hp_bar_smooth(clampf(hp / float(max_hp), 0.0, 1.0))
 
 	if hp_bar_tween and hp_bar_tween.is_valid():
 		hp_bar_tween.kill()
@@ -424,12 +412,7 @@ func show_hp_bar() -> void:
 	hp_bar_root.visible = true
 
 	hp_bar_tween = create_tween()
-	hp_bar_tween.tween_method(
-		set_hp_bar_alpha,
-		hp_bar_alpha,
-		1.0,
-		0.15
-	)
+	hp_bar_tween.tween_method(set_hp_bar_alpha, hp_bar_alpha, 1.0, 0.15)
 
 	await get_tree().create_timer(1.2).timeout
 
@@ -437,12 +420,7 @@ func show_hp_bar() -> void:
 		return
 
 	hp_bar_tween = create_tween()
-	hp_bar_tween.tween_method(
-		set_hp_bar_alpha,
-		hp_bar_alpha,
-		0.0,
-		0.25
-	)
+	hp_bar_tween.tween_method(set_hp_bar_alpha, hp_bar_alpha, 0.0, 0.25)
 
 	await hp_bar_tween.finished
 
@@ -452,12 +430,7 @@ func show_hp_bar() -> void:
 
 func update_hp_bar_smooth(target_ratio: float) -> void:
 	var tween := create_tween()
-	tween.tween_property(
-		hp_bar_fill_pivot,
-		"scale:x",
-		target_ratio,
-		0.15
-	)
+	tween.tween_property(hp_bar_fill_pivot, "scale:x", target_ratio, 0.15)
 
 
 func set_hp_bar_alpha(alpha: float) -> void:
@@ -479,6 +452,46 @@ func update_facing() -> void:
 		return
 
 	var facing_left := dx < 0.0
-
 	sprite.flip_h = facing_left
 	aura_sprite.flip_h = facing_left
+
+# =========================================================
+# Pequeño salto al ser golpeado
+# Pausa la movilidad por unos milisegundos
+# =========================================================
+func play_hit_reaction() -> void:
+	hit_stun_version += 1
+	var my_version: int = hit_stun_version
+
+	is_hit_stunned = true
+
+	if hit_reaction_tween and hit_reaction_tween.is_valid():
+		hit_reaction_tween.kill()
+
+	var base_y: float = hit_offset.position.y
+
+	hit_reaction_tween = create_tween()
+
+	# Subida rápida
+	hit_reaction_tween.tween_property(
+		hit_offset,
+		"position:y",
+		base_y + hit_hop_height,
+		hit_hop_duration * 0.45
+	)
+
+	# Bajada
+	hit_reaction_tween.tween_property(
+		hit_offset,
+		"position:y",
+		0.0,
+		hit_hop_duration * 0.55
+	)
+
+	await get_tree().create_timer(hit_stun_duration).timeout
+
+	if is_dying:
+		return
+
+	if my_version == hit_stun_version:
+		is_hit_stunned = false

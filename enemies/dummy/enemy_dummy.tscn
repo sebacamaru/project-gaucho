@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://dyr8f3dvllxlo" path="res://sprites/hpbar_enemy_background.png" id="4_lgqb0"]
 [ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="4_nyy4h"]
 [ext_resource type="Texture2D" uid="uid://brbs4avkx1oba" path="res://sprites/hpbar_enemy_fill.png" id="5_nyy4h"]
-[ext_resource type="Shader" uid="uid://1v20dklx5h32" path="res://shaders/enemy.gdshader" id="5_xfst4"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aura"]
 render_priority = -1
@@ -20,12 +19,6 @@ shader_parameter/aura_opacity = 0.7999999821184
 shader_parameter/global_alpha = 0.55999998748288
 shader_parameter/edge_fade = 0.3999999910592
 shader_parameter/texture_albedo = ExtResource("1_v857q")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_nyy4h"]
-render_priority = 0
-shader = ExtResource("5_xfst4")
-shader_parameter/min_visibility = 1.0
-shader_parameter/alpha_cutoff = 1.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_lgqb0"]
 atlas = ExtResource("1_v857q")
@@ -71,18 +64,19 @@ script = ExtResource("1_cg66v")
 
 [node name="Visual" type="Node3D" parent="." unique_id=1118079420]
 
-[node name="Sprites" type="Node3D" parent="Visual" unique_id=2144784480]
+[node name="SpritesRoot" type="Node3D" parent="Visual" unique_id=2144784480]
 
-[node name="AuraSprite3D" type="Sprite3D" parent="Visual/Sprites" unique_id=123456789]
+[node name="HitOffset" type="Node3D" parent="Visual/SpritesRoot" unique_id=1054193098]
+
+[node name="AuraSprite3D" type="Sprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=123456789]
 transform = Transform3D(0.52, 0, 0, 0, 0.52, 0, 0, 0, 0.52, 0, 1.0577173, 0)
 material_override = SubResource("ShaderMaterial_aura")
 billboard = 2
 alpha_scissor_threshold = 0.12
 texture = ExtResource("4_nyy4h")
 
-[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visual/Sprites" unique_id=1106185488]
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=1106185488]
 transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0.636, 0)
-material_override = SubResource("ShaderMaterial_nyy4h")
 billboard = 2
 shaded = true
 double_sided = false
