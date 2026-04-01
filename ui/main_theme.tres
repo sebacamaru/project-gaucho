@@ -1,0 +1,6 @@
+[gd_resource type="Theme" format=3 uid="uid://dirds6byeqdk2"]
+
+[ext_resource type="FontFile" uid="uid://c7s8vcmspnt02" path="res://fonts/GoogleSansCode-Regular.ttf" id="1_g1fjd"]
+
+[resource]
+default_font = ExtResource("1_g1fjd")

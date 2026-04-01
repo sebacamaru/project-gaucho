@@ -1,7 +1,7 @@
 extends Node
 
 @onready var camera: Camera3D = get_tree().get_first_node_in_group("camera")
-@onready var flash_rect: ColorRect = $CanvasLayer/DamageRect
+@onready var flash_rect: ColorRect = $CanvasLayer/FX/DamageRect
 
 var shake_strength: float = 0.0
 var shake_fade: float = 20.0

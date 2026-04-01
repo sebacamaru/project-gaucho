@@ -11,6 +11,13 @@
 [ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://objects/bonfire.tscn" id="9_bonfire"]
 [ext_resource type="PackedScene" uid="uid://cqcjp4ig3nxbv" path="res://enemies/dummy/enemy_dummy.tscn" id="9_kek77"]
 [ext_resource type="Shader" uid="uid://blyv065bw88rg" path="res://shaders/retro.gdshader" id="10_efxa6"]
+[ext_resource type="Theme" uid="uid://dirds6byeqdk2" path="res://ui/main_theme.tres" id="11_dg77c"]
+[ext_resource type="Script" uid="uid://bemd66qk36tak" path="res://scripts/ui.gd" id="12_ycdy4"]
+[ext_resource type="Texture2D" uid="uid://b5dej7ancgkfu" path="res://ui/bg-black.png" id="13_vivmo"]
+[ext_resource type="Texture2D" uid="uid://scbnfypjgjra" path="res://ui/bg-violet.png" id="14_2cqfq"]
+[ext_resource type="Texture2D" uid="uid://dejp3tqojtx5p" path="res://ui/bg-red.png" id="15_2cqfq"]
+[ext_resource type="Texture2D" uid="uid://y807v7ljrsgv" path="res://ui/bg-yellow.png" id="16_yaehf"]
+[ext_resource type="Texture2D" uid="uid://baah5gwjmrkc3" path="res://ui/bg-blue.png" id="17_074og"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -336,34 +343,187 @@ texture = ExtResource("5_lquwl")
 [node name="Bonfire" parent="." unique_id=1587422233 instance=ExtResource("9_bonfire")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.28924, 0, 5.37629)
 
-[node name="ScreenFX" type="Node3D" parent="." unique_id=2061694178 groups=["screen_fx"]]
+[node name="HUD" type="Node3D" parent="." unique_id=2061694178 groups=["screen_fx"]]
 script = ExtResource("8_4c57u")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="ScreenFX" unique_id=1223706100]
+[node name="CanvasLayer" type="CanvasLayer" parent="HUD" unique_id=1223706100]
 
-[node name="ColorRect" type="ColorRect" parent="ScreenFX/CanvasLayer" unique_id=1289151269]
+[node name="FX" type="Control" parent="HUD/CanvasLayer" unique_id=386258776]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="HUD/CanvasLayer/FX" unique_id=1289151269]
 material = SubResource("ShaderMaterial_lquwl")
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Shader" type="ColorRect" parent="ScreenFX/CanvasLayer" unique_id=373592998]
+[node name="Shader" type="ColorRect" parent="HUD/CanvasLayer/FX" unique_id=373592998]
 material = SubResource("ShaderMaterial_dg77c")
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="DamageRect" type="ColorRect" parent="ScreenFX/CanvasLayer" unique_id=527050869]
+[node name="DamageRect" type="ColorRect" parent="HUD/CanvasLayer/FX" unique_id=527050869]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 0, 0, 1)
+
+[node name="UI" type="Control" parent="HUD/CanvasLayer" unique_id=2103103214]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("11_dg77c")
+script = ExtResource("12_ycdy4")
+
+[node name="TopUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=455365618]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ExpBar" type="TextureProgressBar" parent="HUD/CanvasLayer/UI/TopUI" unique_id=748427822]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 13.0
+grow_horizontal = 2
+value = 50.0
+nine_patch_stretch = true
+texture_under = ExtResource("13_vivmo")
+texture_progress = ExtResource("14_2cqfq")
+
+[node name="TopCenterContainer" type="CenterContainer" parent="HUD/CanvasLayer/UI/TopUI" unique_id=611891151]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -58.0
+offset_top = 20.0
+offset_right = 58.0
+offset_bottom = 41.0
+grow_horizontal = 2
+
+[node name="BossTimerLabel" type="Label" parent="HUD/CanvasLayer/UI/TopUI/TopCenterContainer" unique_id=453275658]
+layout_mode = 2
+text = "Jefe en 5:28"
+horizontal_alignment = 1
+
+[node name="BottomLeftUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=2036296828]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BottomCenterUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=1447075946]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HealthBar" type="TextureProgressBar" parent="HUD/CanvasLayer/UI/BottomCenterUI" unique_id=1801060447]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -290.0
+offset_top = -80.0
+offset_right = 290.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+pivot_offset = Vector2(-340, 0)
+pivot_offset_ratio = Vector2(-340, 0)
+value = 50.0
+nine_patch_stretch = true
+texture_under = ExtResource("13_vivmo")
+texture_progress = ExtResource("15_2cqfq")
+
+[node name="StaminaBar" type="TextureProgressBar" parent="HUD/CanvasLayer/UI/BottomCenterUI" unique_id=1147178310]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -290.0
+offset_top = -57.0
+offset_right = 290.0
+offset_bottom = -49.0
+grow_horizontal = 2
+grow_vertical = 0
+pivot_offset = Vector2(-340, 0)
+pivot_offset_ratio = Vector2(-340, 0)
+value = 90.0
+nine_patch_stretch = true
+texture_under = ExtResource("13_vivmo")
+texture_progress = ExtResource("16_yaehf")
+
+[node name="ManaBar" type="TextureProgressBar" parent="HUD/CanvasLayer/UI/BottomCenterUI" unique_id=1933494358]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -290.0
+offset_top = -46.0
+offset_right = 290.0
+offset_bottom = -34.0
+grow_horizontal = 2
+grow_vertical = 0
+pivot_offset = Vector2(-340, 0)
+pivot_offset_ratio = Vector2(-340, 0)
+value = 10.0
+nine_patch_stretch = true
+texture_under = ExtResource("13_vivmo")
+texture_progress = ExtResource("17_074og")
+
+[node name="ResourceBarsContainer" type="CenterContainer" parent="HUD/CanvasLayer/UI/BottomCenterUI" unique_id=751282173]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BottomRightUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=1155947597]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Enemy" parent="." unique_id=740511559 instance=ExtResource("9_kek77")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3140539, 0.02, 2.8836334)
