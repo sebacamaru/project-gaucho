@@ -23,6 +23,9 @@
 [ext_resource type="Texture2D" uid="uid://baah5gwjmrkc3" path="res://ui/bg-blue.png" id="17_074og"]
 [ext_resource type="Texture2D" uid="uid://cwj2rilnx3k7l" path="res://ui/bg-skill-3.png" id="17_ryguw"]
 [ext_resource type="Texture2D" uid="uid://bm5jwqm4ct8fb" path="res://ui/bg-skill-4.png" id="18_ryguw"]
+[ext_resource type="Texture2D" uid="uid://bbu47tyqwu6s2" path="res://ui/bg-level.png" id="23_1u8w0"]
+[ext_resource type="Texture2D" uid="uid://bupk3vwnn71vi" path="res://ui/bg-demonios.png" id="24_0odxb"]
+[ext_resource type="Texture2D" uid="uid://c5vy1i1x15ipw" path="res://ui/bg-points.png" id="25_lswn8"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -353,7 +356,6 @@ script = ExtResource("8_4c57u")
 [node name="CanvasLayer" type="CanvasLayer" parent="HUD" unique_id=1223706100]
 
 [node name="FX" type="Control" parent="HUD/CanvasLayer" unique_id=386258776]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -602,13 +604,138 @@ grow_horizontal = 2
 grow_vertical = 0
 
 [node name="BottomRightUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=1155947597]
-visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -350.0
+offset_top = -80.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Container" type="HBoxContainer" parent="HUD/CanvasLayer/UI/BottomRightUI" unique_id=1462653210]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_bottom = -32.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Nivel" type="Control" parent="HUD/CanvasLayer/UI/BottomRightUI/Container" unique_id=689710183]
+modulate = Color(1, 1, 1, 0.6666667)
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Nivel" unique_id=317404450]
+texture_filter = 1
+texture_repeat = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("23_1u8w0")
+expand_mode = 1
+
+[node name="Label" type="Label" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Nivel" unique_id=357490419]
+layout_mode = 0
+offset_top = -4.0
+offset_right = 51.0
+offset_bottom = 7.0
+theme_override_font_sizes/font_size = 7
+text = "Nivel"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LevelCounter" type="Label" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Nivel" unique_id=191328655]
+layout_mode = 0
+offset_right = 48.0
+offset_bottom = 47.0
+theme_override_font_sizes/font_size = 20
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Demonios" type="Control" parent="HUD/CanvasLayer/UI/BottomRightUI/Container" unique_id=1777867812]
+modulate = Color(1, 1, 1, 0.50980395)
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Demonios" unique_id=95013415]
+texture_filter = 1
+texture_repeat = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("24_0odxb")
+expand_mode = 1
+
+[node name="Label" type="Label" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Demonios" unique_id=218252903]
+layout_mode = 0
+offset_top = -5.0
+offset_right = 49.0
+offset_bottom = 6.0
+theme_override_font_sizes/font_size = 7
+text = "Demonios"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DemonsCounter" type="Label" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Demonios" unique_id=660250868]
+layout_mode = 0
+offset_right = 48.0
+offset_bottom = 47.0
+theme_override_font_sizes/font_size = 12
+text = "89"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Puntos" type="Control" parent="HUD/CanvasLayer/UI/BottomRightUI/Container" unique_id=159598309]
+modulate = Color(1, 1, 1, 0.50980395)
+custom_minimum_size = Vector2(96, 48)
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Puntos" unique_id=1713818786]
+texture_filter = 1
+texture_repeat = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("25_lswn8")
+expand_mode = 1
+
+[node name="Label" type="Label" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Puntos" unique_id=914901378]
+layout_mode = 0
+offset_top = -5.0
+offset_right = 43.0
+offset_bottom = 6.0
+theme_override_font_sizes/font_size = 7
+text = "Puntos"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PointsCounter" type="Label" parent="HUD/CanvasLayer/UI/BottomRightUI/Container/Puntos" unique_id=236114905]
+layout_mode = 0
+offset_right = 96.0
+offset_bottom = 47.0
+theme_override_font_sizes/font_size = 12
+text = "000000089"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Enemy" parent="." unique_id=740511559 instance=ExtResource("9_kek77")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3140539, 0.02, 2.8836334)
