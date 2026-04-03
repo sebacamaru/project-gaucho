@@ -4,7 +4,7 @@ extends CharacterBody3D
 # CONFIGURACIÓN GENERAL
 # =========================
 
-@export var hp: float = 10
+@export var max_hp: int = 10
 @export var speed: float = 6.0
 
 # Distancia base del arma respecto al cuerpo
@@ -56,6 +56,15 @@ var lamp_base_rotation: Vector3
 # Qué tan rápido vuelve al centro cuando deja de moverse
 @export var lamp_return_speed: float = 8.0
 
+# =========================
+# HABILIDADES
+# =========================
+
+var unlocked_skills := {
+	"skill_2": false,
+	"skill_3": false,
+	"skill_4": false
+}
 
 # =========================
 # NODOS
@@ -78,6 +87,9 @@ var lamp_base_rotation: Vector3
 # =========================
 # ESTADO INTERNO
 # =========================
+
+# Puntos de vida
+var hp: int = 10
 
 # Puntos 2D usados para dibujar el trail del arma
 var trail_points := []
@@ -110,8 +122,25 @@ var screen_fx: Node = null
 # La guardamos para poder volver exactamente al lugar correcto.
 var grip_base_position: Vector3
 
+# =========================
+# Señales
+# =========================
+
+# Señal para avisar de que el HP cambió
+signal hp_changed(current_hp: int, max_hp: int)
+
+# Señal cuando usa una skill
+signal skill_used(slot_name: String)
+
+# Señal de skill desbloqueada
+signal skill_unlocked(slot_name: String)
+
 
 func _ready() -> void:
+	# Vida inicial
+	hp = max_hp
+	hp_changed.emit(hp, max_hp)
+	
 	# Buscar una referencia opcional al nodo de efectos de pantalla
 	screen_fx = get_tree().get_first_node_in_group("screen_fx")
 
@@ -234,6 +263,9 @@ func start_attack() -> void:
 
 	is_attacking = true
 	attack_base_angle = aim_angle
+	
+	# Señal de que está usando skill 1 (facón)
+	skill_used.emit("skill_1")
 
 	# Empujar el grip hacia adelante con un tween corto.
 	# Esto le da al ataque una sensación de "avance" o "peso".
@@ -421,7 +453,8 @@ func take_damage(amount: int) -> void:
 	if is_dead:
 		return
 
-	hp -= amount
+	hp = max(hp - amount, 0)
+	hp_changed.emit(hp, max_hp)
 
 	# Reintentar encontrar screen_fx si se perdió la referencia
 	if not is_instance_valid(screen_fx):
@@ -464,3 +497,13 @@ func update_lamp_swing(delta: float, input_dir: Vector2) -> void:
 	else:
 		# Si no se mueve, volver suavemente al centro
 		light_sprite.rotation = light_sprite.rotation.lerp(lamp_base_rotation, lamp_return_speed * delta)
+
+func use_skill(slot_name: String) -> void:
+	if not unlocked_skills.get(slot_name, false):
+		return
+
+	skill_used.emit(slot_name)
+
+func unlock_skill(slot_name: String) -> void:
+	unlocked_skills[slot_name] = true
+	skill_unlocked.emit(slot_name)

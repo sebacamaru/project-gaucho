@@ -16,8 +16,13 @@
 [ext_resource type="Texture2D" uid="uid://b5dej7ancgkfu" path="res://ui/bg-black.png" id="13_vivmo"]
 [ext_resource type="Texture2D" uid="uid://scbnfypjgjra" path="res://ui/bg-violet.png" id="14_2cqfq"]
 [ext_resource type="Texture2D" uid="uid://dejp3tqojtx5p" path="res://ui/bg-red.png" id="15_2cqfq"]
+[ext_resource type="Script" uid="uid://boap8avfjx33b" path="res://scripts/skill_slot.gd" id="15_d13ii"]
+[ext_resource type="Texture2D" uid="uid://coovx86rnjiqj" path="res://ui/bg-skill-1.png" id="15_ryguw"]
+[ext_resource type="Texture2D" uid="uid://bcly0y7to6s5f" path="res://ui/bg-skill-2.png" id="16_ryguw"]
 [ext_resource type="Texture2D" uid="uid://y807v7ljrsgv" path="res://ui/bg-yellow.png" id="16_yaehf"]
 [ext_resource type="Texture2D" uid="uid://baah5gwjmrkc3" path="res://ui/bg-blue.png" id="17_074og"]
+[ext_resource type="Texture2D" uid="uid://cwj2rilnx3k7l" path="res://ui/bg-skill-3.png" id="17_ryguw"]
+[ext_resource type="Texture2D" uid="uid://bm5jwqm4ct8fb" path="res://ui/bg-skill-4.png" id="18_ryguw"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -105,7 +110,6 @@ environment = ExtResource("3_h2yge")
 
 [node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.229383, 0.02, 9.489148)
-hp = 5.0
 
 [node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003 groups=["camera"]]
 transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.452898)
@@ -349,6 +353,7 @@ script = ExtResource("8_4c57u")
 [node name="CanvasLayer" type="CanvasLayer" parent="HUD" unique_id=1223706100]
 
 [node name="FX" type="Control" parent="HUD/CanvasLayer" unique_id=386258776]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -430,11 +435,91 @@ horizontal_alignment = 1
 
 [node name="BottomLeftUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=2036296828]
 layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -80.0
+offset_right = -930.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="SkillsContainer" type="HBoxContainer" parent="HUD/CanvasLayer/UI/BottomLeftUI" unique_id=1443145791]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -26.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Skill1" type="Control" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer" unique_id=345837951]
+custom_minimum_size = Vector2(48, 54)
+layout_mode = 2
+script = ExtResource("15_d13ii")
+
+[node name="TextureRect" type="TextureRect" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer/Skill1" unique_id=1753041641]
+texture_filter = 1
+texture_repeat = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("15_ryguw")
+expand_mode = 1
+
+[node name="Skill2" type="Control" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer" unique_id=1463216006]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+script = ExtResource("15_d13ii")
+
+[node name="TextureRect" type="TextureRect" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer/Skill2" unique_id=2110611653]
+texture_filter = 1
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+texture = ExtResource("16_ryguw")
+expand_mode = 1
+
+[node name="Skill3" type="Control" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer" unique_id=1493550142]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+script = ExtResource("15_d13ii")
+
+[node name="TextureRect" type="TextureRect" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer/Skill3" unique_id=82446086]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("17_ryguw")
+expand_mode = 1
+
+[node name="Skill4" type="Control" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer" unique_id=226596519]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+script = ExtResource("15_d13ii")
+
+[node name="TextureRect" type="TextureRect" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer/Skill4" unique_id=1088094014]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("18_ryguw")
+expand_mode = 1
 
 [node name="BottomCenterUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=1447075946]
 layout_mode = 1
