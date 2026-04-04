@@ -2,11 +2,15 @@
 
 [ext_resource type="Script" uid="uid://b07it7bqu2yli" path="res://player/player.gd" id="1_rkbax"]
 [ext_resource type="Texture2D" uid="uid://ct77f2q0u8ktk" path="res://player/spritesheet_gaucho_v2.png" id="2_boad6"]
+[ext_resource type="Script" uid="uid://o106uv37fkdr" path="res://player/player_progress.gd" id="2_rgyib"]
 [ext_resource type="Texture2D" uid="uid://bnimjpn2vmy8k" path="res://textures/shadowblob.png" id="3_g1dw6"]
+[ext_resource type="Script" uid="uid://ckij8iq8id04v" path="res://player/stamina_component.gd" id="3_hg6s5"]
+[ext_resource type="Script" uid="uid://c06loducic03u" path="res://player/dash_skill.gd" id="4_8t03j"]
 [ext_resource type="Texture2D" uid="uid://c2cykje4by77c" path="res://weapons/facon.png" id="5_qjkh3"]
 [ext_resource type="Texture2D" uid="uid://dertnhcsug7ql" path="res://sprites/cursor.png" id="6_boad6"]
 [ext_resource type="Script" uid="uid://ckxstvo6tgnym" path="res://player/facon_attack_hitbox.gd" id="6_g6k8r"]
 [ext_resource type="Texture2D" uid="uid://bkipq7gwvoey8" path="res://sprites/lampara.png" id="7_boad6"]
+[ext_resource type="Texture2D" uid="uid://8vs0nd5g63p3" path="res://player/dash.png" id="11_2ieo8"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
 radius = 0.2993164
@@ -195,6 +199,15 @@ colors = PackedColorArray(0.91764706, 0.5254902, 0.12941177, 0.20784314, 1, 0.16
 script = ExtResource("1_rkbax")
 weapon_radius = 0.8
 
+[node name="PlayerProgress" type="Node" parent="." unique_id=7405254]
+script = ExtResource("2_rgyib")
+
+[node name="StaminaComponent" type="Node" parent="." unique_id=1336586301]
+script = ExtResource("3_hg6s5")
+
+[node name="DashSkill" type="Node" parent="." unique_id=457987336]
+script = ExtResource("4_8t03j")
+
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2061340717]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -0.011559576, 0.7167245, -0.06719446)
 shape = SubResource("CapsuleShape3D_rkbax")
@@ -292,3 +305,9 @@ light_cull_mask = 3
 shadow_enabled = true
 shadow_caster_mask = 4294967293
 omni_range = 2.1171534
+
+[node name="DashSmear" type="Sprite3D" parent="." unique_id=322008958]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017588645, 0.74204564, 0)
+visible = false
+billboard = 2
+texture = ExtResource("11_2ieo8")

@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dejp3tqojtx5p"
-path.s3tc="res://.godot/imported/bg-red.png-6cc339f6eb8d3aa5ce34a14465d78e5d.s3tc.ctex"
+uid="uid://8vs0nd5g63p3"
+path.s3tc="res://.godot/imported/dash.png-b22065b8f07a960d13994af43d89d30c.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://ui/bg-red.png"
-dest_files=["res://.godot/imported/bg-red.png-6cc339f6eb8d3aa5ce34a14465d78e5d.s3tc.ctex"]
+source_file="res://player/dash.png"
+dest_files=["res://.godot/imported/dash.png-b22065b8f07a960d13994af43d89d30c.s3tc.ctex"]
 
 [params]
 

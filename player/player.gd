@@ -37,6 +37,11 @@ extends CharacterBody3D
 # Luz de lámpara
 @onready var weapon_light: OmniLight3D = $LightPivot/OmniLight3D
 
+# Sistema de progreso
+@onready var progress: PlayerProgress = $PlayerProgress
+
+@onready var dash_smear: Sprite3D = $DashSmear
+
 # =========================
 # BALANCEO DE LÁMPARA
 # =========================
@@ -60,11 +65,13 @@ var lamp_base_rotation: Vector3
 # HABILIDADES
 # =========================
 
-var unlocked_skills := {
-	"skill_2": false,
-	"skill_3": false,
-	"skill_4": false
-}
+@onready var dash_skill: DashSkill = $DashSkill
+@onready var stamina: StaminaComponent = $StaminaComponent
+
+var is_dashing: bool = false
+var dash_velocity: Vector3 = Vector3.ZERO
+var dash_timer: float = 0.0
+var last_input_dir: Vector2 = Vector2.DOWN
 
 # =========================
 # NODOS
@@ -82,7 +89,6 @@ var unlocked_skills := {
 @onready var trail: Line2D = $Trail
 @onready var attack_hitbox: Area3D = $Weapon/Grip/AttackHitbox
 @onready var light_sprite: Sprite3D = $Sprites/LampPivot/LightSprite3D
-
 
 # =========================
 # ESTADO INTERNO
@@ -122,8 +128,12 @@ var screen_fx: Node = null
 # La guardamos para poder volver exactamente al lugar correcto.
 var grip_base_position: Vector3
 
+var dash_smear_tween: Tween
+var dash_smear_spawn_timer: float = 0.0
+@export var dash_smear_spawn_interval: float = 0.03
+
 # =========================
-# Señales
+# SEÑALES
 # =========================
 
 # Señal para avisar de que el HP cambió
@@ -132,11 +142,10 @@ signal hp_changed(current_hp: int, max_hp: int)
 # Señal cuando usa una skill
 signal skill_used(slot_name: String)
 
-# Señal de skill desbloqueada
-signal skill_unlocked(slot_name: String)
-
-
 func _ready() -> void:
+	# Skills
+	progress.skill_unlocked.connect(_on_skill_unlocked)
+	
 	# Vida inicial
 	hp = max_hp
 	hp_changed.emit(hp, max_hp)
@@ -162,28 +171,58 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# =========================
-	# MOVIMIENTO
+	# INPUT BASE
 	# =========================
 	var input_dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-	var dir := Vector3(input_dir.x, 0.0, input_dir.y)
-	var move_velocity := dir * speed
-
-	# Se suma el knockback al movimiento manual
-	velocity = move_velocity + knockback_velocity
-	move_and_slide()
 	
+	if input_dir.length_squared() > 0.0:
+		last_input_dir = input_dir.normalized()
+
+	# Actualizar dirección hacia el mouse primero,
+	# así aim_dir ya está fresco para el dash.
+	update_cursor()
+	update_pivot_light()
+
+	# =========================
+	# INPUT DASH
+	# =========================
+	if Input.is_action_just_pressed("skill_3"):
+		var dash_dir := get_dash_direction_to_mouse()
+		dash_skill.try_use(self, stamina, dash_dir)
+
+	# =========================
+	# MOVIMIENTO / DASH
+	# =========================
+	if is_dashing:
+		dash_timer -= delta
+		dash_smear_spawn_timer -= delta
+		
+		if dash_smear_spawn_timer <= 0.0:
+			dash_smear_spawn_timer = dash_smear_spawn_interval
+			spawn_dash_smear_ghost(dash_velocity.normalized())
+			
+		velocity = dash_velocity
+		move_and_slide()
+		
+		if dash_timer <= 0.0:
+			is_dashing = false
+			dash_velocity = Vector3.ZERO
+	else:
+		var dir := Vector3(input_dir.x, 0.0, input_dir.y)
+		var move_velocity := dir * speed
+
+		# Se suma el knockback al movimiento manual
+		velocity = move_velocity + knockback_velocity
+		move_and_slide()
+
 	# Rotación de la lámpara
 	update_lamp_swing(delta, input_dir)
 
 	# El knockback se frena gradualmente
 	knockback_velocity = knockback_velocity.move_toward(Vector3.ZERO, knockback_drag * delta)
 
-	# Actualizar dirección hacia el mouse
-	update_cursor()
-	update_pivot_light()
-
 	# Input de ataque
-	if Input.is_action_just_pressed("attack"):
+	if Input.is_action_just_pressed("attack") and not is_dashing:
 		start_attack()
 
 	# Actualizar visual del arma según el estado
@@ -194,9 +233,38 @@ func _physics_process(delta: float) -> void:
 		update_weapon_idle()
 
 	# Si no está atacando, usar animación de caminar/idle
-	if not is_attacking:
+	if not is_attacking and not is_dashing:
 		update_animation(input_dir)
+		
+func start_dash(direction: Vector3, distance: float, duration: float) -> void:
+	is_dashing = true
+	dash_timer = duration
+	dash_smear_spawn_timer = 0.0
+	
+	var dash_speed := distance / duration
+	dash_velocity = direction * dash_speed
+	
+	# Opcional: cancelar knockback al arrancar dash
+	knockback_velocity = Vector3.ZERO
 
+	play_dash_smear(direction)
+
+func get_dash_direction(input_dir: Vector2) -> Vector3:
+	if input_dir.length_squared() > 0.0:
+		last_input_dir = input_dir.normalized()
+		return Vector3(input_dir.x, 0.0, input_dir.y).normalized()
+	
+	if last_input_dir.length_squared() > 0.0:
+		return Vector3(last_input_dir.x, 0.0, last_input_dir.y).normalized()
+	
+	return -global_transform.basis.z.normalized()
+
+func get_dash_direction_to_mouse() -> Vector3:
+	# aim_dir ya se actualiza en update_cursor() a partir de la posición del mouse
+	# proyectada sobre el plano del suelo.
+	if aim_dir.length_squared() > 0.0001:
+		return aim_dir.normalized()
+	return Vector3.ZERO
 
 func update_cursor() -> void:
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -498,12 +566,64 @@ func update_lamp_swing(delta: float, input_dir: Vector2) -> void:
 		# Si no se mueve, volver suavemente al centro
 		light_sprite.rotation = light_sprite.rotation.lerp(lamp_base_rotation, lamp_return_speed * delta)
 
-func use_skill(slot_name: String) -> void:
-	if not unlocked_skills.get(slot_name, false):
-		return
+func _on_skill_unlocked(slot_name: String) -> void:
+	match slot_name:
+		"skill_2":
+			pass
+		"skill_3":
+			dash_skill.learn()
+		"skill_4":
+			pass
 
-	skill_used.emit(slot_name)
+func play_dash_smear(direction: Vector3) -> void:
+	if dash_smear_tween and dash_smear_tween.is_valid():
+		dash_smear_tween.kill()
 
-func unlock_skill(slot_name: String) -> void:
-	unlocked_skills[slot_name] = true
-	skill_unlocked.emit(slot_name)
+	var dir := direction.normalized()
+	var back_offset := -dir * 0.7
+
+	dash_smear.top_level = true
+	dash_smear.visible = true
+	dash_smear.modulate.a = 0.45
+
+	# Posición global, no local
+	dash_smear.global_position = global_position + Vector3(0.0, 0.8, 0.0) + back_offset
+
+	# Rotación horizontal según la dirección del dash
+	dash_smear.rotation = Vector3.ZERO
+	dash_smear.rotation.y = atan2(dir.x, dir.z)
+
+	# Escala tipo estela
+	dash_smear.scale = Vector3(0.8, 1.0, 2.2)
+
+	dash_smear_tween = create_tween()
+	dash_smear_tween.parallel().tween_property(dash_smear, "modulate:a", 0.0, 1.12)
+	dash_smear_tween.parallel().tween_property(dash_smear, "scale", Vector3(0.4, 1.0, 0.8), 1.12)
+
+	await dash_smear_tween.finished
+	dash_smear.visible = false
+	dash_smear.top_level = false
+
+func spawn_dash_smear_ghost(direction: Vector3) -> void:
+	var dir := direction.normalized()
+	var back_offset := -dir * 0.7
+
+	var ghost := dash_smear.duplicate()
+	get_parent().add_child(ghost)
+
+	ghost.top_level = true
+	ghost.visible = true
+	ghost.modulate = dash_smear.modulate
+	ghost.modulate.a = 0.35
+
+	ghost.global_position = global_position + Vector3(0.0, 0.8, 0.0) + back_offset
+	ghost.rotation = Vector3.ZERO
+	ghost.rotation.y = atan2(dir.x, dir.z)
+	ghost.scale = Vector3(0.8, 1.0, 2.2)
+
+	var tween := create_tween()
+	tween.parallel().tween_property(ghost, "modulate:a", 0.0, 0.18)
+	tween.parallel().tween_property(ghost, "scale", Vector3(0.4, 1.0, 0.8), 0.18)
+
+	await tween.finished
+	ghost.queue_free()

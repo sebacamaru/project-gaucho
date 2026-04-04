@@ -419,6 +419,15 @@ nine_patch_stretch = true
 texture_under = ExtResource("13_vivmo")
 texture_progress = ExtResource("14_2cqfq")
 
+[node name="ExpFlash" type="ColorRect" parent="HUD/CanvasLayer/UI/TopUI" unique_id=1376006582]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 13.0
+grow_horizontal = 2
+mouse_filter = 2
+
 [node name="TopCenterContainer" type="CenterContainer" parent="HUD/CanvasLayer/UI/TopUI" unique_id=611891151]
 layout_mode = 1
 anchors_preset = 5
@@ -541,7 +550,7 @@ anchor_bottom = 1.0
 offset_left = -290.0
 offset_top = -80.0
 offset_right = 290.0
-offset_bottom = -60.0
+offset_bottom = -56.0
 grow_horizontal = 2
 grow_vertical = 0
 pivot_offset = Vector2(-340, 0)
@@ -552,6 +561,7 @@ texture_under = ExtResource("13_vivmo")
 texture_progress = ExtResource("15_2cqfq")
 
 [node name="StaminaBar" type="TextureProgressBar" parent="HUD/CanvasLayer/UI/BottomCenterUI" unique_id=1147178310]
+visible = false
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -559,9 +569,9 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -290.0
-offset_top = -57.0
+offset_top = -53.0
 offset_right = 290.0
-offset_bottom = -49.0
+offset_bottom = -48.0
 grow_horizontal = 2
 grow_vertical = 0
 pivot_offset = Vector2(-340, 0)
@@ -572,6 +582,7 @@ texture_under = ExtResource("13_vivmo")
 texture_progress = ExtResource("16_yaehf")
 
 [node name="ManaBar" type="TextureProgressBar" parent="HUD/CanvasLayer/UI/BottomCenterUI" unique_id=1933494358]
+visible = false
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -579,7 +590,7 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -290.0
-offset_top = -46.0
+offset_top = -45.0
 offset_right = 290.0
 offset_bottom = -34.0
 grow_horizontal = 2
@@ -590,18 +601,6 @@ value = 10.0
 nine_patch_stretch = true
 texture_under = ExtResource("13_vivmo")
 texture_progress = ExtResource("17_074og")
-
-[node name="ResourceBarsContainer" type="CenterContainer" parent="HUD/CanvasLayer/UI/BottomCenterUI" unique_id=751282173]
-visible = false
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -2.0
-offset_bottom = -2.0
-grow_horizontal = 2
-grow_vertical = 0
 
 [node name="BottomRightUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=1155947597]
 layout_mode = 1

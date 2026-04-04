@@ -2,21 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dejp3tqojtx5p"
-path.s3tc="res://.godot/imported/bg-red.png-6cc339f6eb8d3aa5ce34a14465d78e5d.s3tc.ctex"
+uid="uid://ck2v44kau0ctn"
+path="res://.godot/imported/cursor.png-4a6c9cbc7d12af26a5f0d9ddd83bc907.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 
 [deps]
 
-source_file="res://ui/bg-red.png"
-dest_files=["res://.godot/imported/bg-red.png-6cc339f6eb8d3aa5ce34a14465d78e5d.s3tc.ctex"]
+source_file="res://ui/cursor.png"
+dest_files=["res://.godot/imported/cursor.png-4a6c9cbc7d12af26a5f0d9ddd83bc907.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -24,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -38,4 +37,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

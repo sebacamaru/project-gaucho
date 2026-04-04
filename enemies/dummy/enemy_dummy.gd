@@ -26,6 +26,8 @@ enum State {
 @export var attack_cooldown: float = 0.8
 @export var knockback_force: float = 7
 @export var can_chase: bool = true
+@export var exp_reward: int = 120
+@export var points_reward: int = exp_reward * 10
 
 @export_range(0.0, 1.0, 0.01) var min_visibility: float = 0.2
 @export_range(0.0, 1.0, 0.01) var alpha_cutoff: float = 0.1
@@ -355,7 +357,10 @@ func die() -> void:
 	is_dying = true
 	state = State.DEAD
 	hurtbox.monitoring = false
-
+	
+	if player:
+		player.progress.register_enemy_kill(exp_reward, points_reward)
+	
 	fade_out_hp_bar()
 	sprite.stop()
 
