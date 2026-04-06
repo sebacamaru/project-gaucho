@@ -31,7 +31,10 @@ signal upgraded(new_level: int)
 
 # Nombre del slot de UI que representa esta skill.
 # Lo dejamos configurable por si después reutilizás este patrón.
-@export var slot_name: String = "skill_3"
+@export var slot_name: String = "dash"
+
+@export var stamina_recharge_rate: float = 80.0
+@export var stamina_recovery_delay: float = 0.35
 
 # -----------------------------------------------------------------------------
 # Estado interno
@@ -62,6 +65,7 @@ func learn() -> void:
 
 	unlocked.emit()
 
+
 func upgrade() -> void:
 	# Si aún no fue aprendida, primero la aprendemos.
 	if not is_unlocked:
@@ -69,8 +73,8 @@ func upgrade() -> void:
 		return
 
 	level += 1
-
 	upgraded.emit(level)
+
 
 # -----------------------------------------------------------------------------
 # Estadísticas
@@ -81,6 +85,7 @@ func get_distance() -> float:
 	# Nivel 1 = base_distance
 	# Nivel 2+ = aumenta progresivamente
 	return base_distance + distance_per_level * float(level - 1)
+
 
 # -----------------------------------------------------------------------------
 # Uso de la skill
@@ -100,7 +105,10 @@ func try_use(player: Node, stamina: StaminaComponent, dash_dir: Vector3) -> bool
 		return false
 
 	# Consume toda la barra (cooldown visual).
-	stamina.empty()
+	stamina.empty_and_configure_recovery(
+		stamina_recharge_rate,
+		stamina_recovery_delay
+	)
 
 	# Ejecuta el dash físico en el player.
 	player.start_dash(

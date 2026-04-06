@@ -7,32 +7,12 @@ extends CharacterBody3D
 @export var max_hp: int = 10
 @export var speed: float = 6.0
 
-# Distancia base del arma respecto al cuerpo
-@export var weapon_radius: float = 1.0
-
-# Ángulo total del slash
-@export var swing_arc_deg: float = 180.0
-
-# Duración de la parte principal del ataque
-@export var swing_duration: float = 0.4
-
-# Tiempo de regreso del arma a la posición de reposo
-@export var return_duration: float = swing_duration / 10.0
-
 # Qué tan rápido se frena el knockback
 @export var knockback_drag: float = 18.0
 
-# Cantidad máxima de puntos del trail del arma
-@export var trail_max_points := 8
-
-# Cuánto avanza el grip hacia adelante durante el ataque
-@export var grip_attack_offset_z: float = 1
-
-# Duración del tween que empuja el grip hacia adelante
-@export var grip_push_duration: float = 0.08
-
-# Duración del tween que devuelve el grip a su lugar
-@export var grip_return_duration: float = 0.10
+# =========================
+# NODOS / COMPONENTES
+# =========================
 
 # Luz de lámpara
 @onready var weapon_light: OmniLight3D = $LightPivot/OmniLight3D
@@ -40,6 +20,10 @@ extends CharacterBody3D
 # Sistema de progreso
 @onready var progress: PlayerProgress = $PlayerProgress
 
+# Componente de armas
+@onready var weapon_component: WeaponComponent = $WeaponComponent
+
+# Efecto visual del dash
 @onready var dash_smear: Sprite3D = $DashSmear
 
 # =========================
@@ -74,7 +58,7 @@ var dash_timer: float = 0.0
 var last_input_dir: Vector2 = Vector2.DOWN
 
 # =========================
-# NODOS
+# NODOS DE ESCENA
 # =========================
 
 @onready var camera: Camera3D = get_viewport().get_camera_3d()
@@ -82,41 +66,27 @@ var last_input_dir: Vector2 = Vector2.DOWN
 @onready var anim_sprite: AnimatedSprite3D = $Sprites/AnimatedSprite3D
 @onready var cursor: Node3D = $Cursor
 
+# Nodo raíz visual del arma.
+# La lógica del arma vive en WeaponComponent, pero este nodo sigue
+# perteneciendo visualmente al player.
 @onready var weapon_pivot: Node3D = $Weapon
-@onready var weapon_grip: Node3D = $Weapon/Grip
-@onready var weapon_sprite: Sprite3D = $Weapon/Grip/Sprite3D
-@onready var weapon_tip: Marker3D = $Weapon/Grip/Tip
-@onready var trail: Line2D = $Trail
-@onready var attack_hitbox: Area3D = $Weapon/Grip/AttackHitbox
+
+# Sprite de luz falsa de la lámpara
 @onready var light_sprite: Sprite3D = $Sprites/LampPivot/LightSprite3D
 
 # =========================
 # ESTADO INTERNO
 # =========================
 
-# Puntos de vida
+# Puntos de vida actuales
 var hp: int = 10
-
-# Puntos 2D usados para dibujar el trail del arma
-var trail_points := []
-
-# Estado del ataque
-var is_attacking := false
 
 # Estado de muerte
 var is_dead := false
 
 # Dirección actual de apuntado
 var aim_angle := 0.0
-var attack_base_angle := 0.0
-var swing_side := 1.0
 var aim_dir := Vector3.ZERO
-
-# Tween actual del swing del ataque
-var attack_tween: Tween = null
-
-# Tween usado para empujar/devolver el grip
-var grip_tween: Tween = null
 
 # Knockback acumulado
 var knockback_velocity: Vector3 = Vector3.ZERO
@@ -124,12 +94,11 @@ var knockback_velocity: Vector3 = Vector3.ZERO
 # Referencia opcional a efectos de pantalla
 var screen_fx: Node = null
 
-# Posición original del grip.
-# La guardamos para poder volver exactamente al lugar correcto.
-var grip_base_position: Vector3
-
+# Tweens del dash smear
 var dash_smear_tween: Tween
 var dash_smear_spawn_timer: float = 0.0
+
+# Intervalo de spawn entre ghosts del dash
 @export var dash_smear_spawn_interval: float = 0.03
 
 # =========================
@@ -139,26 +108,23 @@ var dash_smear_spawn_timer: float = 0.0
 # Señal para avisar de que el HP cambió
 signal hp_changed(current_hp: int, max_hp: int)
 
-# Señal cuando usa una skill
+# Señal cuando usa una skill / arma
 signal skill_used(slot_name: String)
 
 func _ready() -> void:
-	# Skills
+	# Skills / progreso
 	progress.skill_unlocked.connect(_on_skill_unlocked)
-	
+
 	# Vida inicial
 	hp = max_hp
 	hp_changed.emit(hp, max_hp)
-	
+
 	# Buscar una referencia opcional al nodo de efectos de pantalla
 	screen_fx = get_tree().get_first_node_in_group("screen_fx")
 
-	# Guardar la posición base del grip al iniciar
-	grip_base_position = weapon_grip.position
-	
-	# Guardar la posición de la rotación de la lámpara
+	# Guardar la rotación base de la lámpara
 	lamp_base_rotation = light_sprite.rotation
-	
+
 	# Arranca en idle
 	anim_sprite.play("Idle")
 
@@ -174,19 +140,19 @@ func _physics_process(delta: float) -> void:
 	# INPUT BASE
 	# =========================
 	var input_dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-	
+
 	if input_dir.length_squared() > 0.0:
 		last_input_dir = input_dir.normalized()
 
 	# Actualizar dirección hacia el mouse primero,
-	# así aim_dir ya está fresco para el dash.
+	# así aim_dir ya está fresco tanto para el dash como para las armas.
 	update_cursor()
 	update_pivot_light()
 
 	# =========================
 	# INPUT DASH
 	# =========================
-	if Input.is_action_just_pressed("skill_3"):
+	if Input.is_action_just_pressed("dash"):
 		var dash_dir := get_dash_direction_to_mouse()
 		dash_skill.try_use(self, stamina, dash_dir)
 
@@ -196,14 +162,14 @@ func _physics_process(delta: float) -> void:
 	if is_dashing:
 		dash_timer -= delta
 		dash_smear_spawn_timer -= delta
-		
+
 		if dash_smear_spawn_timer <= 0.0:
 			dash_smear_spawn_timer = dash_smear_spawn_interval
 			spawn_dash_smear_ghost(dash_velocity.normalized())
-			
+
 		velocity = dash_velocity
 		move_and_slide()
-		
+
 		if dash_timer <= 0.0:
 			is_dashing = false
 			dash_velocity = Vector3.ZERO
@@ -215,56 +181,70 @@ func _physics_process(delta: float) -> void:
 		velocity = move_velocity + knockback_velocity
 		move_and_slide()
 
-	# Rotación de la lámpara
+	# Rotación / balanceo de la lámpara
 	update_lamp_swing(delta, input_dir)
 
 	# El knockback se frena gradualmente
 	knockback_velocity = knockback_velocity.move_toward(Vector3.ZERO, knockback_drag * delta)
 
-	# Input de ataque
-	if Input.is_action_just_pressed("attack") and not is_dashing:
-		start_attack()
+	# =========================
+	# INPUT DE ATAQUE
+	# =========================
+	# Ataque principal: facón, siempre disponible
+	if Input.is_action_just_pressed("facon") and not is_dashing:
+		weapon_component.try_primary_attack()
 
-	# Actualizar visual del arma según el estado
-	if is_attacking:
-		update_trail()
-		update_weapon_attack()
-	else:
-		update_weapon_idle()
+	# Ataque secundario: escopeta, solo si fue aprendida
+	# Acá asumimos que shotgun está mapeado al click derecho o tecla secundaria.
+	if Input.is_action_just_pressed("escopeta") and not is_dashing:
+		weapon_component.try_secondary_attack()
 
-	# Si no está atacando, usar animación de caminar/idle
-	if not is_attacking and not is_dashing:
+	# =========================
+	# VISUAL DEL ARMA
+	# =========================
+	# Cuando no está atacando, el arma acompaña el cursor.
+	# Durante el ataque, el propio WeaponComponent controla el swing.
+	weapon_component.update_weapon_idle()
+
+	# =========================
+	# ANIMACIÓN DEL PERSONAJE
+	# =========================
+	# Si no está atacando ni dashing, usar animación de caminar/idle.
+	if not weapon_component.is_attacking and not is_dashing:
 		update_animation(input_dir)
-		
+
+
 func start_dash(direction: Vector3, distance: float, duration: float) -> void:
 	is_dashing = true
 	dash_timer = duration
 	dash_smear_spawn_timer = 0.0
-	
+
 	var dash_speed := distance / duration
 	dash_velocity = direction * dash_speed
-	
+
 	# Opcional: cancelar knockback al arrancar dash
 	knockback_velocity = Vector3.ZERO
 
 	play_dash_smear(direction)
 
+
 func get_dash_direction(input_dir: Vector2) -> Vector3:
 	if input_dir.length_squared() > 0.0:
 		last_input_dir = input_dir.normalized()
 		return Vector3(input_dir.x, 0.0, input_dir.y).normalized()
-	
+
 	if last_input_dir.length_squared() > 0.0:
 		return Vector3(last_input_dir.x, 0.0, last_input_dir.y).normalized()
-	
+
 	return -global_transform.basis.z.normalized()
 
+
 func get_dash_direction_to_mouse() -> Vector3:
-	# aim_dir ya se actualiza en update_cursor() a partir de la posición del mouse
-	# proyectada sobre el plano del suelo.
+	# aim_dir se actualiza en update_cursor()
 	if aim_dir.length_squared() > 0.0001:
 		return aim_dir.normalized()
 	return Vector3.ZERO
+
 
 func update_cursor() -> void:
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -308,130 +288,24 @@ func apply_knockback(dir: Vector3, force: float = 4.5) -> void:
 	knockback_velocity = dir.normalized() * force
 
 
-func update_weapon_idle() -> void:
-	# En reposo, el arma acompaña la dirección del cursor
-	weapon_pivot.rotation.y = aim_angle
-	weapon_sprite.position = Vector3(0.0, 0.0, weapon_radius)
-
-
-func start_attack() -> void:
-	# No permitir atacar si está muerto
+func apply_shotgun_recoil(dir: Vector3, force: float = 3.0) -> void:
+	# Si está muerto, ignoramos recoil nuevo
 	if is_dead:
 		return
 
-	# Si había un tween de swing anterior, cancelarlo
-	if attack_tween and attack_tween.is_valid():
-		attack_tween.kill()
-
-	# Si había un tween del grip anterior, cancelarlo
-	if grip_tween and grip_tween.is_valid():
-		grip_tween.kill()
-
-	clear_trail()
-
-	is_attacking = true
-	attack_base_angle = aim_angle
-	
-	# Señal de que está usando skill 1 (facón)
-	skill_used.emit("skill_1")
-
-	# Empujar el grip hacia adelante con un tween corto.
-	# Esto le da al ataque una sensación de "avance" o "peso".
-	grip_tween = create_tween()
-	grip_tween.set_trans(Tween.TRANS_QUAD)
-	grip_tween.set_ease(Tween.EASE_OUT)
-	grip_tween.tween_property(
-		weapon_grip,
-		"position",
-		grip_base_position + Vector3(0.0, 0.0, grip_attack_offset_z),
-		grip_push_duration
-	)
-
-	# Reproducir animación de ataque
-	anim_sprite.play("Attack")
-
-	var half_arc = deg_to_rad(swing_arc_deg) * 0.5
-	var start_angle: float
-	var end_angle: float
-
-	# Elegir sentido del swing según hacia qué lado apunta
-	swing_side = -1.0 if aim_dir.x >= 0.0 else 1.0
-
-	if swing_side > 0.0:
-		start_angle = attack_base_angle - half_arc
-		end_angle = attack_base_angle + half_arc
-	else:
-		start_angle = attack_base_angle + half_arc
-		end_angle = attack_base_angle - half_arc
-
-	# Colocar el arma en el inicio del swing
-	update_weapon_swing(start_angle)
-
-	var tween = create_tween()
-	attack_tween = tween
-
-	# Ida del slash
-	tween.set_trans(Tween.TRANS_CUBIC)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_method(update_weapon_swing, start_angle, end_angle, swing_duration)
-
-	# Vuelta al centro
-	tween.set_trans(Tween.TRANS_QUAD)
-	tween.set_ease(Tween.EASE_IN)
-	tween.tween_method(update_weapon_swing, end_angle, attack_base_angle, return_duration)
-
-	# Activar hitbox un poco después de iniciar el swing
-	await get_tree().create_timer(0.05).timeout
-	if is_dead:
-		return
-	attack_hitbox.begin_attack()
-
-	# Desactivar hitbox un rato después
-	await get_tree().create_timer(0.1).timeout
-	if is_dead:
-		return
-	attack_hitbox.end_attack()
-
-	# Esperar a que termine el swing completo
-	await tween.finished
-
-	# Si murió durante el ataque, cortar acá
-	if is_dead:
+	# Si está dashing, mejor no sumar recoil
+	# para no mezclar dos impulsos fuertes.
+	if is_dashing:
 		return
 
-	clear_trail()
-	is_attacking = false
+	dir.y = 0.0
 
-	# Devolver el grip suavemente a su posición original
-	if grip_tween and grip_tween.is_valid():
-		grip_tween.kill()
+	if dir.length_squared() <= 0.0001:
+		return
 
-	grip_tween = create_tween()
-	grip_tween.set_trans(Tween.TRANS_QUAD)
-	grip_tween.set_ease(Tween.EASE_OUT)
-	grip_tween.tween_property(
-		weapon_grip,
-		"position",
-		grip_base_position,
-		grip_return_duration
-	)
-
-
-func update_weapon_attack() -> void:
-	# El tween del swing ya se encarga del movimiento principal del arma.
-	# Esta función queda libre para sumar después:
-	# - partículas
-	# - brillo
-	# - smear
-	# - rotación extra del sprite
-	pass
-
-
-func update_weapon_swing(angle: float) -> void:
-	# El pivot rota alrededor del player y el sprite se mantiene a una
-	# distancia fija definida por weapon_radius
-	weapon_pivot.rotation.y = angle
-	weapon_sprite.position = Vector3(0.0, 0.0, weapon_radius)
+	# En vez de pisar completamente el knockback actual,
+	# sumamos un impulso corto.
+	knockback_velocity += dir.normalized() * force
 
 
 func update_animation(input_dir: Vector2) -> void:
@@ -447,69 +321,27 @@ func update_animation(input_dir: Vector2) -> void:
 			anim_sprite.play("Idle")
 
 
-func get_weapon_tip_position() -> Vector3:
-	return weapon_tip.global_transform.origin
-
-
-func update_trail() -> void:
-	var pos3d = get_weapon_tip_position()
-
-	# Si el tip del arma está detrás de la cámara, no dibujar trail
-	if camera.is_position_behind(pos3d):
-		return
-
-	var pos2d = camera.unproject_position(pos3d)
-	trail_points.push_front(pos2d)
-
-	if trail_points.size() > trail_max_points:
-		trail_points.pop_back()
-
-	trail.points = PackedVector2Array(trail_points)
-
-
-func clear_trail() -> void:
-	trail_points.clear()
-	trail.points = PackedVector2Array()
-
-
 func die() -> void:
 	# Evitar ejecutar la muerte más de una vez
 	if is_dead:
 		return
 
 	is_dead = true
-	is_attacking = false
 
 	# Frenar completamente el movimiento
 	velocity = Vector3.ZERO
 	knockback_velocity = Vector3.ZERO
 
-	# Limpiar efectos visuales del ataque
-	clear_trail()
-
-	# Cancelar tween del swing si seguía activo
-	if attack_tween and attack_tween.is_valid():
-		attack_tween.kill()
-
-	# Cancelar tween del grip si seguía activo
-	if grip_tween and grip_tween.is_valid():
-		grip_tween.kill()
-
-	# Asegurarnos de que el grip vuelva a su posición base
-	# por si murió en medio del ataque
-	weapon_grip.position = grip_base_position
-
-	# Apagar hitbox por seguridad
-	if attack_hitbox.has_method("end_attack"):
-		attack_hitbox.end_attack()
+	# Delegar al componente el apagado visual / lógico del arma
+	weapon_component.cancel_attack_visuals()
 
 	# Ocultar el arma completa al morir
 	weapon_pivot.visible = false
-	
+
 	# Ocultar lámpara al morir
 	light_sprite.visible = false
 
-	# Opcional: ocultar el cursor para que no siga "apuntando"
+	# Ocultar cursor para que no siga "apuntando"
 	cursor.visible = false
 
 	# Reproducir animación de muerte
@@ -538,42 +370,51 @@ func take_damage(amount: int) -> void:
 	if hp <= 0:
 		die()
 
+
 func update_pivot_light() -> void:
-	# Mueve la luz de la lámpara junto con la posición del mouse
-	var offset := Vector3(0.0, 0.8, weapon_radius)
+	# Mueve la luz de la lámpara junto con la posición del mouse.
+	# El facón sigue siendo el arma visual base, así que el componente
+	# devuelve el radio de reposo correspondiente.
+	var offset := Vector3(0.0, 0.8, weapon_component.get_current_weapon_radius())
 	offset = offset.rotated(Vector3.UP, aim_angle)
 	weapon_light.position = offset
+
 
 func update_lamp_swing(delta: float, input_dir: Vector2) -> void:
 	# Si está muerto, que vuelva a la posición normal
 	if is_dead:
-		
-		rotation = light_sprite.rotation.lerp(lamp_base_rotation, lamp_return_speed * delta)
+		light_sprite.rotation = light_sprite.rotation.lerp(lamp_base_rotation, lamp_return_speed * delta)
 		return
 
 	# Si el player se está moviendo, aplicamos balanceo
 	if input_dir.length() > 0.0:
 		lamp_swing_time += delta * lamp_swing_speed
+
 		# Balanceo con seno
 		var swing_angle_rad = deg_to_rad(lamp_swing_angle_deg) * sin(lamp_swing_time)
+
 		# Partimos de la rotación base
-		var target_rotation = lamp_base_rotation
+		var target_rotation := lamp_base_rotation
+
 		# Balancear en Z
 		target_rotation.z += swing_angle_rad
+
 		# Interpolación suave para evitar rigidez
 		light_sprite.rotation = light_sprite.rotation.lerp(target_rotation, 10.0 * delta)
 	else:
 		# Si no se mueve, volver suavemente al centro
 		light_sprite.rotation = light_sprite.rotation.lerp(lamp_base_rotation, lamp_return_speed * delta)
 
+
 func _on_skill_unlocked(slot_name: String) -> void:
 	match slot_name:
-		"skill_2":
-			pass
-		"skill_3":
+		"shotgun":
+			weapon_component.learn_shotgun()
+		"dash":
 			dash_skill.learn()
 		"skill_4":
 			pass
+
 
 func play_dash_smear(direction: Vector3) -> void:
 	if dash_smear_tween and dash_smear_tween.is_valid():
@@ -603,6 +444,7 @@ func play_dash_smear(direction: Vector3) -> void:
 	await dash_smear_tween.finished
 	dash_smear.visible = false
 	dash_smear.top_level = false
+
 
 func spawn_dash_smear_ghost(direction: Vector3) -> void:
 	var dir := direction.normalized()

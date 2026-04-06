@@ -19,14 +19,14 @@ enum State {
 	DEAD
 }
 
-@export var max_hp: int = 5
+@export var max_hp: int = 1
 @export var move_speed: float = 1.8
 @export var attack_range: float = 1.2
 @export var attack_damage: int = 1
 @export var attack_cooldown: float = 0.8
 @export var knockback_force: float = 7
 @export var can_chase: bool = true
-@export var exp_reward: int = 120
+@export var exp_reward: int = 260
 @export var points_reward: int = exp_reward * 10
 
 @export_range(0.0, 1.0, 0.01) var min_visibility: float = 0.2

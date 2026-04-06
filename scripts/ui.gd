@@ -17,8 +17,8 @@ extends Control
 @onready var stamina_bar: TextureProgressBar = $BottomCenterUI/StaminaBar
 
 @onready var skill_1: Control = $BottomLeftUI/SkillsContainer/Skill1
-@onready var skill_2: Control = $BottomLeftUI/SkillsContainer/Skill2
-@onready var skill_3: Control = $BottomLeftUI/SkillsContainer/Skill3
+@onready var shotgun: Control = $BottomLeftUI/SkillsContainer/Skill2
+@onready var slot_dash: Control = $BottomLeftUI/SkillsContainer/Skill3
 @onready var skill_4: Control = $BottomLeftUI/SkillsContainer/Skill4
 
 @onready var level_indicator: Control = $BottomRightUI/Container/Nivel
@@ -43,7 +43,6 @@ var boss_time_left: float = 328.0
 # Lo guardamos para poder cortar el tween anterior si entra XP de nuevo enseguida.
 var exp_tween: Tween
 var squish_tween: Tween
-
 # -----------------------------------------------------------------------------
 # Ciclo de vida
 # -----------------------------------------------------------------------------
@@ -72,6 +71,9 @@ func _ready() -> void:
 		)
 
 	# Skills
+
+
+	# Señal cuando usa una skill / arma
 	player.skill_used.connect(_on_player_skill_used)
 	player.progress.skill_unlocked.connect(_on_player_skill_unlocked)
 	_refresh_skill_ui()
@@ -223,11 +225,10 @@ func _on_score_changed(new_score: int) -> void:
 func _on_player_skill_unlocked(slot_name: String) -> void:
 	# Activa visualmente el slot correspondiente cuando el player lo desbloquea.
 	match slot_name:
-		"skill_2":
-			skill_2.set_unlocked(true)
-		"skill_3":
-			skill_3.set_unlocked(true)
-			stamina_bar.visible = true
+		"shotgun":
+			shotgun.set_unlocked(true)
+		"dash":
+			slot_dash.set_unlocked(true)
 		"skill_4":
 			skill_4.set_unlocked(true)
 
@@ -236,16 +237,15 @@ func _on_player_skill_used(slot_name: String) -> void:
 	match slot_name:
 		"skill_1":
 			skill_1.play_use_squish()
-		"skill_2":
-			skill_2.play_use_squish()
-		"skill_3":
-			skill_3.play_use_squish()
+		"shotgun":
+			shotgun.play_use_squish()
+		"dash":
+			slot_dash.play_use_squish()
 		"skill_4":
 			skill_4.play_use_squish()
 
 func _refresh_skill_ui() -> void:
 	# Sincroniza el estado visual de skills ya desbloqueadas al iniciar la escena.
-	skill_2.set_unlocked(player.progress.unlocked_skills.get("skill_2", false))
-	skill_3.set_unlocked(player.progress.unlocked_skills.get("skill_3", false))
+	shotgun.set_unlocked(player.progress.unlocked_skills.get("shotgun", false))
+	slot_dash.set_unlocked(player.progress.unlocked_skills.get("dash", false))
 	skill_4.set_unlocked(player.progress.unlocked_skills.get("skill_4", false))
-	stamina_bar.visible = player.progress.unlocked_skills.get("skill_3", false)

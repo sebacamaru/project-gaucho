@@ -25,8 +25,8 @@ signal skill_unlocked(slot_name: String)
 @export var max_level: int = 99
 
 var unlocked_skills := {
-	"skill_2": false,
-	"skill_3": false,
+	"shotgun": false,
+	"dash": false,
 	"skill_4": false
 }
 
@@ -62,10 +62,6 @@ func add_xp(amount: int) -> void:
 	while level < max_level and current_xp >= get_xp_to_next_level():
 		current_xp -= get_xp_to_next_level()
 		level += 1
-		
-		# Testing
-		if level == 2:
-			unlock_skill("skill_3")
 
 		level_changed.emit(level)
 		level_up.emit(level)

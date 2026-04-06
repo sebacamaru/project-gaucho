@@ -26,6 +26,7 @@
 [ext_resource type="Texture2D" uid="uid://bbu47tyqwu6s2" path="res://ui/bg-level.png" id="23_1u8w0"]
 [ext_resource type="Texture2D" uid="uid://bupk3vwnn71vi" path="res://ui/bg-demonios.png" id="24_0odxb"]
 [ext_resource type="Texture2D" uid="uid://c5vy1i1x15ipw" path="res://ui/bg-points.png" id="25_lswn8"]
+[ext_resource type="Script" uid="uid://cm80n46eknbiu" path="res://ui/level_up_panel.gd" id="26_a6jrf"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -561,7 +562,6 @@ texture_under = ExtResource("13_vivmo")
 texture_progress = ExtResource("15_2cqfq")
 
 [node name="StaminaBar" type="TextureProgressBar" parent="HUD/CanvasLayer/UI/BottomCenterUI" unique_id=1147178310]
-visible = false
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -736,12 +736,221 @@ text = "000000089"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="LevelUpPanel" type="Control" parent="HUD/CanvasLayer" unique_id=550018480]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("11_dg77c")
+script = ExtResource("26_a6jrf")
+
+[node name="Panel" type="Panel" parent="HUD/CanvasLayer/LevelUpPanel" unique_id=1384850118]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -290.0
+offset_top = -220.0
+offset_right = 290.0
+offset_bottom = 158.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel" unique_id=965775730]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer" unique_id=2135395975]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7647059, 0.29411766, 0.972549, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 30
+text = "¡Subiste a NIVEL 2!"
+horizontal_alignment = 1
+
+[node name="Descripcion" type="Label" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer" unique_id=1072691448]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.4392157)
+theme_override_font_sizes/font_size = 16
+text = "Elegí una mejora:"
+horizontal_alignment = 1
+
+[node name="Options" type="HBoxContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer" unique_id=908843518]
+custom_minimum_size = Vector2(0, 340)
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Button1" type="Button" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options" unique_id=1133970071]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button1" unique_id=233316440]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button1/PanelContainer" unique_id=1163620006]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button1/PanelContainer/MarginContainer" unique_id=896996588]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button1/PanelContainer/MarginContainer/VBoxContainer" unique_id=1636081123]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+texture = ExtResource("15_ryguw")
+stretch_mode = 3
+
+[node name="Title" type="Label" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button1/PanelContainer/MarginContainer/VBoxContainer" unique_id=1221557112]
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7529412)
+theme_override_font_sizes/font_size = 18
+text = "Dash"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="Description" type="Label" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button1/PanelContainer/MarginContainer/VBoxContainer" unique_id=1500094422]
+custom_minimum_size = Vector2(0, 130)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.8392157)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "Permite hacer un dash para escapar de los enemigos rápidamente."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Button2" type="Button" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options" unique_id=1434071311]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button2" unique_id=1019936081]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button2/PanelContainer" unique_id=1658447398]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button2/PanelContainer/MarginContainer" unique_id=1304281587]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button2/PanelContainer/MarginContainer/VBoxContainer" unique_id=1122158947]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+texture = ExtResource("15_ryguw")
+stretch_mode = 3
+
+[node name="Title" type="Label" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button2/PanelContainer/MarginContainer/VBoxContainer" unique_id=392147864]
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7529412)
+theme_override_font_sizes/font_size = 18
+text = "Dash"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="Description" type="Label" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button2/PanelContainer/MarginContainer/VBoxContainer" unique_id=501036949]
+custom_minimum_size = Vector2(0, 130)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.8392157)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "Permite hacer un dash para escapar de los enemigos rápidamente."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Button3" type="Button" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options" unique_id=364793484]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button3" unique_id=964023707]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button3/PanelContainer" unique_id=1174738812]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button3/PanelContainer/MarginContainer" unique_id=1932291073]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button3/PanelContainer/MarginContainer/VBoxContainer" unique_id=2090332887]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+texture = ExtResource("15_ryguw")
+stretch_mode = 3
+
+[node name="Title" type="Label" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button3/PanelContainer/MarginContainer/VBoxContainer" unique_id=907930835]
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7529412)
+theme_override_font_sizes/font_size = 18
+text = "Dash"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="Description" type="Label" parent="HUD/CanvasLayer/LevelUpPanel/Panel/VBoxContainer/Options/Button3/PanelContainer/MarginContainer/VBoxContainer" unique_id=852178543]
+custom_minimum_size = Vector2(0, 130)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.8392157)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "Permite hacer un dash para escapar de los enemigos rápidamente."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
 [node name="Enemy" parent="." unique_id=740511559 instance=ExtResource("9_kek77")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3140539, 0.02, 2.8836334)
 can_chase = false
 
 [node name="Enemy2" parent="." unique_id=513251102 instance=ExtResource("9_kek77")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.674326, 0.02, 2.0326214)
+can_chase = false
 
 [node name="Enemy3" parent="." unique_id=538971288 instance=ExtResource("9_kek77")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.24584, 0.02, 8.619416)
+can_chase = false
