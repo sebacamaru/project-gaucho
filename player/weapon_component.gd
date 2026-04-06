@@ -2,65 +2,66 @@ extends Node
 class_name WeaponComponent
 
 # Este componente centraliza la lógica de combate del player.
-# En esta versión:
-# - El facón es el ataque primario y siempre está disponible
-# - La escopeta es el ataque secundario y solo funciona si fue aprendida
-# - El facón y la escopeta consumen la barra completa de stamina
-# - La recuperación de stamina depende de los stats de cada acción
 #
-# Además:
-# - Si la escopeta fue aprendida, se muestra equipada en la espalda
-# - Al disparar, la escopeta frontal arranca desde la pose de la espalda
-# - Luego hace la transición hasta la pose frontal que ya venías usando
-# - Después vuelve a la espalda y reaparece el facón
+# Diseño actual:
+# - Facón:
+#   - ataque primario
+#   - NO usa stamina
+#   - tiene cooldown propio
+#
+# - Escopeta:
+#   - ataque secundario en 2 fases
+#   - mantener botón derecho = apuntar
+#   - soltar botón derecho = consumir stamina y disparar
+#
+# Objetivos de esta versión:
+# - que el facón siga siendo rápido y divertido
+# - que dash / escopeta no bloqueen el facón por culpa de la stamina
+# - mantener la escopeta como ataque más pesado y comprometido
 
 signal attack_started(weapon_name: String)
 signal attack_finished(weapon_name: String)
 
-# =========================
+# =========================================================
 # CONFIGURACIÓN GENERAL
-# =========================
+# =========================================================
 
-# Cantidad máxima de puntos del trail del facón.
 @export var trail_max_points: int = 8
-
-# Nivel actual del facón.
 @export var facon_level: int = 1
-
-# Si la escopeta fue aprendida o no.
 @export var shotgun_unlocked: bool = false
-
-# Si skill boleadoras fue aprendida o no.
 @export var boleadoras_unlocked: bool = false
 
-# =========================
+# =========================================================
 # ESTADO INTERNO
-# =========================
+# =========================================================
 
-# Indica si hay un ataque en ejecución.
+# Indica si hay una acción ofensiva real en ejecución.
+# Ejemplo:
+# - swing del facón
+# - secuencia de disparo de la escopeta
 var is_attacking: bool = false
 
-# Tween principal del swing del facón.
-var attack_tween: Tween = null
+# Indica si la escopeta está en modo apuntado.
+# Mientras esto sea true:
+# - la escopeta frontal está visible
+# - sigue al mouse
+# - todavía no consumió stamina
+var is_shotgun_aiming: bool = false
 
-# Tween para empujar / devolver el grip.
+# Cooldown propio del facón.
+# Es independiente de la stamina.
+var facon_cooldown_timer: float = 0.0
+
+var attack_tween: Tween = null
 var grip_tween: Tween = null
 
-# Cooldown global antes de poder volver a atacar.
-# Hoy quedó más como lock técnico que como regla principal.
-var cooldown_timer: float = 0.0
-
-# Puntos 2D usados para dibujar el trail del facón.
 var trail_points: Array[Vector2] = []
 
-# Posición base del grip al iniciar.
 var grip_base_position: Vector3
-
-# Rotación base del grip al iniciar.
 var grip_base_rotation: Vector3
 
-# Pose global temporal del arma en la espalda.
-# La usamos para que la escopeta frontal "nazca" desde ahí.
+# Pose global temporal de la escopeta en la espalda.
+# La usamos como punto inicial / final visual.
 var shotgun_back_global_transform: Transform3D
 
 # Datos del golpe actualmente activo del facón.
@@ -68,15 +69,16 @@ var shotgun_back_global_transform: Transform3D
 var current_attack_damage: int = 0
 var current_attack_knockback: float = 0.0
 
-# =========================
+# =========================================================
 # STATS BASE DEL FACÓN
-# =========================
+# =========================================================
 
+# Nota:
+# Sacamos todo lo relacionado a stamina.
+# El facón ahora se regula con cooldown propio.
 var facon_base_stats := {
 	"damage": 1,
 	"knockback": 4.5,
-	"stamina_recharge_rate": 180.0,
-	"stamina_recovery_delay": 0.0,
 	"swing_arc_deg": 180.0,
 	"swing_duration": 0.40,
 	"return_duration": 0.04,
@@ -86,11 +88,15 @@ var facon_base_stats := {
 	"grip_return_duration": 0.10,
 	"hitbox_start_delay": 0.05,
 	"hitbox_active_time": 0.10,
+
+	# Cooldown posterior al ataque.
+	# Empieza cuando termina el facón.
+	"cooldown": 0.10,
 }
 
-# =========================
+# =========================================================
 # STATS BASE DE LA ESCOPETA
-# =========================
+# =========================================================
 
 var shotgun_base_stats := {
 	"damage": 2,
@@ -100,69 +106,88 @@ var shotgun_base_stats := {
 	"range": 5.0,
 	"cone_angle_deg": 55.0,
 	"windup": 0.08,
-
-	# Tiempo de desenfunde visual.
 	"draw_duration": 0.18,
-
-	# Tiempo para volver a guardarla.
 	"holster_duration": 0.18,
 }
 
-# =========================
+# =========================================================
 # REFERENCIAS
-# =========================
+# =========================================================
 
 @onready var player := get_parent()
 @onready var camera: Camera3D = player.get_viewport().get_camera_3d()
 
-# Pivot / grip frontal del arma usada activamente.
 @onready var weapon_pivot: Node3D = player.get_node("Weapon")
 @onready var weapon_grip: Node3D = player.get_node("Weapon/Grip")
 
-# Visuals frontales.
 @onready var facon_sprite: Sprite3D = player.get_node("Weapon/Grip/FaconSprite3D")
 @onready var shotgun_front_sprite: Sprite3D = player.get_node("Weapon/Grip/ShotgunSprite3D")
 
-# Escopeta "equipada" en la espalda.
 @onready var shotgun_back_pivot: Node3D = player.get_node("Sprites/ShotgunPivot")
 @onready var shotgun_back_sprite: Sprite3D = player.get_node("Sprites/ShotgunPivot/ShotgunSprite3D")
 
-# Markers / hitbox.
 @onready var shotgun_muzzle: Marker3D = player.get_node("Weapon/Grip/Muzzle")
 @onready var weapon_tip: Marker3D = player.get_node("Weapon/Grip/Tip")
 @onready var attack_hitbox: Area3D = player.get_node("Weapon/Grip/AttackHitbox")
 
-# VFX / animación.
 @onready var trail: Line2D = player.get_node("Trail")
 @onready var anim_sprite: AnimatedSprite3D = player.get_node("Sprites/AnimatedSprite3D")
 @onready var muzzle_flash: Sprite3D = player.get_node("Weapon/Grip/Muzzle/MuzzleFlash")
 @onready var muzzle_flash_light: OmniLight3D = player.get_node("Weapon/Grip/Muzzle/MuzzleFlashLight")
 @onready var muzzle_smoke: Sprite3D = player.get_node("Weapon/Grip/Muzzle/MuzzleSmoke")
+@onready var shotgun_preview: ShotgunPreview = player.get_node("ShotgunPreview")
+
 
 func _ready() -> void:
 	if muzzle_flash_light:
 		muzzle_flash_light.light_energy = 0.0
-	
+
+	# Configuramos el preview visual de la escopeta
+	# usando los mismos stats reales del arma.
+	if shotgun_preview:
+		var shotgun_stats := get_shotgun_stats()
+		shotgun_preview.configure(
+			float(shotgun_stats["range"]),
+			float(shotgun_stats["cone_angle_deg"])
+		)
+
 	grip_base_position = weapon_grip.position
+	grip_base_rotation = weapon_grip.rotation
 
 	show_facon_visual()
 	update_shotgun_back_visual()
 
 
 func _physics_process(delta: float) -> void:
-	if cooldown_timer > 0.0:
-		cooldown_timer = max(cooldown_timer - delta, 0.0)
+	# Cooldown propio del facón.
+	if facon_cooldown_timer > 0.0:
+		facon_cooldown_timer = max(facon_cooldown_timer - delta, 0.0)
 
 	# Solo el facón usa trail.
 	if is_attacking and current_attack_damage > 0:
 		update_trail()
 
+	# Mientras estamos apuntando con la escopeta,
+	# actualizamos la pose continuamente para que siga al mouse.
+	if is_shotgun_aiming:
+		update_shotgun_aim_pose()
+		update_shotgun_preview()
 
-func can_attack() -> bool:
+
+# =========================================================
+# VALIDACIONES DE USO
+# =========================================================
+
+# Chequeo específico del facón.
+# No depende de stamina.
+func can_start_facon_attack() -> bool:
 	if is_attacking:
 		return false
 
-	if cooldown_timer > 0.0:
+	if is_shotgun_aiming:
+		return false
+
+	if facon_cooldown_timer > 0.0:
 		return false
 
 	if player.is_dead:
@@ -171,50 +196,32 @@ func can_attack() -> bool:
 	return true
 
 
+# Chequeo específico de la escopeta.
+# La escopeta sí sigue atada a la stamina.
+func can_start_shotgun_action() -> bool:
+	if is_attacking:
+		return false
+
+	if is_shotgun_aiming:
+		return false
+
+	if player.is_dead:
+		return false
+
+	return true
+
+
+# =========================================================
+# FACÓN
+# =========================================================
+
 func try_primary_attack() -> bool:
-	var stats := get_facon_stats()
-
-	# Facón: siempre disponible.
-	if not can_attack():
+	# El facón ya no usa stamina.
+	if not can_start_facon_attack():
 		return false
-
-	if player.stamina == null or not player.stamina.is_full():
-		return false
-
-	player.stamina.empty_and_configure_recovery(
-		float(stats["stamina_recharge_rate"]),
-		float(stats["stamina_recovery_delay"])
-	)
 
 	start_facon_attack()
 	return true
-
-
-func try_secondary_attack() -> bool:
-	var stats := get_shotgun_stats()
-
-	# Escopeta: solo si fue aprendida.
-	if not shotgun_unlocked:
-		return false
-
-	if not can_attack():
-		return false
-
-	if player.stamina == null or not player.stamina.is_full():
-		return false
-
-	player.stamina.empty_and_configure_recovery(
-		float(stats["stamina_recharge_rate"]),
-		float(stats["stamina_recovery_delay"])
-	)
-
-	start_shotgun_attack()
-	return true
-
-
-func learn_shotgun() -> void:
-	shotgun_unlocked = true
-	update_shotgun_back_visual()
 
 
 func get_facon_stats() -> Dictionary:
@@ -227,54 +234,16 @@ func get_facon_stats() -> Dictionary:
 			stats["damage"] += 1
 		3:
 			stats["damage"] += 1
-			stats["stamina_recharge_rate"] = 220.0
+			stats["cooldown"] = 0.08
 		4:
 			stats["swing_arc_deg"] += 20.0
 		5:
 			stats["damage"] += 2
-			stats["stamina_recharge_rate"] = 260.0
 			stats["knockback"] += 0.5
+			stats["cooldown"] = 0.06
 
 	return stats
 
-
-func get_shotgun_stats() -> Dictionary:
-	var stats: Dictionary = shotgun_base_stats.duplicate()
-	return stats
-
-
-func get_current_weapon_radius() -> float:
-	# Como el facón es el arma base visual, devolvemos su radio.
-	return float(get_facon_stats()["weapon_radius"])
-
-
-func level_up_facon() -> void:
-	facon_level += 1
-
-
-func get_current_attack_damage() -> int:
-	return current_attack_damage
-
-
-func get_current_attack_knockback() -> float:
-	return current_attack_knockback
-
-
-func get_current_attack_direction(target_global_position: Vector3) -> Vector3:
-	var dir: Vector3 = target_global_position - player.global_position
-	dir.y = 0.0
-
-	if dir.length_squared() <= 0.0001:
-		if player.aim_dir.length_squared() > 0.0001:
-			return player.aim_dir.normalized()
-		return -player.global_transform.basis.z.normalized()
-
-	return dir.normalized()
-
-
-# =========================================================
-# FACÓN
-# =========================================================
 
 func start_facon_attack() -> void:
 	var stats := get_facon_stats()
@@ -294,9 +263,10 @@ func start_facon_attack() -> void:
 	player.skill_used.emit("skill_1")
 	attack_started.emit("facon")
 
-	# Al usar facón, mostramos el arma frontal correcta.
+	# Visual frontal del facón
 	show_facon_visual()
 
+	# Pequeño empuje hacia adelante del grip.
 	grip_tween = create_tween()
 	grip_tween.set_trans(Tween.TRANS_QUAD)
 	grip_tween.set_ease(Tween.EASE_OUT)
@@ -312,10 +282,11 @@ func start_facon_attack() -> void:
 	var attack_base_angle: float = player.aim_angle
 	var aim_dir: Vector3 = player.aim_dir
 
-	var half_arc := deg_to_rad(float(stats["swing_arc_deg"])) * 0.5
+	var half_arc: float = deg_to_rad(float(stats["swing_arc_deg"])) * 0.5
 	var start_angle: float
 	var end_angle: float
 
+	# Elegimos lado del swing según hacia dónde mira el jugador.
 	var swing_side := -1.0 if aim_dir.x >= 0.0 else 1.0
 
 	if swing_side > 0.0:
@@ -330,6 +301,7 @@ func start_facon_attack() -> void:
 	var tween := create_tween()
 	attack_tween = tween
 
+	# Ida del golpe.
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.set_ease(Tween.EASE_OUT)
 	tween.tween_method(
@@ -340,6 +312,7 @@ func start_facon_attack() -> void:
 		float(stats["swing_duration"])
 	)
 
+	# Vuelta rápida.
 	tween.set_trans(Tween.TRANS_QUAD)
 	tween.set_ease(Tween.EASE_IN)
 	tween.tween_method(
@@ -350,6 +323,7 @@ func start_facon_attack() -> void:
 		float(stats["return_duration"])
 	)
 
+	# Activamos hitbox en la ventana útil del golpe.
 	await get_tree().create_timer(float(stats["hitbox_start_delay"])).timeout
 	if player.is_dead:
 		_finish_attack_state()
@@ -373,6 +347,7 @@ func start_facon_attack() -> void:
 
 	clear_trail()
 
+	# Volvemos el grip a su pose base.
 	if grip_tween and grip_tween.is_valid():
 		grip_tween.kill()
 
@@ -387,6 +362,10 @@ func start_facon_attack() -> void:
 	)
 
 	_finish_attack_state()
+
+	# Recién al terminar, arrancamos el cooldown propio del facón.
+	facon_cooldown_timer = float(stats["cooldown"])
+
 	attack_finished.emit("facon")
 
 
@@ -394,8 +373,32 @@ func start_facon_attack() -> void:
 # ESCOPETA
 # =========================================================
 
-func start_shotgun_attack() -> void:
-	var stats := get_shotgun_stats()
+func get_shotgun_stats() -> Dictionary:
+	var stats: Dictionary = shotgun_base_stats.duplicate()
+	return stats
+
+
+# Se llama cuando APRETÁS click derecho.
+# Entra en modo apuntado, pero todavía no gasta stamina.
+func try_start_shotgun_aim() -> bool:
+	if not shotgun_unlocked:
+		return false
+
+	if not can_start_shotgun_action():
+		return false
+
+	# Para empezar a apuntar exigimos stamina llena,
+	# pero todavía no consumimos nada.
+	if player.stamina == null or not player.stamina.is_full():
+		return false
+
+	start_shotgun_aim()
+	return true
+
+
+func start_shotgun_aim() -> void:
+	if shotgun_preview:
+		shotgun_preview.visible = true
 
 	if attack_tween and attack_tween.is_valid():
 		attack_tween.kill()
@@ -404,34 +407,80 @@ func start_shotgun_attack() -> void:
 		grip_tween.kill()
 
 	clear_trail()
-	is_attacking = true
 
-	# La escopeta no usa hitbox melee.
+	is_shotgun_aiming = true
 	current_attack_damage = 0
 	current_attack_knockback = 0.0
 
-	player.skill_used.emit("shotgun")
-	attack_started.emit("shotgun")
-
-	# Guardamos la pose global de la escopeta en la espalda.
-	# Esa va a ser la pose inicial del arma frontal.
 	shotgun_back_global_transform = shotgun_back_pivot.global_transform
 
-	# Mostramos la escopeta frontal y ocultamos la de la espalda.
+	# Mostramos escopeta frontal y ocultamos la de la espalda.
 	show_shotgun_front_visual()
 	update_shotgun_front_flip()
 
-	# El arma frontal arranca exactamente donde está la de la espalda
-	# en ese instante.
+	# La escopeta frontal nace exactamente desde la pose de la espalda.
 	weapon_grip.global_position = shotgun_back_pivot.global_position
-	
 	weapon_grip.rotation = get_shotgun_side_rotation()
 
 	anim_sprite.play("Attack")
 
-	# Lleva la escopeta desde la espalda hasta la pose frontal
-	# que ya venías usando antes.
-	await animate_shotgun_draw(player.aim_angle, float(stats["draw_duration"]))
+	await animate_shotgun_draw(
+		player.aim_angle,
+		float(get_shotgun_stats()["draw_duration"])
+	)
+
+	if player.is_dead:
+		cancel_shotgun_aim()
+		return
+
+
+# Mientras mantenés apretado, la escopeta acompaña el mouse.
+func update_shotgun_aim_pose() -> void:
+	if not is_shotgun_aiming:
+		return
+
+	weapon_pivot.rotation.y = player.aim_angle
+	update_shotgun_front_flip()
+
+	# Pose frontal estable mientras apuntás.
+	weapon_grip.position = grip_base_position + Vector3(0.0, 0.02, 0.10)
+	weapon_grip.rotation = Vector3.ZERO
+
+
+func update_shotgun_preview() -> void:
+	if shotgun_preview == null or not is_shotgun_aiming:
+		return
+
+	shotgun_preview.global_position = player.global_position + Vector3(0.0, 0.03, 0.0)
+	shotgun_preview.rotation.y = player.aim_angle
+
+
+# Se llama cuando SOLTÁS click derecho.
+# Acá recién consumimos stamina y hacemos el disparo.
+func release_shotgun() -> void:
+	if shotgun_preview:
+		shotgun_preview.visible = false
+
+	if not is_shotgun_aiming:
+		return
+
+	var stats := get_shotgun_stats()
+
+	# Validamos de nuevo la stamina al soltar.
+	if player.stamina == null or not player.stamina.is_full():
+		cancel_shotgun_aim()
+		return
+
+	player.stamina.empty_and_configure_recovery(
+		float(stats["stamina_recharge_rate"]),
+		float(stats["stamina_recovery_delay"])
+	)
+
+	is_shotgun_aiming = false
+	is_attacking = true
+
+	player.skill_used.emit("shotgun")
+	attack_started.emit("shotgun")
 
 	await get_tree().create_timer(float(stats["windup"])).timeout
 	if player.is_dead:
@@ -443,25 +492,19 @@ func start_shotgun_attack() -> void:
 	play_muzzle_flash_light()
 	play_muzzle_smoke()
 	play_shotgun_recoil()
-	
-	var backward := -get_shotgun_forward_dir()
 
+	var backward := -get_shotgun_forward_dir()
 	if player.has_method("apply_shotgun_recoil"):
 		player.apply_shotgun_recoil(backward, 4.8)
-	
-	# Esperamos un toque después del recoil para que se lea el disparo.
-	await get_tree().create_timer(0.10).timeout
 
-	# La guardamos nuevamente.
+	await get_tree().create_timer(0.10).timeout
 	await animate_shotgun_holster(float(stats["holster_duration"]))
 
 	weapon_grip.position = grip_base_position
 	weapon_grip.rotation = grip_base_rotation
 
-	# Volvemos al facón y reaparece la escopeta en la espalda.
 	show_facon_visual()
 
-	# Fade in corto del facón.
 	fade_sprite_alpha(
 		facon_sprite,
 		0.0,
@@ -473,14 +516,26 @@ func start_shotgun_attack() -> void:
 	attack_finished.emit("shotgun")
 
 
-# Animación de "sacar" la escopeta hacia el frente.
-#
-# IMPORTANTE:
-# - La pose inicial NO la seteamos acá, porque ahora viene de la espalda
-#   copiando shotgun_back_pivot.global_transform
-# - La pose final sí es la misma que ya usabas antes
+func cancel_shotgun_aim() -> void:
+	if not is_shotgun_aiming:
+		return
+
+	if shotgun_preview:
+		shotgun_preview.visible = false
+
+	is_shotgun_aiming = false
+	weapon_grip.position = grip_base_position
+	weapon_grip.rotation = grip_base_rotation
+	show_facon_visual()
+
+
+func learn_shotgun() -> void:
+	shotgun_unlocked = true
+	update_shotgun_back_visual()
+
+
+# Animación de sacar la escopeta hacia el frente.
 func animate_shotgun_draw(target_angle: float, duration: float) -> void:
-	# La pose final sigue siendo la misma lógica anterior.
 	weapon_pivot.rotation.y = target_angle
 
 	var tween := create_tween()
@@ -490,7 +545,6 @@ func animate_shotgun_draw(target_angle: float, duration: float) -> void:
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.set_ease(Tween.EASE_OUT)
 
-	# Lleva el grip a la pose frontal anterior.
 	tween.tween_property(
 		weapon_grip,
 		"position",
@@ -508,7 +562,6 @@ func animate_shotgun_draw(target_angle: float, duration: float) -> void:
 	await tween.finished
 
 
-# Recoil simple del disparo.
 func play_shotgun_recoil() -> void:
 	grip_tween = create_tween()
 	grip_tween.set_trans(Tween.TRANS_QUAD)
@@ -529,18 +582,10 @@ func play_shotgun_recoil() -> void:
 	)
 
 
-# Animación de volver a guardar la escopeta.
-#
-# Acá hacemos el camino inverso:
-# - desde la pose frontal actual
-# - hasta la pose global que tenía la escopeta en la espalda
 func animate_shotgun_holster(duration: float) -> void:
 	var start_global_pos: Vector3 = weapon_grip.global_position
 	var start_rotation: Vector3 = weapon_grip.rotation
-
-	# Pose local de guardado "fake" para la vuelta.
-	# La idea es que se vea una leve rotación antes de desaparecer.
-	var holster_rotation = get_shotgun_side_rotation()
+	var holster_rotation := get_shotgun_side_rotation()
 
 	var tween := create_tween()
 	grip_tween = tween
@@ -552,7 +597,6 @@ func animate_shotgun_holster(duration: float) -> void:
 		var current_back_pos: Vector3 = shotgun_back_pivot.global_position
 		weapon_grip.global_position = start_global_pos.lerp(current_back_pos, t)
 
-		# Rotación local controlada.
 		weapon_grip.rotation.x = lerp_angle(start_rotation.x, holster_rotation.x, t)
 		weapon_grip.rotation.y = lerp_angle(start_rotation.y, holster_rotation.y, t)
 		weapon_grip.rotation.z = lerp_angle(start_rotation.z, holster_rotation.z, t)
@@ -562,10 +606,14 @@ func animate_shotgun_holster(duration: float) -> void:
 	await tween.finished
 
 	weapon_grip.position = grip_base_position
+	weapon_grip.rotation = grip_base_rotation
 
 
-# Si algo interrumpe el disparo, restauramos el visual a un estado sano.
 func _restore_after_shotgun_cancel() -> void:
+	if shotgun_preview:
+		shotgun_preview.visible = false
+
+	is_shotgun_aiming = false
 	weapon_grip.position = grip_base_position
 	weapon_grip.rotation = grip_base_rotation
 	show_facon_visual()
@@ -630,22 +678,18 @@ func fire_shotgun_blast(stats: Dictionary) -> void:
 # =========================================================
 
 func update_weapon_idle() -> void:
-	# Si está atacando, manda la animación activa.
-	if is_attacking:
+	# Si estamos atacando o apuntando con la escopeta,
+	# no queremos que el idle pise esa pose.
+	if is_attacking or is_shotgun_aiming:
 		return
 
 	var facon_stats := get_facon_stats()
 
-	# El pivot frontal sigue apuntando al mouse.
 	weapon_pivot.rotation.y = player.aim_angle
-
-	# El facón en idle va delante del grip según su radio.
 	facon_sprite.position = Vector3(0.0, 0.0, float(facon_stats["weapon_radius"]))
 
-	# La escopeta frontal en idle queda "guardada".
 	shotgun_front_sprite.position = Vector3.ZERO
 
-	# Aseguramos pose base.
 	weapon_grip.position = grip_base_position
 	weapon_grip.rotation = grip_base_rotation
 
@@ -655,6 +699,34 @@ func update_weapon_idle() -> void:
 func update_weapon_swing(angle: float, radius: float) -> void:
 	weapon_pivot.rotation.y = angle
 	facon_sprite.position = Vector3(0.0, 0.0, radius)
+
+
+func get_current_weapon_radius() -> float:
+	return float(get_facon_stats()["weapon_radius"])
+
+
+func level_up_facon() -> void:
+	facon_level += 1
+
+
+func get_current_attack_damage() -> int:
+	return current_attack_damage
+
+
+func get_current_attack_knockback() -> float:
+	return current_attack_knockback
+
+
+func get_current_attack_direction(target_global_position: Vector3) -> Vector3:
+	var dir: Vector3 = target_global_position - player.global_position
+	dir.y = 0.0
+
+	if dir.length_squared() <= 0.0001:
+		if player.aim_dir.length_squared() > 0.0001:
+			return player.aim_dir.normalized()
+		return -player.global_transform.basis.z.normalized()
+
+	return dir.normalized()
 
 
 func get_weapon_tip_position() -> Vector3:
@@ -688,9 +760,14 @@ func _finish_attack_state() -> void:
 
 
 func cancel_attack_visuals() -> void:
+	if shotgun_preview:
+		shotgun_preview.visible = false
+
 	is_attacking = false
+	is_shotgun_aiming = false
 	current_attack_damage = 0
 	current_attack_knockback = 0.0
+
 	clear_trail()
 
 	if attack_tween and attack_tween.is_valid():
@@ -703,6 +780,7 @@ func cancel_attack_visuals() -> void:
 		attack_hitbox.end_attack()
 
 	weapon_grip.position = grip_base_position
+	weapon_grip.rotation = grip_base_rotation
 
 	show_facon_visual()
 
@@ -762,19 +840,18 @@ func play_muzzle_flash_light() -> void:
 		1.2,
 		0.18
 	)
-	
-	
+
+
 func play_muzzle_smoke() -> void:
 	if muzzle_smoke == null or shotgun_muzzle == null:
 		return
 
-	# Creamos una copia para este disparo.
 	var smoke := muzzle_smoke.duplicate()
 	get_parent().add_child(smoke)
 
 	smoke.top_level = true
 	smoke.visible = true
-	
+
 	var spawn_pos := shotgun_muzzle.global_position
 	var forward := -shotgun_muzzle.global_transform.basis.z.normalized()
 
@@ -815,35 +892,42 @@ func play_muzzle_smoke() -> void:
 
 	await tween.finished
 	smoke.queue_free()
-	
-# =========================
-# HELPERS VISUALES
-# =========================
 
-# La escopeta de la espalda se ve solo si:
+
+# =========================================================
+# HELPERS VISUALES
+# =========================================================
+
+# La escopeta de la espalda se ve solo cuando:
 # - fue aprendida
-# - no estamos usando activamente la escopeta frontal
+# - la escopeta frontal NO está visible
 func update_shotgun_back_visual() -> void:
-	shotgun_back_pivot.visible = shotgun_unlocked and not (is_attacking and shotgun_front_sprite.visible)
+	shotgun_back_pivot.visible = shotgun_unlocked and not shotgun_front_sprite.visible
 
 
 func show_facon_visual() -> void:
 	facon_sprite.visible = true
 	facon_sprite.modulate.a = 1.0
+
 	shotgun_front_sprite.visible = false
 	shotgun_front_sprite.flip_h = false
+
 	update_shotgun_back_visual()
 
 
 func show_shotgun_front_visual() -> void:
 	facon_sprite.visible = false
+
 	shotgun_front_sprite.visible = true
 	shotgun_front_sprite.modulate.a = 1.0
-	shotgun_back_pivot.visible = false
+
+	update_shotgun_back_visual()
 
 
 func update_shotgun_front_flip() -> void:
-	shotgun_front_sprite.flip_h = player.aim_dir.x < 0.0
+	# Si la textura base mira a la izquierda, esta línea está bien.
+	# Si en tu asset base mira a la derecha, invertí el operador.
+	shotgun_front_sprite.flip_h = player.aim_dir.x <= 0.0
 
 
 func fade_sprite_alpha(sprite: Sprite3D, from_alpha: float, to_alpha: float, duration: float) -> Tween:
@@ -858,8 +942,8 @@ func get_shotgun_side_rotation() -> Vector3:
 	if player.aim_dir.x < 0.0:
 		return Vector3(0.0, deg_to_rad(-90.0), 0.0)
 	return Vector3(0.0, deg_to_rad(90.0), 0.0)
-	
-	
+
+
 func get_shotgun_forward_dir() -> Vector3:
 	var forward: Vector3 = player.aim_dir
 	forward.y = 0.0

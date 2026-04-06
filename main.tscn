@@ -949,8 +949,9 @@ can_chase = false
 
 [node name="Enemy2" parent="." unique_id=513251102 instance=ExtResource("9_kek77")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.674326, 0.02, 2.0326214)
-can_chase = false
+
+[node name="Enemy4" parent="." unique_id=1859527240 instance=ExtResource("9_kek77")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.74795, 0.02, -4.920226)
 
 [node name="Enemy3" parent="." unique_id=538971288 instance=ExtResource("9_kek77")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.24584, 0.02, 8.619416)
-can_chase = false

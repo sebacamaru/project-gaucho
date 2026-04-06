@@ -19,7 +19,7 @@ enum State {
 	DEAD
 }
 
-@export var max_hp: int = 1
+@export var max_hp: int = 3
 @export var move_speed: float = 1.8
 @export var attack_range: float = 1.2
 @export var attack_damage: int = 1

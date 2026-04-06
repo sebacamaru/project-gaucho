@@ -196,8 +196,11 @@ func _physics_process(delta: float) -> void:
 
 	# Ataque secundario: escopeta, solo si fue aprendida
 	# Acá asumimos que shotgun está mapeado al click derecho o tecla secundaria.
-	if Input.is_action_just_pressed("escopeta") and not is_dashing:
-		weapon_component.try_secondary_attack()
+	if Input.is_action_just_pressed("escopeta"):
+		weapon_component.try_start_shotgun_aim()
+	
+	if Input.is_action_just_released("escopeta"):
+		weapon_component.release_shotgun()
 
 	# =========================
 	# VISUAL DEL ARMA

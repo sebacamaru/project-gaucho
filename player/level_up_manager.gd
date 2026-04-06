@@ -14,7 +14,7 @@ class_name LevelUpManager
 @onready var level_up_panel: LevelUpPanel = get_node("../../HUD/CanvasLayer/LevelUpPanel")
 
 const ICON_FACON = preload("res://ui/bg-skill-1.png")
-# const ICON_SHOTGUN = preload("res://ui/bg-skill-2.png")
+const ICON_SHOTGUN = preload("res://ui/bg-skill-2.png")
 const ICON_DASH = preload("res://ui/bg-skill-3.png")
 # const ICON_BOLEADORAS = preload("res://ui/bg-skill-4.png")
 const ICON_PLACEHOLDER = preload("res://ui/bg-skill-placeholder.png")
@@ -83,7 +83,7 @@ func make_upgrade_data(id: String) -> Dictionary:
 				"id": id,
 				"title": "Escopeta",
 				"description": "Dispara múltiples perdigones a corta distancia.",
-				"icon": ICON_PLACEHOLDER
+				"icon": ICON_SHOTGUN
 			}
 
 		"learn_boleadoras":
@@ -132,7 +132,7 @@ func get_first_level_choices() -> Array[Dictionary]:
 func get_available_upgrades() -> Array[Dictionary]:
 	var upgrades: Array[Dictionary] = []
 
-	upgrades.append(make_upgrade_data("facon_level_up"))
+	#upgrades.append(make_upgrade_data("facon_level_up"))
 
 	if not dash_skill.is_unlocked:
 		upgrades.append(make_upgrade_data("learn_dash"))
