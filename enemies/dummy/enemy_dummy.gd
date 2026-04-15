@@ -8,6 +8,7 @@ extends Node3D
 # - feedback visual al recibir daño
 # - visibilidad mínima en runtime mediante shader
 # - dissolve al morir
+# - inmovilización indefinida por boleadoras
 # =========================================================
 
 const ENEMY_DISSOLVE_SHADER = preload("res://shaders/enemy_dissolve.gdshader")
@@ -18,6 +19,8 @@ enum State {
 	ATTACK,
 	DEAD
 }
+
+signal died
 
 @export var max_hp: int = 3
 @export var move_speed: float = 1.8
@@ -39,10 +42,13 @@ var is_dying := false
 var can_attack := true
 
 @onready var visual_root = $Visual
+
 # Root principal para movimientos de ataque / squash
 @onready var sprites_root = $Visual/SpritesRoot
+
 # Offset secundario exclusivo para hit reactions
 @onready var hit_offset = $Visual/SpritesRoot/HitOffset
+
 # Sprites reales
 @onready var sprite = $Visual/SpritesRoot/HitOffset/AnimatedSprite3D
 @onready var aura_sprite = $Visual/SpritesRoot/HitOffset/AuraSprite3D
@@ -65,6 +71,18 @@ var hp_bar_alpha := 0.0
 var is_hit_stunned := false
 var hit_reaction_tween: Tween
 var hit_stun_version := 0
+
+# =========================================================
+# BOLEADORAS / ROOT
+# =========================================================
+
+# Indica si el enemigo quedó atrapado por boleadoras.
+# Mientras esto sea true:
+# - no puede perseguir
+# - no puede iniciar ataques
+# - queda inmovilizado indefinidamente
+var is_boleadora_rooted: bool = false
+
 
 func _ready() -> void:
 	hp = max_hp
@@ -110,10 +128,20 @@ func _process(delta: float) -> void:
 	match state:
 		State.CHASE:
 			update_facing()
-			if can_chase and not is_hit_stunned:
+
+			# Solo perseguimos si:
+			# - el enemigo puede perseguir
+			# - no está en hit stun
+			# - no quedó atrapado por boleadoras
+			if can_chase and not is_hit_stunned and not is_boleadora_rooted:
 				update_chase(delta)
+
 		State.ATTACK:
-			pass
+			# Si quedó boleado en medio de otro flujo,
+			# lo forzamos de nuevo a estado chase.
+			if is_boleadora_rooted:
+				state = State.CHASE
+
 		State.DEAD:
 			pass
 
@@ -199,7 +227,7 @@ func update_chase(delta: float) -> void:
 	var distance := to_player.length()
 
 	if distance <= attack_range:
-		if can_attack:
+		if can_attack and not is_boleadora_rooted:
 			start_attack()
 		return
 
@@ -208,7 +236,11 @@ func update_chase(delta: float) -> void:
 
 
 func start_attack() -> void:
-	if is_dying or not can_attack:
+	# No puede atacar si:
+	# - se está muriendo
+	# - está en cooldown de ataque
+	# - quedó inmovilizado por boleadoras
+	if is_dying or not can_attack or is_boleadora_rooted:
 		return
 
 	state = State.ATTACK
@@ -239,9 +271,20 @@ func start_attack() -> void:
 	if is_dying:
 		return
 
+	# Si quedó boleado durante o después del ataque,
+	# no reactivamos el ataque.
+	if is_boleadora_rooted:
+		state = State.CHASE
+		return
+
 	await get_tree().create_timer(attack_cooldown).timeout
 
 	if is_dying:
+		return
+
+	# Si quedó boleado durante el cooldown, tampoco puede volver a atacar.
+	if is_boleadora_rooted:
+		state = State.CHASE
 		return
 
 	can_attack = true
@@ -286,6 +329,42 @@ func flash_hit() -> void:
 	await get_tree().create_timer(0.08).timeout
 	if is_instance_valid(sprite) and not is_dying:
 		sprite.modulate = Color.WHITE
+
+
+# =========================================================
+# BOLEADORAS
+# =========================================================
+# Inmovilización indefinida.
+# En esta fase no tiene duración: el enemigo queda quieto hasta morir.
+func apply_boleadora_root() -> void:
+	if is_dying:
+		return
+
+	# Si ya estaba atrapado, no hacemos nada.
+	if is_boleadora_rooted:
+		return
+
+	is_boleadora_rooted = true
+
+	# Frenamos cualquier posibilidad de iniciar ataque.
+	can_attack = false
+	state = State.CHASE
+
+	# Si justo había alguna animación/tween de hit o ataque,
+	# la cortamos para dejar una pose limpia.
+	if hit_tween and hit_tween.is_valid():
+		hit_tween.kill()
+
+	# También podemos cortar la hit reaction si querés una inmovilización
+	# más "seca" y estable visualmente.
+	if hit_reaction_tween and hit_reaction_tween.is_valid():
+		hit_reaction_tween.kill()
+
+	# Dejamos el enemigo en una pose neutral.
+	sprites_root.position = Vector3.ZERO
+	sprites_root.scale = Vector3.ONE
+	hit_offset.position = Vector3.ZERO
+	hit_offset.scale = Vector3.ONE
 
 
 # =========================================================
@@ -357,10 +436,10 @@ func die() -> void:
 	is_dying = true
 	state = State.DEAD
 	hurtbox.monitoring = false
-	
+
 	if player:
 		player.progress.register_enemy_kill(exp_reward, points_reward)
-	
+
 	fade_out_hp_bar()
 	sprite.stop()
 
@@ -390,6 +469,7 @@ func die() -> void:
 			start_alpha, 0.0, 0.4
 		)
 
+	died.emit()
 	await tween.finished
 	queue_free()
 
@@ -459,6 +539,7 @@ func update_facing() -> void:
 	var facing_left := dx < 0.0
 	sprite.flip_h = facing_left
 	aura_sprite.flip_h = facing_left
+
 
 # =========================================================
 # Pequeño salto al ser golpeado

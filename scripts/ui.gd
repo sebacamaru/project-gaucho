@@ -19,7 +19,11 @@ extends Control
 @onready var skill_1: Control = $BottomLeftUI/SkillsContainer/Skill1
 @onready var shotgun: Control = $BottomLeftUI/SkillsContainer/Skill2
 @onready var slot_dash: Control = $BottomLeftUI/SkillsContainer/Skill3
-@onready var skill_4: Control = $BottomLeftUI/SkillsContainer/Skill4
+@onready var boleadoras: Control = $BottomLeftUI/SkillsContainer/Skill4
+
+# Label específica del contador de boleadoras.
+# Acá mostramos cuántas boleadoras "disponibles" quedan sobre el máximo.
+@onready var boleadoras_label: Label = $BottomLeftUI/SkillsContainer/Skill4/Label
 
 @onready var level_indicator: Control = $BottomRightUI/Container/Nivel
 
@@ -43,6 +47,11 @@ var boss_time_left: float = 328.0
 # Lo guardamos para poder cortar el tween anterior si entra XP de nuevo enseguida.
 var exp_tween: Tween
 var squish_tween: Tween
+
+# Referencia cacheada al WeaponComponent.
+# La resolvemos en _ready() una vez que validamos que exista player.
+var weapon_component = null
+
 # -----------------------------------------------------------------------------
 # Ciclo de vida
 # -----------------------------------------------------------------------------
@@ -51,17 +60,22 @@ func _ready() -> void:
 	# Cursor
 	var cursor = load("res://ui/cursor.png")
 	Input.set_custom_mouse_cursor(cursor, Input.CURSOR_ARROW, Vector2(8, 8))
-	
+
 	# Inicializa el timer visual del jefe.
 	update_boss_timer()
 
+	# Si no encontramos player, no podemos conectar el resto de la UI.
 	if not player:
 		return
+
+	# Cacheamos referencia al WeaponComponent si existe.
+	if player.has_node("WeaponComponent"):
+		weapon_component = player.get_node("WeaponComponent")
 
 	# Vida
 	player.hp_changed.connect(_on_player_hp_changed)
 	_on_player_hp_changed(player.hp, player.max_hp)
-	
+
 	# Estamina
 	if player.stamina and player.stamina.has_signal("changed"):
 		player.stamina.changed.connect(_on_player_stamina_changed)
@@ -70,13 +84,15 @@ func _ready() -> void:
 			player.stamina.max_stamina
 		)
 
-	# Skills
-
-
 	# Señal cuando usa una skill / arma
 	player.skill_used.connect(_on_player_skill_used)
 	player.progress.skill_unlocked.connect(_on_player_skill_unlocked)
 	_refresh_skill_ui()
+
+	# Contador de boleadoras
+	# Si el WeaponComponent expone la señal, la conectamos.
+	# Además hacemos una sincronización inicial para que la UI arranque correcta.
+	_connect_boleadora_counter()
 
 	# Experiencia
 	if player.progress.has_signal("xp_changed"):
@@ -90,16 +106,17 @@ func _ready() -> void:
 	# Level up
 	if player.progress.has_signal("level_up"):
 		player.progress.level_up.connect(_on_player_level_up)
-	
+
 	# Nueva kill
 	if player.progress.has_signal("demons_killed_changed"):
 		player.progress.demons_killed_changed.connect(_on_demons_killed_changed)
 		_on_demons_killed_changed(player.progress.demons_killed)
-	
+
 	# Suma puntos
 	if player.progress.has_signal("score_changed"):
 		player.progress.score_changed.connect(_on_score_changed)
 		_on_score_changed(player.progress.score)
+
 
 func _process(delta: float) -> void:
 	# Cuenta regresiva del boss.
@@ -109,6 +126,7 @@ func _process(delta: float) -> void:
 			boss_time_left = 0.0
 
 	update_boss_timer()
+
 
 # -----------------------------------------------------------------------------
 # Boss timer
@@ -121,6 +139,7 @@ func update_boss_timer() -> void:
 
 	boss_timer_label.text = "Jefe en %d:%02d" % [minutes, seconds]
 
+
 # -----------------------------------------------------------------------------
 # Player HP
 # -----------------------------------------------------------------------------
@@ -129,9 +148,10 @@ func _on_player_hp_changed(current_hp: int, max_hp: int) -> void:
 	health_bar.min_value = 0
 	health_bar.max_value = max_hp
 	health_bar.value = current_hp
-	
+
+
 # -----------------------------------------------------------------------------
-# Player Stammina
+# Player Stamina
 # -----------------------------------------------------------------------------
 
 func _on_player_stamina_changed(current: float, max_value: float) -> void:
@@ -147,7 +167,8 @@ func _on_player_stamina_changed(current: float, max_value: float) -> void:
 	stamina_tween.set_trans(Tween.TRANS_CUBIC)
 	stamina_tween.set_ease(Tween.EASE_OUT)
 	stamina_tween.tween_property(stamina_bar, "value", current, duration)
-	
+
+
 # -----------------------------------------------------------------------------
 # Player EXP / Level
 # -----------------------------------------------------------------------------
@@ -174,6 +195,7 @@ func _on_player_exp_changed(current_exp: int, exp_to_next: int, level: int) -> v
 	# Feedback visual extra al ganar experiencia.
 	_play_exp_gain_feedback()
 
+
 func _on_player_level_up(new_level: int) -> void:
 	# Pequeño golpe visual extra cuando sube de nivel.
 	var tween := create_tween()
@@ -190,14 +212,15 @@ func _on_player_level_up(new_level: int) -> void:
 		squish_tween.kill()
 
 	scale = Vector2.ONE
-	
-	# Efecto squish 
+
+	# Efecto squish
 	squish_tween = create_tween()
 	squish_tween.set_trans(Tween.TRANS_QUAD)
 	squish_tween.set_ease(Tween.EASE_OUT)
 	squish_tween.tween_property(level_indicator, "scale", Vector2(0.88, 1.08), 0.045)
 	squish_tween.tween_property(level_indicator, "scale", Vector2(1.04, 0.96), 0.05)
 	squish_tween.tween_property(level_indicator, "scale", Vector2.ONE, 0.08)
+
 
 func _play_exp_gain_feedback() -> void:
 	# Hace un pequeño pulse de la barra y un flash encima.
@@ -212,11 +235,14 @@ func _play_exp_gain_feedback() -> void:
 
 	tween.parallel().tween_property(exp_flash, "modulate:a", 0.0, 0.28)
 
+
 func _on_demons_killed_changed(total: int) -> void:
 	demons_label.text = str(total)
 
+
 func _on_score_changed(new_score: int) -> void:
 	score_label.text = str(new_score).pad_zeros(9)
+
 
 # -----------------------------------------------------------------------------
 # Skills
@@ -229,8 +255,14 @@ func _on_player_skill_unlocked(slot_name: String) -> void:
 			shotgun.set_unlocked(true)
 		"dash":
 			slot_dash.set_unlocked(true)
-		"skill_4":
-			skill_4.set_unlocked(true)
+		"boleadoras":
+			boleadoras.set_unlocked(true)
+
+	# Si justo se desbloquean las boleadoras, refrescamos también el texto
+	# para que el contador aparezca con el valor correcto.
+	if slot_name == "boleadoras":
+		_sync_boleadora_counter()
+
 
 func _on_player_skill_used(slot_name: String) -> void:
 	# Reproduce un pequeño squash en el slot cuando se usa una skill.
@@ -241,11 +273,72 @@ func _on_player_skill_used(slot_name: String) -> void:
 			shotgun.play_use_squish()
 		"dash":
 			slot_dash.play_use_squish()
-		"skill_4":
-			skill_4.play_use_squish()
+		"boleadoras":
+			boleadoras.play_use_squish()
+
 
 func _refresh_skill_ui() -> void:
 	# Sincroniza el estado visual de skills ya desbloqueadas al iniciar la escena.
 	shotgun.set_unlocked(player.progress.unlocked_skills.get("shotgun", false))
 	slot_dash.set_unlocked(player.progress.unlocked_skills.get("dash", false))
-	skill_4.set_unlocked(player.progress.unlocked_skills.get("skill_4", false))
+	boleadoras.set_unlocked(player.progress.unlocked_skills.get("boleadoras", false))
+
+	# También sincronizamos el contador de boleadoras al iniciar.
+	_sync_boleadora_counter()
+
+
+# -----------------------------------------------------------------------------
+# Boleadoras Counter
+# -----------------------------------------------------------------------------
+
+func _connect_boleadora_counter() -> void:
+	# Conecta la señal del WeaponComponent si existe.
+	# Esto permite que la UI se actualice automáticamente
+	# cuando una boleadora queda ocupada o cuando se libera un slot.
+	if weapon_component == null:
+		return
+
+	if weapon_component.has_signal("boleadora_count_changed"):
+		weapon_component.boleadora_count_changed.connect(_on_boleadora_count_changed)
+
+	# Sincronización inicial.
+	_sync_boleadora_counter()
+
+
+func _sync_boleadora_counter() -> void:
+	# Refresca manualmente el texto del contador.
+	# Esto sirve al iniciar la escena o cuando la skill recién se desbloquea.
+	if boleadoras_label == null:
+		return
+
+	# Si todavía no existe WeaponComponent, dejamos un valor por defecto.
+	if weapon_component == null:
+		boleadoras_label.text = "0/0"
+		return
+
+	# Si la skill aún no está desbloqueada, mostramos el máximo igualmente
+	# o podés dejarlo vacío si preferís.
+	var unlocked: bool = player.progress.unlocked_skills.get("boleadoras", false)
+
+	# Intentamos leer el estado actual desde métodos / props del WeaponComponent.
+	# Esto asume que agregaste:
+	# - get_active_boleadora_count()
+	# - max_boleadora_targets
+	if weapon_component.has_method("get_active_boleadora_count"):
+		var active_count: int = weapon_component.get_active_boleadora_count()
+		var max_count: int = weapon_component.max_boleadora_targets
+		var available_count: int = max_count - active_count
+
+		if unlocked:
+			boleadoras_label.text = "%d/%d" % [available_count, max_count]
+		else:
+			boleadoras_label.text = "%d/%d" % [max_count, max_count]
+	else:
+		# Fallback defensivo por si todavía no agregaste el método.
+		boleadoras_label.text = "3/3"
+
+
+func _on_boleadora_count_changed(current: int, max_value: int) -> void:
+	# Esta señal debería venir desde WeaponComponent.
+	# "current" representa cuántas boleadoras disponibles quedan.
+	boleadoras_label.text = "%d/%d" % [current, max_value]

@@ -201,6 +201,13 @@ func _physics_process(delta: float) -> void:
 	
 	if Input.is_action_just_released("escopeta"):
 		weapon_component.release_shotgun()
+		
+	# Ataque terciario: boleadoras
+	if Input.is_action_just_pressed("boleadoras"):
+		weapon_component.try_start_boleadoras_aim()
+
+	if Input.is_action_just_released("boleadoras"):
+		weapon_component.release_boleadoras()
 
 	# =========================
 	# VISUAL DEL ARMA
@@ -415,8 +422,8 @@ func _on_skill_unlocked(slot_name: String) -> void:
 			weapon_component.learn_shotgun()
 		"dash":
 			dash_skill.learn()
-		"skill_4":
-			pass
+		"boleadoras":
+			weapon_component.learn_boleadoras()
 
 
 func play_dash_smear(direction: Vector3) -> void:

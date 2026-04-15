@@ -27,7 +27,7 @@ signal skill_unlocked(slot_name: String)
 var unlocked_skills := {
 	"shotgun": false,
 	"dash": false,
-	"skill_4": false
+	"boleadoras": false
 }
 
 # -----------------------------------------------------------------------------

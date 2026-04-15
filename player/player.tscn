@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://ckij8iq8id04v" path="res://player/stamina_component.gd" id="3_hg6s5"]
 [ext_resource type="Script" uid="uid://bc335qo3y1i5p" path="res://player/level_up_manager.gd" id="3_yllr7"]
 [ext_resource type="Script" uid="uid://c06loducic03u" path="res://player/dash_skill.gd" id="4_8t03j"]
+[ext_resource type="PackedScene" uid="uid://dn22aym0dh2wv" path="res://weapons/BoleadoraProjectile.tscn" id="5_c35mf"]
 [ext_resource type="Texture2D" uid="uid://c2cykje4by77c" path="res://weapons/facon.png" id="5_qjkh3"]
 [ext_resource type="Texture2D" uid="uid://dertnhcsug7ql" path="res://sprites/cursor.png" id="6_boad6"]
 [ext_resource type="Texture2D" uid="uid://bkipq7gwvoey8" path="res://sprites/lampara.png" id="7_boad6"]
@@ -17,6 +18,7 @@
 [ext_resource type="Texture2D" uid="uid://b5jknl4ypt7wm" path="res://weapons/escopeta.png" id="12_kb6p2"]
 [ext_resource type="Texture2D" uid="uid://c8n72u20b52gi" path="res://weapons/fogonazo_v2.png" id="13_wodsf"]
 [ext_resource type="Texture2D" uid="uid://doeerjfwgekv1" path="res://weapons/smoke.png" id="14_32hag"]
+[ext_resource type="Texture2D" uid="uid://ce1due3x16bvc" path="res://weapons/boleadoras.png" id="14_e7oew"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
 radius = 0.2993164
@@ -212,6 +214,7 @@ script = ExtResource("3_yllr7")
 
 [node name="WeaponComponent" type="Node" parent="." unique_id=1343772771]
 script = ExtResource("3_ebec5")
+boleadora_projectile_scene = ExtResource("5_c35mf")
 
 [node name="StaminaComponent" type="Node" parent="." unique_id=1336586301]
 script = ExtResource("3_hg6s5")
@@ -288,6 +291,16 @@ layers = 2
 shaded = true
 no_depth_test = true
 texture = ExtResource("5_qjkh3")
+
+[node name="BoleadorasPivot" type="Node3D" parent="Weapon/Grip" unique_id=814586623]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
+
+[node name="BoleadorasSprite3D" type="Sprite3D" parent="Weapon/Grip/BoleadorasPivot" unique_id=1044141247]
+transform = Transform3D(0.09990483, -0.0043619387, -1.906664e-10, 0, -4.371139e-09, 0.10000001, -0.0043619387, -0.09990483, -4.366979e-09, 0.028738484, 2.8799105e-08, 0.6582196)
+layers = 2
+shaded = true
+no_depth_test = true
+texture = ExtResource("14_e7oew")
 
 [node name="ShotgunSprite3D" type="Sprite3D" parent="Weapon/Grip" unique_id=885775104]
 transform = Transform3D(0.6993337, -0.030533573, -1.3346649e-09, 0, -3.059797e-08, 0.7, -0.030533573, -0.6993337, -3.056885e-08, -0.23498704, 0, 0.010259777)

@@ -16,7 +16,7 @@ class_name LevelUpManager
 const ICON_FACON = preload("res://ui/bg-skill-1.png")
 const ICON_SHOTGUN = preload("res://ui/bg-skill-2.png")
 const ICON_DASH = preload("res://ui/bg-skill-3.png")
-# const ICON_BOLEADORAS = preload("res://ui/bg-skill-4.png")
+const ICON_BOLEADORAS = preload("res://ui/bg-skill-4.png")
 const ICON_PLACEHOLDER = preload("res://ui/bg-skill-placeholder.png")
 
 var is_choosing_upgrade: bool = false
@@ -91,7 +91,7 @@ func make_upgrade_data(id: String) -> Dictionary:
 				"id": id,
 				"title": "Boleadoras",
 				"description": "Lanza boleadoras para frenar enemigos.",
-				"icon": ICON_PLACEHOLDER
+				"icon": ICON_BOLEADORAS
 			}
 
 		"max_hp_up":
@@ -173,6 +173,7 @@ func apply_upgrade(upgrade_id: String) -> void:
 		"learn_boleadoras":
 			print("learn_boleadoras")
 			weapon_component.boleadoras_unlocked = true
+			player.progress.unlock_skill("boleadoras")
 
 		"max_hp_up":
 			print("max_hp_up")

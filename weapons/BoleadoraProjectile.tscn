@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dn22aym0dh2wv"]
+
+[ext_resource type="Script" uid="uid://c0i173fmygm0b" path="res://weapons/boleadora_projectile.gd" id="1_3jnwb"]
+[ext_resource type="Texture2D" uid="uid://ce1due3x16bvc" path="res://weapons/boleadoras.png" id="1_te232"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3jnwb"]
+
+[node name="BoleadoraProjectile" type="Area3D" unique_id=877988443]
+script = ExtResource("1_3jnwb")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1899654422]
+shape = SubResource("BoxShape3D_3jnwb")
+debug_color = Color(0.94372493, 9.337366e-06, 0.6025717, 0.41960785)
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=392619979]
+transform = Transform3D(0.09990483, -0.0043619387, -1.906664e-10, 0, -4.371139e-09, 0.10000001, -0.0043619387, -0.09990483, -4.366979e-09, 0, 0, 0)
+layers = 2
+no_depth_test = true
+texture = ExtResource("1_te232")

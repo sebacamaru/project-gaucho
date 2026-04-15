@@ -21,6 +21,7 @@ class_name WeaponComponent
 
 signal attack_started(weapon_name: String)
 signal attack_finished(weapon_name: String)
+signal boleadora_count_changed(current: int, max: int)
 
 # =========================================================
 # CONFIGURACIÓN GENERAL
@@ -48,6 +49,13 @@ var is_attacking: bool = false
 # - todavía no consumió stamina
 var is_shotgun_aiming: bool = false
 
+# Indica si las boleadoras están en modo apuntado.
+# Mientras sea true:
+# - se oculta el facón
+# - se muestran las boleadoras
+# - el grip sigue al mouse (ya resuelto por el player)
+var is_boleadoras_aiming: bool = false
+
 # Cooldown propio del facón.
 # Es independiente de la stamina.
 var facon_cooldown_timer: float = 0.0
@@ -68,6 +76,15 @@ var shotgun_back_global_transform: Transform3D
 # El hitbox melee consulta estos valores.
 var current_attack_damage: int = 0
 var current_attack_knockback: float = 0.0
+
+# Velocidad de giro visual de las boleadoras mientras se mantiene
+# el botón del medio apretado.
+# Valor en radianes por segundo.
+var boleadoras_spin_speed: float = 18.0
+
+# Cantidad máxima de enemigos atrapados por la boleadora
+@export var max_boleadora_targets: int = 3
+var active_boleadora_targets: Array[Node] = []
 
 # =========================================================
 # STATS BASE DEL FACÓN
@@ -122,6 +139,8 @@ var shotgun_base_stats := {
 
 @onready var facon_sprite: Sprite3D = player.get_node("Weapon/Grip/FaconSprite3D")
 @onready var shotgun_front_sprite: Sprite3D = player.get_node("Weapon/Grip/ShotgunSprite3D")
+@onready var boleadoras_pivot: Node3D = player.get_node("Weapon/Grip/BoleadorasPivot")
+@onready var boleadoras_sprite: Sprite3D = player.get_node("Weapon/Grip/BoleadorasPivot/BoleadorasSprite3D")
 
 @onready var shotgun_back_pivot: Node3D = player.get_node("Sprites/ShotgunPivot")
 @onready var shotgun_back_sprite: Sprite3D = player.get_node("Sprites/ShotgunPivot/ShotgunSprite3D")
@@ -137,6 +156,9 @@ var shotgun_base_stats := {
 @onready var muzzle_smoke: Sprite3D = player.get_node("Weapon/Grip/Muzzle/MuzzleSmoke")
 @onready var shotgun_preview: ShotgunPreview = player.get_node("ShotgunPreview")
 
+@export var boleadora_projectile_scene: PackedScene
+@export var boleadora_stamina_recharge_rate: float = 240.0
+@export var boleadora_stamina_recovery_delay: float = 0.18
 
 func _ready() -> void:
 	if muzzle_flash_light:
@@ -159,19 +181,44 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# Cooldown propio del facón.
+	# =========================================================
+	# COOLDOWN FACÓN
+	# =========================================================
+	# El facón tiene cooldown propio, separado de la stamina.
 	if facon_cooldown_timer > 0.0:
 		facon_cooldown_timer = max(facon_cooldown_timer - delta, 0.0)
 
-	# Solo el facón usa trail.
+	# =========================================================
+	# TRAIL FACÓN
+	# =========================================================
+	# Solo el facón usa trail visual durante el swing.
 	if is_attacking and current_attack_damage > 0:
 		update_trail()
 
+	# =========================================================
+	# AIM ESCOPETA
+	# =========================================================
 	# Mientras estamos apuntando con la escopeta,
-	# actualizamos la pose continuamente para que siga al mouse.
+	# actualizamos la pose continuamente para seguir al mouse.
 	if is_shotgun_aiming:
 		update_shotgun_aim_pose()
 		update_shotgun_preview()
+
+	# =========================================================
+	# AIM BOLEADORAS
+	# =========================================================
+	# Mientras mantenemos apretado el botón,
+	# las boleadoras:
+	# - siguen la dirección del mouse
+	# - mantienen una pose estable en la mano
+	# - giran visualmente sobre su pivot
+	if is_boleadoras_aiming:
+		update_boleadoras_aim_pose()
+
+		if boleadoras_pivot:
+			boleadoras_pivot.rotation.y += boleadoras_spin_speed * delta
+
+		update_boleadoras_flip()
 
 
 # =========================================================
@@ -210,6 +257,21 @@ func can_start_shotgun_action() -> bool:
 
 	return true
 
+# Chequeo específico de las boleadoras.
+func can_start_boleadoras_action() -> bool:
+	if is_attacking:
+		return false
+
+	if is_shotgun_aiming:
+		return false
+
+	if is_boleadoras_aiming:
+		return false
+
+	if player.is_dead:
+		return false
+
+	return true
 
 # =========================================================
 # FACÓN
@@ -516,6 +578,26 @@ func release_shotgun() -> void:
 	attack_finished.emit("shotgun")
 
 
+func release_boleadoras() -> void:
+	if not is_boleadoras_aiming:
+		return
+
+	is_boleadoras_aiming = false
+
+	if not can_launch_boleadora():
+		show_facon_visual()
+		return
+
+	if player.stamina:
+		player.stamina.empty_and_configure_recovery(
+			boleadora_stamina_recharge_rate,
+			boleadora_stamina_recovery_delay
+		)
+
+	launch_boleadora()
+	show_facon_visual()
+
+
 func cancel_shotgun_aim() -> void:
 	if not is_shotgun_aiming:
 		return
@@ -674,13 +756,142 @@ func fire_shotgun_blast(stats: Dictionary) -> void:
 
 
 # =========================================================
+# BOLEADORAS
+# =========================================================
+
+func launch_boleadora() -> void:
+	if boleadora_projectile_scene == null:
+		return
+
+	var projectile := boleadora_projectile_scene.instantiate()
+
+	var launch_dir: Vector3 = player.aim_dir
+	if launch_dir.length_squared() <= 0.0001:
+		launch_dir = -player.global_transform.basis.z.normalized()
+
+	var spawn_pos := weapon_tip.global_position + launch_dir * 0.55
+	spawn_pos.y += 0.05
+
+	get_tree().current_scene.add_child(projectile)
+	projectile.setup(spawn_pos, launch_dir, player, self)
+
+
+func try_start_boleadoras_aim() -> bool:
+	if not boleadoras_unlocked:
+		return false
+
+	if not can_start_boleadoras_action():
+		return false
+
+	if not can_launch_boleadora():
+		return false
+
+	start_boleadoras_aim()
+	return true
+
+
+func start_boleadoras_aim() -> void:
+	clear_trail()
+
+	is_boleadoras_aiming = true
+
+	update_boleadoras_flip()
+	show_boleadoras_visual()
+
+
+func learn_boleadoras() -> void:
+	boleadoras_unlocked = true
+
+
+# Mientras mantenés apretado el botón de boleadoras,
+# el arma acompaña el mouse igual que el facón,
+# pero usando el visual de las boleadoras.
+func update_boleadoras_aim_pose() -> void:
+	if not is_boleadoras_aiming:
+		return
+
+	# El nodo raíz del arma acompaña el ángulo del mouse.
+	weapon_pivot.rotation.y = player.aim_angle
+
+	# Dejamos el grip en una pose estable, igual que en idle,
+	# para que no herede offsets raros de otras armas.
+	weapon_grip.position = grip_base_position
+	weapon_grip.rotation = grip_base_rotation
+
+	# Mantener el facón en su radio normal ayuda a que
+	# la posición visual siga siendo consistente con el idle.
+	var facon_stats := get_facon_stats()
+	facon_sprite.position = Vector3(0.0, 0.0, float(facon_stats["weapon_radius"]))
+
+
+func cleanup_boleadora_targets() -> void:
+	var valid_targets: Array[Node] = []
+
+	for enemy in active_boleadora_targets:
+		if enemy == null:
+			continue
+
+		if not is_instance_valid(enemy):
+			continue
+
+		if "is_dying" in enemy and enemy.is_dying:
+			continue
+
+		valid_targets.append(enemy)
+
+	active_boleadora_targets = valid_targets
+
+
+func get_active_boleadora_count() -> int:
+	cleanup_boleadora_targets()
+	return active_boleadora_targets.size()
+
+
+func can_launch_boleadora() -> bool:
+	return get_active_boleadora_count() < max_boleadora_targets
+
+
+func register_boleadora_target(enemy: Node) -> void:
+	if enemy == null:
+		return
+
+	if not is_instance_valid(enemy):
+		return
+
+	cleanup_boleadora_targets()
+
+	if active_boleadora_targets.has(enemy):
+		return
+
+	active_boleadora_targets.append(enemy)
+
+	# Si el enemigo emite señal de muerte, lo escuchamos
+	if enemy.has_signal("died"):
+		if not enemy.died.is_connected(_on_boleadora_target_died):
+			enemy.died.connect(_on_boleadora_target_died.bind(enemy), CONNECT_ONE_SHOT)
+
+	boleadora_count_changed.emit(
+		max_boleadora_targets - active_boleadora_targets.size(),
+		max_boleadora_targets
+	)
+
+
+func _on_boleadora_target_died(enemy: Node) -> void:
+	active_boleadora_targets.erase(enemy)
+
+	boleadora_count_changed.emit(
+		max_boleadora_targets - active_boleadora_targets.size(),
+		max_boleadora_targets
+	)
+
+# =========================================================
 # VISUAL / APOYO
 # =========================================================
 
 func update_weapon_idle() -> void:
 	# Si estamos atacando o apuntando con la escopeta,
 	# no queremos que el idle pise esa pose.
-	if is_attacking or is_shotgun_aiming:
+	if is_attacking or is_shotgun_aiming or is_boleadoras_aiming:
 		return
 
 	var facon_stats := get_facon_stats()
@@ -765,6 +976,7 @@ func cancel_attack_visuals() -> void:
 
 	is_attacking = false
 	is_shotgun_aiming = false
+	is_boleadoras_aiming = false
 	current_attack_damage = 0
 	current_attack_knockback = 0.0
 
@@ -906,11 +1118,39 @@ func update_shotgun_back_visual() -> void:
 
 
 func show_facon_visual() -> void:
+	# Visual base del arma.
 	facon_sprite.visible = true
 	facon_sprite.modulate.a = 1.0
 
+	# Ocultamos visuales alternativos.
 	shotgun_front_sprite.visible = false
 	shotgun_front_sprite.flip_h = false
+
+	boleadoras_sprite.visible = false
+	boleadoras_sprite.flip_h = false
+
+	# Reiniciamos la rotación de las boleadoras
+	# para que no queden "torcidas" al próximo uso.
+	boleadoras_pivot.rotation = Vector3.ZERO
+
+	update_shotgun_back_visual()
+
+
+func show_boleadoras_visual() -> void:
+	# Ocultamos el facón mientras preparamos el lanzamiento.
+	facon_sprite.visible = false
+
+	# También nos aseguramos de ocultar la escopeta frontal.
+	shotgun_front_sprite.visible = false
+	shotgun_front_sprite.flip_h = false
+
+	# Mostramos boleadoras.
+	boleadoras_sprite.visible = true
+	boleadoras_sprite.modulate.a = 1.0
+
+	# Reiniciamos la rotación para que siempre arranquen
+	# desde una pose limpia al empezar a mantener.
+	boleadoras_pivot.rotation = Vector3.ZERO
 
 	update_shotgun_back_visual()
 
@@ -929,6 +1169,10 @@ func update_shotgun_front_flip() -> void:
 	# Si en tu asset base mira a la derecha, invertí el operador.
 	shotgun_front_sprite.flip_h = player.aim_dir.x <= 0.0
 
+func update_boleadoras_flip() -> void:
+	# Si la textura base mira a la izquierda, esta línea está bien.
+	# Si en tu asset base mira a la derecha, invertí el operador.
+	boleadoras_sprite.flip_h = player.aim_dir.x <= 0.0
 
 func fade_sprite_alpha(sprite: Sprite3D, from_alpha: float, to_alpha: float, duration: float) -> Tween:
 	sprite.modulate.a = from_alpha
