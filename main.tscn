@@ -27,6 +27,7 @@
 [ext_resource type="Texture2D" uid="uid://bupk3vwnn71vi" path="res://ui/bg-demonios.png" id="24_0odxb"]
 [ext_resource type="Texture2D" uid="uid://c5vy1i1x15ipw" path="res://ui/bg-points.png" id="25_lswn8"]
 [ext_resource type="Script" uid="uid://cm80n46eknbiu" path="res://ui/level_up_panel.gd" id="26_a6jrf"]
+[ext_resource type="PackedScene" uid="uid://ccvpj2unjteaq" path="res://models/Rancho_LVL01.glb" id="28_xuqvo"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -100,6 +101,14 @@ shader_parameter/posterize_levels = 24.0000010925
 shader_parameter/dither_amount = 0.03200000152
 shader_parameter/dither_resolution = Vector2(640, 360)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a6jrf"]
+bg_color = Color(0, 0, 0, 0.3647059)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+corner_detail = 4
+
 [node name="Main" type="Node3D" unique_id=1046872265]
 
 [node name="Terrain" type="MeshInstance3D" parent="." unique_id=1772764079]
@@ -113,7 +122,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_7dm0k")
 environment = ExtResource("3_h2yge")
 
 [node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.229383, 0.02, 9.489148)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5960836, 0.02, -6.421582)
 
 [node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003 groups=["camera"]]
 transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.452898)
@@ -351,6 +360,9 @@ texture = ExtResource("5_lquwl")
 [node name="Bonfire" parent="." unique_id=1587422233 instance=ExtResource("9_bonfire")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.28924, 0, 5.37629)
 
+[node name="Bonfire2" parent="." unique_id=177662689 instance=ExtResource("9_bonfire")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.939523, 0, -4.8608527)
+
 [node name="HUD" type="Node3D" parent="." unique_id=2061694178 groups=["screen_fx"]]
 script = ExtResource("8_4c57u")
 
@@ -517,11 +529,20 @@ grow_vertical = 2
 texture = ExtResource("18_ryguw")
 expand_mode = 1
 
+[node name="Panel" type="Panel" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer/Skill4" unique_id=1654085329]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 5.0
+offset_right = 33.0
+offset_bottom = 17.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_a6jrf")
+
 [node name="Label" type="Label" parent="HUD/CanvasLayer/UI/BottomLeftUI/SkillsContainer/Skill4" unique_id=778206674]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 17.0
+offset_top = 3.0
+offset_bottom = 20.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 8
 text = "3/3"
@@ -959,10 +980,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3140539, 0.02, 2.8836334)
 can_chase = false
 
 [node name="Enemy2" parent="." unique_id=513251102 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.674326, 0.02, 2.0326214)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.942522, 0.02, 18.76274)
 
 [node name="Enemy4" parent="." unique_id=1859527240 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.74795, 0.02, -4.920226)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.306, 0.02, -4.9059906)
 
 [node name="Enemy3" parent="." unique_id=538971288 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.24584, 0.02, 8.619416)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.322863, 0.02, 22.512047)
+
+[node name="Enemy5" parent="." unique_id=1108511781 instance=ExtResource("9_kek77")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.291798, 0.02, 23.760191)
+
+[node name="Rancho_LVL01" parent="." unique_id=1030208606 instance=ExtResource("28_xuqvo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5986538, 0, -13.969747)

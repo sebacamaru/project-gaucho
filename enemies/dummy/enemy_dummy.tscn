@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://dyr8f3dvllxlo" path="res://sprites/hpbar_enemy_background.png" id="4_lgqb0"]
 [ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="4_nyy4h"]
 [ext_resource type="Texture2D" uid="uid://brbs4avkx1oba" path="res://sprites/hpbar_enemy_fill.png" id="5_nyy4h"]
+[ext_resource type="Texture2D" uid="uid://ce1due3x16bvc" path="res://weapons/boleadoras.png" id="5_xfst4"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aura"]
 render_priority = -1
@@ -68,6 +69,12 @@ script = ExtResource("1_cg66v")
 
 [node name="HitOffset" type="Node3D" parent="Visual/SpritesRoot" unique_id=1054193098]
 
+[node name="RootEffectSprite3D" type="Sprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=297557798]
+transform = Transform3D(0.09599934, 0.0006993897, 0.027993495, -0.003786318, 0.099374905, 0.010501847, -0.027745068, -0.011141633, 0.09542574, 0, 0.7047459, 0.16471386)
+visible = false
+no_depth_test = true
+texture = ExtResource("5_xfst4")
+
 [node name="AuraSprite3D" type="Sprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=123456789]
 transform = Transform3D(0.52, 0, 0, 0, 0.52, 0, 0, 0, 0.52, 0, 1.0577173, 0)
 material_override = SubResource("ShaderMaterial_aura")
@@ -84,6 +91,9 @@ alpha_cut = 1
 sprite_frames = SubResource("SpriteFrames_s4okt")
 autoplay = "default"
 frame_progress = 0.80344236
+
+[node name="SatusOverlay" type="Node3D" parent="Visual/SpritesRoot" unique_id=1694156794]
+transform = Transform3D(0.7053662, -0.6512258, 0.279935, 0.6517761, 0.7511053, 0.10501849, -0.27865142, 0.10837842, 0.9542576, 0, 0.7047459, 0.16471386)
 
 [node name="Hurtbox" type="Area3D" parent="." unique_id=1558266044]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48982334, 0)

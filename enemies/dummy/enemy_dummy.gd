@@ -52,6 +52,7 @@ var can_attack := true
 # Sprites reales
 @onready var sprite = $Visual/SpritesRoot/HitOffset/AnimatedSprite3D
 @onready var aura_sprite = $Visual/SpritesRoot/HitOffset/AuraSprite3D
+@onready var root_effect_sprite: Sprite3D = $Visual/SpritesRoot/HitOffset/RootEffectSprite3D
 @onready var hurtbox = $Hurtbox
 
 @onready var hp_bar_root = $HealthBar
@@ -86,6 +87,8 @@ var is_boleadora_rooted: bool = false
 
 func _ready() -> void:
 	hp = max_hp
+	
+	root_effect_sprite.visible = false
 
 	initialize_health_bar()
 	cache_player_reference()
@@ -365,6 +368,9 @@ func apply_boleadora_root() -> void:
 	sprites_root.scale = Vector3.ONE
 	hit_offset.position = Vector3.ZERO
 	hit_offset.scale = Vector3.ONE
+	
+	# Sprite de estado "atrapado"
+	root_effect_sprite.visible = true
 
 
 # =========================================================
@@ -470,6 +476,7 @@ func die() -> void:
 		)
 
 	died.emit()
+	root_effect_sprite.visible = false
 	await tween.finished
 	queue_free()
 

@@ -593,7 +593,8 @@ func release_boleadoras() -> void:
 			boleadora_stamina_recharge_rate,
 			boleadora_stamina_recovery_delay
 		)
-
+	
+	player.skill_used.emit("boleadoras")
 	launch_boleadora()
 	show_facon_visual()
 

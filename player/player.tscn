@@ -11,8 +11,8 @@
 [ext_resource type="PackedScene" uid="uid://dn22aym0dh2wv" path="res://weapons/BoleadoraProjectile.tscn" id="5_c35mf"]
 [ext_resource type="Texture2D" uid="uid://c2cykje4by77c" path="res://weapons/facon.png" id="5_qjkh3"]
 [ext_resource type="Texture2D" uid="uid://dertnhcsug7ql" path="res://sprites/cursor.png" id="6_boad6"]
-[ext_resource type="Texture2D" uid="uid://bkipq7gwvoey8" path="res://sprites/lampara.png" id="7_boad6"]
 [ext_resource type="Script" uid="uid://bbnttdi8cgvdq" path="res://weapons/shotgun_preview.gd" id="7_tqiix"]
+[ext_resource type="Texture2D" uid="uid://bvo5w64okmdta" path="res://sprites/lampara3.png" id="10_c35mf"]
 [ext_resource type="Texture2D" uid="uid://8vs0nd5g63p3" path="res://player/dash.png" id="11_2ieo8"]
 [ext_resource type="Script" uid="uid://cm1qtch4li2b5" path="res://player/attack_hitbox.gd" id="11_ebec5"]
 [ext_resource type="Texture2D" uid="uid://b5jknl4ypt7wm" path="res://weapons/escopeta.png" id="12_kb6p2"]
@@ -247,10 +247,10 @@ texture = ExtResource("12_kb6p2")
 [node name="LampPivot" type="Node3D" parent="Sprites" unique_id=504348815]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.89538383, 0.48107594, -0.3591329)
 
-[node name="LightSprite3D" type="Sprite3D" parent="Sprites/LampPivot" unique_id=626710260]
-transform = Transform3D(0.065, 0, 0, 0, 0.065, 0, 0, 0, 0.065, 0, 0, 0)
+[node name="LightSprite3D" type="Sprite3D" parent="Sprites/LampPivot" unique_id=58954727]
+transform = Transform3D(0.035, 0, 0, 0, 0.035, 0, 0, 0, 0.035, 0.010198177, 0.06721133, 0)
 layers = 2
-texture = ExtResource("7_boad6")
+texture = ExtResource("10_c35mf")
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Sprites" unique_id=1888602037]
 transform = Transform3D(0.9999667, -0.0029977006, -0.0075933808, 0.0031342707, 0.9998324, 0.01803623, 0.007538036, -0.01805943, 0.9998085, 0, 0.7797992, -0.002997756)
