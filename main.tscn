@@ -12,7 +12,9 @@
 [ext_resource type="PackedScene" uid="uid://cqcjp4ig3nxbv" path="res://enemies/dummy/enemy_dummy.tscn" id="9_kek77"]
 [ext_resource type="Shader" uid="uid://blyv065bw88rg" path="res://shaders/retro.gdshader" id="10_efxa6"]
 [ext_resource type="Theme" uid="uid://dirds6byeqdk2" path="res://ui/main_theme.tres" id="11_dg77c"]
+[ext_resource type="Shader" uid="uid://b4a2ih4x1iaud" path="res://shaders/canvas_item.gdshader" id="11_htxhm"]
 [ext_resource type="Script" uid="uid://buwb8gtkpcjpi" path="res://effects/sapukai_effect.gd" id="11_qsp4k"]
+[ext_resource type="Script" uid="uid://cxneorkfk6ty4" path="res://scripts/fog_overlay.gd" id="12_jq2sk"]
 [ext_resource type="Script" uid="uid://bemd66qk36tak" path="res://scripts/ui.gd" id="12_ycdy4"]
 [ext_resource type="Texture2D" uid="uid://b5dej7ancgkfu" path="res://ui/bg-black.png" id="13_vivmo"]
 [ext_resource type="Texture2D" uid="uid://scbnfypjgjra" path="res://ui/bg-violet.png" id="14_2cqfq"]
@@ -103,6 +105,18 @@ shader_parameter/blue_add = -0.005999976535
 shader_parameter/posterize_levels = 24.0000010925
 shader_parameter/dither_amount = 0.03200000152
 shader_parameter/dither_resolution = Vector2(640, 360)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jq2sk"]
+shader = ExtResource("11_htxhm")
+shader_parameter/player_screen_uv = Vector2(0.5, 0.5)
+shader_parameter/clear_radius = 0.18
+shader_parameter/clear_softness = 0.12
+shader_parameter/fog_alpha = 0.09
+shader_parameter/noise_scale = 0.2
+shader_parameter/noise_speed = 0.5
+shader_parameter/camera_world_offset = Vector2(0, 0)
+shader_parameter/world_noise_scale = 0.03
+shader_parameter/fog_color = Color(0.72156864, 0.54901963, 0.78039217, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a6jrf"]
 bg_color = Color(0, 0, 0, 0.3647059)
@@ -412,6 +426,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 0, 0, 1)
+
+[node name="FogOverlay" type="ColorRect" parent="HUD/CanvasLayer/FX" unique_id=1269370963]
+material = SubResource("ShaderMaterial_jq2sk")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("12_jq2sk")
+player_path = NodePath("../../../../Player")
 
 [node name="SapukaiEffect" type="ColorRect" parent="HUD/CanvasLayer/FX" unique_id=1218638801]
 layout_mode = 1
