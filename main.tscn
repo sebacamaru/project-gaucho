@@ -26,6 +26,8 @@
 [ext_resource type="Texture2D" uid="uid://bm5jwqm4ct8fb" path="res://ui/bg-skill-4.png" id="18_ryguw"]
 [ext_resource type="Texture2D" uid="uid://bbu47tyqwu6s2" path="res://ui/bg-level.png" id="23_1u8w0"]
 [ext_resource type="Texture2D" uid="uid://bupk3vwnn71vi" path="res://ui/bg-demonios.png" id="24_0odxb"]
+[ext_resource type="Texture2D" uid="uid://cnc7ddffshld2" path="res://ui/key-e_1.png" id="24_seu75"]
+[ext_resource type="Texture2D" uid="uid://v2kv7720bcv0" path="res://ui/key-e_2.png" id="25_htxhm"]
 [ext_resource type="Texture2D" uid="uid://c5vy1i1x15ipw" path="res://ui/bg-points.png" id="25_lswn8"]
 [ext_resource type="Script" uid="uid://cm80n46eknbiu" path="res://ui/level_up_panel.gd" id="26_a6jrf"]
 [ext_resource type="PackedScene" uid="uid://ccvpj2unjteaq" path="res://models/Rancho_LVL01.glb" id="28_xuqvo"]
@@ -109,6 +111,13 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 corner_detail = 4
+
+[sub_resource type="AnimatedTexture" id="AnimatedTexture_jq2sk"]
+frames = 2
+frame_0/texture = ExtResource("24_seu75")
+frame_0/duration = 0.25
+frame_1/texture = ExtResource("25_htxhm")
+frame_1/duration = 0.25
 
 [node name="Main" type="Node3D" unique_id=1046872265]
 
@@ -411,7 +420,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.10980392, 0.27450982, 1, 0.2901961)
+color = Color(0.29671264, 0, 0.06564218, 0.2901961)
 script = ExtResource("11_qsp4k")
 
 [node name="UI" type="Control" parent="HUD/CanvasLayer" unique_id=2103103214]
@@ -643,6 +652,18 @@ value = 10.0
 nine_patch_stretch = true
 texture_under = ExtResource("13_vivmo")
 texture_progress = ExtResource("17_074og")
+
+[node name="KeyE" type="TextureRect" parent="HUD/CanvasLayer/UI/BottomCenterUI/SapukaiBar" unique_id=75860982]
+texture_filter = 2
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -12.0
+offset_right = 12.0
+offset_bottom = 24.0
+grow_horizontal = 2
+texture = SubResource("AnimatedTexture_jq2sk")
 
 [node name="BottomRightUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=1155947597]
 layout_mode = 1

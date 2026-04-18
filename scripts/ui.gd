@@ -24,6 +24,8 @@ extends Control
 
 @onready var sapukai_effect = get_node_or_null("../FX/SapukaiEffect")
 
+@onready var sapukai_key: Control = $BottomCenterUI/SapukaiBar/KeyE
+
 # Label específica del contador de boleadoras.
 # Acá mostramos cuántas boleadoras "disponibles" quedan sobre el máximo.
 @onready var boleadoras_label: Label = $BottomLeftUI/SkillsContainer/Skill4/Label
@@ -74,7 +76,10 @@ var sapukai_is_full: bool = false
 # -----------------------------------------------------------------------------
 
 func _ready() -> void:
-	print("sapukai_effect:", sapukai_effect)
+	# Oculta el sprite de tecla E en la UI (Sapukai)
+	if sapukai_key:
+		sapukai_key.visible = false
+	
 	# Cursor
 	var cursor = load("res://ui/cursor.png")
 	Input.set_custom_mouse_cursor(cursor, Input.CURSOR_ARROW, Vector2(8, 8))
@@ -273,6 +278,10 @@ func _on_sapukai_fury_changed(current: float, max_value: float) -> void:
 	if sapukai_component and sapukai_component.is_active:
 		_stop_sapukai_full_effect()
 		sapukai_bar.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+	# Mostrar tecla solo si está llena y NO está activo
+	if sapukai_key:
+		sapukai_key.visible = now_full and not sapukai_component.is_active
 
 	# Si no está activa pero sí está llena, el pulse se encarga del aspecto visual.
 	elif now_full:

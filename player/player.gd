@@ -68,6 +68,7 @@ var last_input_dir: Vector2 = Vector2.DOWN
 @onready var sprites: Node3D = $Sprites
 @onready var anim_sprite: AnimatedSprite3D = $Sprites/AnimatedSprite3D
 @onready var cursor: Node3D = $Cursor
+@onready var sapukai_sprite: Sprite3D = $Sprites/SapukaiSprite3D
 
 # Nodo raíz visual del arma.
 # La lógica del arma vive en WeaponComponent, pero este nodo sigue
@@ -182,7 +183,21 @@ func _physics_process(delta: float) -> void:
 			dash_velocity = Vector3.ZERO
 	else:
 		var dir := Vector3(input_dir.x, 0.0, input_dir.y)
-		var move_velocity := dir * speed
+
+		# =========================================================
+		# VELOCIDAD DE MOVIMIENTO (incluye Sapukai)
+		# =========================================================
+		#
+		# Partimos de la velocidad base del player.
+		var move_speed: float = speed
+
+		# Si Sapukai está activo, aumentamos la velocidad.
+		# El multiplicador vive en SapukaiComponent,
+		# así mantenemos todo centralizado.
+		if sapukai != null:
+			move_speed *= sapukai.get_move_speed_mult()
+
+		var move_velocity := dir * move_speed
 
 		# Se suma el knockback al movimiento manual
 		velocity = move_velocity + knockback_velocity
@@ -443,6 +458,8 @@ func _on_skill_unlocked(slot_name: String) -> void:
 			dash_skill.learn()
 		"boleadoras":
 			weapon_component.learn_boleadoras()
+		"sapukai":
+			sapukai.unlock()
 
 
 func play_dash_smear(direction: Vector3) -> void:
@@ -501,10 +518,12 @@ func spawn_dash_smear_ghost(direction: Vector3) -> void:
 
 
 func _on_sapukai_started():
-	anim_sprite.modulate = Color(0.296, 0.454, 1.3, 1.0)
+	anim_sprite.modulate = Color(0.885, 0.064, 0.413, 1.0)
+	sapukai_sprite.visible = true
 
 func _on_sapukai_ended():
 	anim_sprite.modulate = Color(1,1,1)
+	sapukai_sprite.visible = false
 
 func is_sapukai_invulnerable() -> bool:
 	return sapukai != null and sapukai.is_active

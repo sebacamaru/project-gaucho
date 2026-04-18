@@ -5,7 +5,7 @@ extends ColorRect
 # =========================================================
 
 @export var base_alpha: float = 0.18
-@export var pulse_alpha: float = 0.88
+@export var pulse_alpha: float = 0.98
 @export var pulse_speed: float = 0.35
 
 # =========================================================

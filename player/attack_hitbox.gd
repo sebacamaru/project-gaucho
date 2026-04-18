@@ -1,12 +1,21 @@
 extends Area3D
 class_name AttackHitbox
 
-# Este hitbox ya no define daño fijo propio.
-# Su trabajo es:
-# - activarse / desactivarse cuando el arma lo indica
-# - detectar enemigos válidos
-# - evitar pegar múltiples veces al mismo objetivo durante el mismo swing
-# - consultar al WeaponComponent cuánto daño y knockback aplicar
+# =========================================================
+# ATTACK HITBOX
+# =========================================================
+#
+# Este hitbox:
+# - se activa / desactiva cuando el arma lo indica
+# - detecta enemigos válidos
+# - evita pegar múltiples veces al mismo objetivo durante el mismo swing
+# - consulta al WeaponComponent cuánto daño y knockback aplicar
+# - suma furia al Sapukai SOLO cuando el facón conecta
+#
+# Como queremos que Sapukai se cargue únicamente con el facón,
+# este es el mejor lugar para agregar esa lógica.
+# =========================================================
+
 
 # Diccionario de objetivos ya golpeados durante el ataque actual.
 # Usamos Dictionary como set simple: target -> true
@@ -28,6 +37,10 @@ var is_active: bool = false
 
 # Referencia al componente de armas del player.
 @onready var weapon_component: WeaponComponent = player.get_node("WeaponComponent")
+
+# Referencia al componente Sapukai del player.
+# Si no existe, no rompemos nada.
+@onready var sapukai = player.get_node_or_null("SapukaiComponent")
 
 # Referencia al collision shape del hitbox.
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
@@ -114,6 +127,14 @@ func _try_hit(target: Node) -> void:
 	# Aplicar daño si el objetivo lo soporta.
 	if target.has_method("take_damage"):
 		target.take_damage(damage)
+
+		# Como este hitbox corresponde al facón,
+		# cada golpe conectado suma furia al Sapukai.
+		#
+		# El propio SapukaiComponent ya se encarga de decidir
+		# internamente si acumula o no según su estado.
+		if sapukai != null:
+			sapukai.add_fury_from_damage_dealt(damage)
 
 	# Aplicar knockback si el objetivo lo soporta.
 	if target.has_method("apply_knockback"):

@@ -17,9 +17,12 @@
 [ext_resource type="Texture2D" uid="uid://8vs0nd5g63p3" path="res://player/dash.png" id="11_2ieo8"]
 [ext_resource type="Script" uid="uid://cm1qtch4li2b5" path="res://player/attack_hitbox.gd" id="11_ebec5"]
 [ext_resource type="Texture2D" uid="uid://b5jknl4ypt7wm" path="res://weapons/escopeta.png" id="12_kb6p2"]
+[ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="13_s7qer"]
 [ext_resource type="Texture2D" uid="uid://c8n72u20b52gi" path="res://weapons/fogonazo_v2.png" id="13_wodsf"]
 [ext_resource type="Texture2D" uid="uid://doeerjfwgekv1" path="res://weapons/smoke.png" id="14_32hag"]
 [ext_resource type="Texture2D" uid="uid://ce1due3x16bvc" path="res://weapons/boleadoras.png" id="14_e7oew"]
+[ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="14_g4c7l"]
+[ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="15_knn7v"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
 radius = 0.2993164
@@ -188,6 +191,19 @@ animations = [{
 "speed": 15.0
 }]
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7pqkx"]
+render_priority = -1
+shader = ExtResource("13_s7qer")
+shader_parameter/aura_color = Color(0.75686276, 0, 0.15294118, 1)
+shader_parameter/flame_speed = 3.10000003874312
+shader_parameter/flame_distortion = 0.10499999765304
+shader_parameter/flame_tip_sharpness = 5.000000074506
+shader_parameter/edge_power = 1.6899999622251198
+shader_parameter/aura_opacity = 1.58999996446032
+shader_parameter/global_alpha = 0.55999998748288
+shader_parameter/edge_fade = 0.3999999910592
+shader_parameter/texture_albedo = ExtResource("14_g4c7l")
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yw30f"]
 transparency = 1
 shading_mode = 0
@@ -225,6 +241,7 @@ script = ExtResource("4_8t03j")
 
 [node name="SapukaiComponent" type="Node" parent="." unique_id=1787568450]
 script = ExtResource("8_65viv")
+drain_per_second = 20.0
 
 [node name="ShotgunPreview" type="MeshInstance3D" parent="." unique_id=647233454]
 transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, -0.0023024678, 1.1253486)
@@ -267,6 +284,14 @@ render_priority = 1
 sprite_frames = SubResource("SpriteFrames_hg6s5")
 animation = &"Idle"
 frame_progress = 0.23386756
+
+[node name="SapukaiSprite3D" type="Sprite3D" parent="Sprites" unique_id=911739539]
+transform = Transform3D(0.52, 0, 0, 0, 0.52, 0, 0, 0, 0.52, 0, 1.0577173, 0)
+visible = false
+material_override = SubResource("ShaderMaterial_7pqkx")
+billboard = 2
+alpha_scissor_threshold = 0.12
+texture = ExtResource("15_knn7v")
 
 [node name="ShadowBlob" type="MeshInstance3D" parent="." unique_id=353868600]
 transform = Transform3D(-2.321343e-08, 1.1711669, 1.3113433e-08, 0, -5.119332e-08, 0.3, 0.5310622, 5.1193407e-08, 5.7320657e-16, 0, 0, 0)
