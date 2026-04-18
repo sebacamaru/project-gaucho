@@ -160,6 +160,10 @@ var shotgun_base_stats := {
 @export var boleadora_stamina_recharge_rate: float = 240.0
 @export var boleadora_stamina_recovery_delay: float = 0.18
 
+@onready var sapukai = player.get_node_or_null("SapukaiComponent")
+@export var sapukai_facon_damage_mult: float = 1.7
+@export var sapukai_facon_speed_mult: float = 1.6
+
 func _ready() -> void:
 	if muzzle_flash_light:
 		muzzle_flash_light.light_energy = 0.0
@@ -289,6 +293,9 @@ func try_primary_attack() -> bool:
 func get_facon_stats() -> Dictionary:
 	var stats: Dictionary = facon_base_stats.duplicate()
 
+	# ---------------------------------------------------------
+	# PROGRESIÓN NORMAL DEL FACÓN
+	# ---------------------------------------------------------
 	match facon_level:
 		1:
 			pass
@@ -303,6 +310,35 @@ func get_facon_stats() -> Dictionary:
 			stats["damage"] += 2
 			stats["knockback"] += 0.5
 			stats["cooldown"] = 0.06
+
+	# ---------------------------------------------------------
+	# SAPUKAI
+	# ---------------------------------------------------------
+	# Si Sapukai está activo, potenciamos SOLO el facón.
+	#
+	# Qué hacemos:
+	# - más daño
+	# - swing más rápido
+	# - vuelta más rápida
+	# - hitbox aparece antes
+	# - hitbox dura un poco menos, pero acompaña la velocidad del golpe
+	# - menos cooldown entre ataques
+	#
+	# Importante:
+	# usamos max(...) para evitar tiempos demasiado chicos o cero.
+	if sapukai != null and sapukai.is_active:
+		var damage_mult: float = sapukai_facon_damage_mult
+		var speed_mult: float = sapukai_facon_speed_mult
+
+		stats["damage"] = max(1, int(round(float(stats["damage"]) * damage_mult)))
+
+		stats["swing_duration"] = max(0.08, float(stats["swing_duration"]) / speed_mult)
+		stats["return_duration"] = max(0.02, float(stats["return_duration"]) / speed_mult)
+
+		stats["hitbox_start_delay"] = max(0.015, float(stats["hitbox_start_delay"]) / speed_mult)
+		stats["hitbox_active_time"] = max(0.05, float(stats["hitbox_active_time"]) / speed_mult)
+
+		stats["cooldown"] = max(0.02, float(stats["cooldown"]) / speed_mult)
 
 	return stats
 
@@ -429,7 +465,12 @@ func start_facon_attack() -> void:
 	facon_cooldown_timer = float(stats["cooldown"])
 
 	attack_finished.emit("facon")
-
+	
+	print("SAPUKAI ACTIVO:", sapukai != null and sapukai.is_active)
+	print("FACON DAMAGE:", stats["damage"])
+	print("SWING:", stats["swing_duration"])
+	print("RETURN:", stats["return_duration"])
+	print("COOLDOWN:", stats["cooldown"])
 
 # =========================================================
 # ESCOPETA

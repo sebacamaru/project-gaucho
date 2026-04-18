@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://c2cykje4by77c" path="res://weapons/facon.png" id="5_qjkh3"]
 [ext_resource type="Texture2D" uid="uid://dertnhcsug7ql" path="res://sprites/cursor.png" id="6_boad6"]
 [ext_resource type="Script" uid="uid://bbnttdi8cgvdq" path="res://weapons/shotgun_preview.gd" id="7_tqiix"]
+[ext_resource type="Script" uid="uid://db21k8dd7koof" path="res://player/sapukai_component.gd" id="8_65viv"]
 [ext_resource type="Texture2D" uid="uid://bvo5w64okmdta" path="res://sprites/lampara3.png" id="10_c35mf"]
 [ext_resource type="Texture2D" uid="uid://8vs0nd5g63p3" path="res://player/dash.png" id="11_2ieo8"]
 [ext_resource type="Script" uid="uid://cm1qtch4li2b5" path="res://player/attack_hitbox.gd" id="11_ebec5"]
@@ -222,6 +223,9 @@ script = ExtResource("3_hg6s5")
 [node name="DashSkill" type="Node" parent="." unique_id=457987336]
 script = ExtResource("4_8t03j")
 
+[node name="SapukaiComponent" type="Node" parent="." unique_id=1787568450]
+script = ExtResource("8_65viv")
+
 [node name="ShotgunPreview" type="MeshInstance3D" parent="." unique_id=647233454]
 transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, -0.0023024678, 1.1253486)
 script = ExtResource("7_tqiix")
@@ -286,7 +290,7 @@ transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, 0.5925225, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.279, -0.3)
 
 [node name="FaconSprite3D" type="Sprite3D" parent="Weapon/Grip" unique_id=280945246]
-transform = Transform3D(0.99904823, -0.043619387, 0, -1.906664e-09, -4.3669786e-08, 1, -0.043619387, -0.99904823, -4.371139e-08, 0, 0, 0)
+transform = Transform3D(0.8991434, -0.03925745, -1.7159975e-09, 0, -3.934025e-08, 0.9, -0.03925745, -0.8991434, -3.9302808e-08, 0, 0, 0)
 layers = 2
 shaded = true
 no_depth_test = true

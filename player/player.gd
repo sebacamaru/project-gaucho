@@ -26,6 +26,9 @@ extends CharacterBody3D
 # Efecto visual del dash
 @onready var dash_smear: Sprite3D = $DashSmear
 
+# Habilidad Sapukai
+@onready var sapukai: SapukaiComponent = $SapukaiComponent
+
 # =========================
 # BALANCEO DE LÁMPARA
 # =========================
@@ -127,6 +130,10 @@ func _ready() -> void:
 
 	# Arranca en idle
 	anim_sprite.play("Idle")
+	
+	# Sapukai
+	sapukai.sapukai_started.connect(_on_sapukai_started)
+	sapukai.sapukai_ended.connect(_on_sapukai_ended)
 
 
 func _physics_process(delta: float) -> void:
@@ -205,9 +212,13 @@ func _physics_process(delta: float) -> void:
 	# Ataque terciario: boleadoras
 	if Input.is_action_just_pressed("boleadoras"):
 		weapon_component.try_start_boleadoras_aim()
-
+	
 	if Input.is_action_just_released("boleadoras"):
 		weapon_component.release_boleadoras()
+	
+	# Activar modo Sapukai
+	if Input.is_action_just_pressed("sapukai"):
+		sapukai.try_activate()
 
 	# =========================
 	# VISUAL DEL ARMA
@@ -289,6 +300,9 @@ func apply_knockback(dir: Vector3, force: float = 4.5) -> void:
 	# Si está muerto, ignoramos knockback nuevo
 	if is_dead:
 		return
+	
+	if is_sapukai_invulnerable():
+		return
 
 	dir.y = 0.0
 
@@ -363,6 +377,10 @@ func take_damage(amount: int) -> void:
 	if is_dead:
 		return
 
+	# Durante Sapukai, el gaucho es inmune al daño.
+	if is_sapukai_invulnerable():
+		return
+
 	hp = max(hp - amount, 0)
 	hp_changed.emit(hp, max_hp)
 
@@ -373,8 +391,9 @@ func take_damage(amount: int) -> void:
 	# Reproducir feedback visual si existe
 	if screen_fx and screen_fx.has_method("play_damage_feedback"):
 		screen_fx.play_damage_feedback()
-
-	print("HP:", hp)
+	
+	# Aumenta furia al recibir daño (Sapukai)
+	sapukai.add_fury_from_damage_taken(amount)
 
 	# Si la vida llegó a 0 o menos, morir
 	if hp <= 0:
@@ -479,3 +498,13 @@ func spawn_dash_smear_ghost(direction: Vector3) -> void:
 
 	await tween.finished
 	ghost.queue_free()
+
+
+func _on_sapukai_started():
+	anim_sprite.modulate = Color(0.296, 0.454, 1.3, 1.0)
+
+func _on_sapukai_ended():
+	anim_sprite.modulate = Color(1,1,1)
+
+func is_sapukai_invulnerable() -> bool:
+	return sapukai != null and sapukai.is_active

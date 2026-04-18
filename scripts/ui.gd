@@ -15,11 +15,14 @@ extends Control
 
 @onready var health_bar: TextureProgressBar = $BottomCenterUI/HealthBar
 @onready var stamina_bar: TextureProgressBar = $BottomCenterUI/StaminaBar
+@onready var sapukai_bar: TextureProgressBar = $BottomCenterUI/SapukaiBar
 
 @onready var skill_1: Control = $BottomLeftUI/SkillsContainer/Skill1
 @onready var shotgun: Control = $BottomLeftUI/SkillsContainer/Skill2
 @onready var slot_dash: Control = $BottomLeftUI/SkillsContainer/Skill3
 @onready var boleadoras: Control = $BottomLeftUI/SkillsContainer/Skill4
+
+@onready var sapukai_effect = get_node_or_null("../FX/SapukaiEffect")
 
 # Label específica del contador de boleadoras.
 # Acá mostramos cuántas boleadoras "disponibles" quedan sobre el máximo.
@@ -35,6 +38,12 @@ extends Control
 # -----------------------------------------------------------------------------
 
 var stamina_tween: Tween
+var sapukai_tween: Tween
+
+# Tween dedicado al efecto de "barra llena".
+# Lo mantenemos aparte para poder iniciarlo / frenarlo sin pelearse
+# con la animación normal de llenado de la barra.
+var sapukai_pulse_tween: Tween
 
 # -----------------------------------------------------------------------------
 # Estado interno
@@ -52,11 +61,20 @@ var squish_tween: Tween
 # La resolvemos en _ready() una vez que validamos que exista player.
 var weapon_component = null
 
+# Referencia cacheada al SapukaiComponent.
+# La usamos para conectar señales y consultar si está activo.
+var sapukai_component = null
+
+# Guarda si la barra de Sapukai está llena o no.
+# Esto evita relanzar el efecto de pulse cada frame / cada señal repetida.
+var sapukai_is_full: bool = false
+
 # -----------------------------------------------------------------------------
 # Ciclo de vida
 # -----------------------------------------------------------------------------
 
 func _ready() -> void:
+	print("sapukai_effect:", sapukai_effect)
 	# Cursor
 	var cursor = load("res://ui/cursor.png")
 	Input.set_custom_mouse_cursor(cursor, Input.CURSOR_ARROW, Vector2(8, 8))
@@ -72,6 +90,12 @@ func _ready() -> void:
 	if player.has_node("WeaponComponent"):
 		weapon_component = player.get_node("WeaponComponent")
 
+	# Cacheamos referencia al SapukaiComponent si existe.
+	# No asumimos que esté siempre, para que la UI no rompa si todavía
+	# estamos probando escenas viejas o variantes del player.
+	if player.has_node("SapukaiComponent"):
+		sapukai_component = player.get_node("SapukaiComponent")
+
 	# Vida
 	player.hp_changed.connect(_on_player_hp_changed)
 	_on_player_hp_changed(player.hp, player.max_hp)
@@ -83,6 +107,11 @@ func _ready() -> void:
 			player.stamina.current_stamina,
 			player.stamina.max_stamina
 		)
+
+	# Sapukai / furia
+	# Conectamos la señal de cambio de furia si el componente existe
+	# y sincronizamos el valor inicial para que la barra arranque correcta.
+	_connect_sapukai_bar()
 
 	# Señal cuando usa una skill / arma
 	player.skill_used.connect(_on_player_skill_used)
@@ -167,6 +196,161 @@ func _on_player_stamina_changed(current: float, max_value: float) -> void:
 	stamina_tween.set_trans(Tween.TRANS_CUBIC)
 	stamina_tween.set_ease(Tween.EASE_OUT)
 	stamina_tween.tween_property(stamina_bar, "value", current, duration)
+
+
+# -----------------------------------------------------------------------------
+# Sapukai / Furia
+# -----------------------------------------------------------------------------
+
+func _connect_sapukai_bar() -> void:
+	# Si la barra no existe, no hacemos nada.
+	if sapukai_bar == null:
+		return
+
+	# Si la escena todavía no tiene SapukaiComponent, dejamos la barra
+	# en un estado seguro y salimos.
+	if sapukai_component == null:
+		sapukai_bar.min_value = 0
+		sapukai_bar.max_value = 100
+		sapukai_bar.value = 0
+		sapukai_bar.modulate = Color(1.0, 1.0, 1.0, 0.65)
+		return
+
+	# Conectamos cambio de furia.
+	if sapukai_component.has_signal("fury_changed"):
+		sapukai_component.fury_changed.connect(_on_sapukai_fury_changed)
+
+	# También escuchamos inicio y fin del modo para reforzar el feedback visual.
+	if sapukai_component.has_signal("sapukai_started"):
+		sapukai_component.sapukai_started.connect(_on_sapukai_started)
+
+	if sapukai_component.has_signal("sapukai_ended"):
+		sapukai_component.sapukai_ended.connect(_on_sapukai_ended)
+
+	# Sincronización inicial.
+	_on_sapukai_fury_changed(
+		sapukai_component.current_fury,
+		sapukai_component.max_fury
+	)
+
+
+func _on_sapukai_fury_changed(current: float, max_value: float) -> void:
+	if sapukai_bar == null:
+		return
+
+	sapukai_bar.min_value = 0
+	sapukai_bar.max_value = max(max_value, 1.0)
+
+	# Si había una animación anterior de valor, la cortamos para que
+	# la barra no quede peleándose entre tweens.
+	if sapukai_tween and sapukai_tween.is_valid():
+		sapukai_tween.kill()
+
+	# Cuando la barra baja, usamos una animación apenas más rápida.
+	# Cuando sube, un pelín más suave.
+	var duration := 0.10 if current < sapukai_bar.value else 0.16
+
+	sapukai_tween = create_tween()
+	sapukai_tween.set_trans(Tween.TRANS_CUBIC)
+	sapukai_tween.set_ease(Tween.EASE_OUT)
+	sapukai_tween.tween_property(sapukai_bar, "value", current, duration)
+
+	# Detectamos si ahora quedó llena.
+	var now_full: bool = current >= max_value
+
+	# Si acaba de llenarse y todavía no está activa,
+	# arrancamos el efecto de pulse.
+	if now_full and not sapukai_is_full and not sapukai_component.is_active:
+		sapukai_is_full = true
+		_start_sapukai_full_effect()
+
+	# Si dejó de estar llena, cortamos el efecto.
+	elif not now_full and sapukai_is_full:
+		sapukai_is_full = false
+		_stop_sapukai_full_effect()
+
+	# Si Sapukai está activo, la barra se ve estable e intensa.
+	if sapukai_component and sapukai_component.is_active:
+		_stop_sapukai_full_effect()
+		sapukai_bar.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+	# Si no está activa pero sí está llena, el pulse se encarga del aspecto visual.
+	elif now_full:
+		pass
+
+	# Si no está ni activa ni llena, aspecto normal.
+	else:
+		sapukai_bar.modulate = Color(1.0, 1.0, 1.0, 0.78)
+
+
+func _on_sapukai_started() -> void:
+	# Al activarse Sapukai:
+	# - cortamos el pulse de "listo para usar"
+	# - dejamos la barra sólida y clara
+	if sapukai_bar == null:
+		return
+
+	sapukai_is_full = false
+	_stop_sapukai_full_effect()
+	sapukai_bar.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	
+	if sapukai_effect:
+		sapukai_effect.start_effect()
+
+
+func _on_sapukai_ended() -> void:
+	# Cuando termina:
+	# - nos aseguramos de cortar cualquier pulse residual
+	# - devolvemos la barra a un aspecto normal
+	if sapukai_bar == null:
+		return
+
+	sapukai_is_full = false
+	_stop_sapukai_full_effect()
+	sapukai_bar.modulate = Color(1.0, 1.0, 1.0, 0.78)
+	
+	if sapukai_effect:
+		sapukai_effect.stop_effect()
+
+
+func _start_sapukai_full_effect() -> void:
+	# Efecto suave mientras la barra está llena:
+	# un pulse de brillo / alpha para decir "está lista".
+	#
+	# Muy importante:
+	# NO tocamos scale, size ni layout.
+	# Solo trabajamos con modulate para evitar deformaciones raras.
+	if sapukai_bar == null:
+		return
+
+	# Si ya había un tween viejo, lo matamos antes de arrancar uno nuevo.
+	if sapukai_pulse_tween and sapukai_pulse_tween.is_valid():
+		sapukai_pulse_tween.kill()
+
+	sapukai_pulse_tween = create_tween()
+	sapukai_pulse_tween.set_loops()
+
+	# Subida del brillo
+	sapukai_pulse_tween.tween_property(
+		sapukai_bar,
+		"modulate",
+		Color(1.15, 0.95, 0.95, 1.0),
+		0.38
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	# Bajada suave
+	sapukai_pulse_tween.tween_property(
+		sapukai_bar,
+		"modulate",
+		Color(1.0, 0.86, 0.86, 0.5),
+		0.38
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func _stop_sapukai_full_effect() -> void:
+	# Corta el pulse visual de barra llena.
+	if sapukai_pulse_tween and sapukai_pulse_tween.is_valid():
+		sapukai_pulse_tween.kill()
 
 
 # -----------------------------------------------------------------------------
