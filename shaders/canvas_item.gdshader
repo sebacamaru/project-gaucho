@@ -6,16 +6,24 @@ uniform float clear_radius = 0.18;
 uniform float clear_softness = 0.12;
 
 uniform float fog_alpha = 0.16;
-uniform float noise_scale = 3.0;
+uniform float noise_scale = 0.03;
 uniform float noise_speed = 0.015;
 
+// Posición de la cámara en coordenadas de mundo (o equivalente 2D del plano)
 uniform vec2 camera_world_offset = vec2(0.0, 0.0);
-uniform float world_noise_scale = 0.03;
+
+// Tamaño visible del mundo en pantalla.
+// Ejemplo: si tu cámara ve aprox 24 unidades de ancho y 13.5 de alto,
+// este valor debe representar eso en el mismo espacio que camera_world_offset.
+uniform vec2 visible_world_size = vec2(20.0, 12.0);
 
 uniform vec4 fog_color : source_color = vec4(0.72, 0.72, 0.78, 1.0);
 
+
 float hash(vec2 p) {
-	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+	p = fract(p * vec2(0.1031, 0.1030));
+	p += dot(p, p.yx + 33.33);
+	return fract((p.x + p.y) * p.x);
 }
 
 float noise(vec2 p) {
@@ -50,14 +58,17 @@ float fbm(vec2 p) {
 void fragment() {
 	vec2 uv = SCREEN_UV;
 
-	// En vez de ruido pegado a pantalla,
-	// lo desplazamos usando la posición de la cámara en el mundo.
-	vec2 world_uv = uv / world_noise_scale + camera_world_offset;
+	// Convertimos cada píxel de pantalla a una posición continua dentro del mundo.
+	// Esto deja el patrón "pegado" al escenario en vez de pegado a la pantalla.
+	vec2 world_pos = camera_world_offset + uv * visible_world_size;
 
-	// Movimiento muy sutil
-	world_uv += vec2(TIME * noise_speed, TIME * noise_speed * 0.6);
+	// Escala del ruido
+	vec2 noise_uv = world_pos * noise_scale;
 
-	float n = fbm(world_uv * noise_scale);
+	// Movimiento muy sutil de la niebla
+	noise_uv += vec2(TIME * noise_speed, TIME * noise_speed * 0.6);
+
+	float n = fbm(noise_uv);
 	float fog_variation = smoothstep(0.35, 0.8, n);
 
 	float dist_to_player = distance(uv, player_screen_uv);

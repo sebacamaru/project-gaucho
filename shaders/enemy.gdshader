@@ -7,6 +7,6 @@ void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
 
 	ALBEDO = tex.rgb;
-	EMISSION = tex.rgb * 0.9;
+	EMISSION = tex.rgb * 0.4;
 	ALPHA = tex.a;
 }

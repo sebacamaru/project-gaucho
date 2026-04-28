@@ -4,9 +4,11 @@
 background_mode = 1
 background_color = Color(0.03283944, 0.054402888, 0.107583605, 1)
 glow_enabled = true
-glow_bloom = 0.5
+glow_intensity = 0.1
+glow_bloom = 0.1
 volumetric_fog_density = 0.6917
 volumetric_fog_anisotropy = 0.33
 adjustment_enabled = true
-adjustment_contrast = 1.015
-adjustment_saturation = 1.2
+adjustment_brightness = 1.27
+adjustment_contrast = 1.025
+adjustment_saturation = 1.72

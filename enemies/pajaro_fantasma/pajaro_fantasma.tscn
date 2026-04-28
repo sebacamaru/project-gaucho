@@ -1,17 +1,18 @@
-[gd_scene format=3 uid="uid://cqcjp4ig3nxbv"]
+[gd_scene format=3 uid="uid://dt6h12kf4uwrx"]
 
-[ext_resource type="Script" uid="uid://c4i2t7ql523d1" path="res://enemies/dummy/enemy_dummy.gd" id="1_cg66v"]
-[ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="1_v857q"]
-[ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="2_blackaura"]
-[ext_resource type="Texture2D" uid="uid://dyr8f3dvllxlo" path="res://sprites/hpbar_enemy_background.png" id="4_lgqb0"]
-[ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="4_nyy4h"]
-[ext_resource type="Texture2D" uid="uid://brbs4avkx1oba" path="res://sprites/hpbar_enemy_fill.png" id="5_nyy4h"]
-[ext_resource type="Texture2D" uid="uid://ce1due3x16bvc" path="res://weapons/boleadoras.png" id="5_xfst4"]
+[ext_resource type="Script" uid="uid://c4i2t7ql523d1" path="res://enemies/dummy/enemy_dummy.gd" id="1_okdph"]
+[ext_resource type="Texture2D" uid="uid://ce1due3x16bvc" path="res://weapons/boleadoras.png" id="2_3pusl"]
+[ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="3_ye4w8"]
+[ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="4_owp1k"]
+[ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="5_1q3e2"]
+[ext_resource type="Texture2D" uid="uid://dyr8f3dvllxlo" path="res://sprites/hpbar_enemy_background.png" id="6_lrl0h"]
+[ext_resource type="Texture2D" uid="uid://dfeg8swy2acuj" path="res://enemies/pajaro_fantasma/pajaro_fantasma.png" id="6_w2ytb"]
+[ext_resource type="Texture2D" uid="uid://brbs4avkx1oba" path="res://sprites/hpbar_enemy_fill.png" id="7_8pqnt"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aura"]
 render_priority = -1
-shader = ExtResource("2_blackaura")
-shader_parameter/aura_color = Color(0.024422154, 0.0022169384, 0.14289719, 1)
+shader = ExtResource("3_ye4w8")
+shader_parameter/aura_color = Color(0.3481493, 0.24409091, 0.28338826, 1)
 shader_parameter/flame_speed = 3.10000003874312
 shader_parameter/flame_distortion = 0.10499999765304
 shader_parameter/flame_tip_sharpness = 5.000000074506
@@ -19,38 +20,45 @@ shader_parameter/edge_power = 1.6899999622251198
 shader_parameter/aura_opacity = 0.7999999821184
 shader_parameter/global_alpha = 0.55999998748288
 shader_parameter/edge_fade = 0.3999999910592
-shader_parameter/texture_albedo = ExtResource("1_v857q")
+shader_parameter/texture_albedo = ExtResource("4_owp1k")
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_lgqb0"]
-atlas = ExtResource("1_v857q")
-region = Rect2(1800, 0, 600, 400)
+[sub_resource type="AtlasTexture" id="AtlasTexture_a8d0t"]
+atlas = ExtResource("6_w2ytb")
+region = Rect2(0, 200, 200, 200)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_nyy4h"]
-atlas = ExtResource("1_v857q")
-region = Rect2(1200, 0, 600, 400)
+[sub_resource type="AtlasTexture" id="AtlasTexture_3g56v"]
+atlas = ExtResource("6_w2ytb")
+region = Rect2(200, 200, 200, 200)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_xfst4"]
-atlas = ExtResource("1_v857q")
-region = Rect2(600, 0, 600, 400)
+[sub_resource type="AtlasTexture" id="AtlasTexture_2pvdt"]
+atlas = ExtResource("6_w2ytb")
+region = Rect2(400, 200, 200, 200)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_hhner"]
-atlas = ExtResource("1_v857q")
-region = Rect2(0, 0, 600, 400)
+[sub_resource type="AtlasTexture" id="AtlasTexture_jpbpn"]
+atlas = ExtResource("6_w2ytb")
+region = Rect2(600, 200, 200, 200)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jd34x"]
+atlas = ExtResource("6_w2ytb")
+region = Rect2(800, 200, 200, 200)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_s4okt"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_lgqb0")
+"texture": SubResource("AtlasTexture_a8d0t")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_nyy4h")
+"texture": SubResource("AtlasTexture_3g56v")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_xfst4")
+"texture": SubResource("AtlasTexture_2pvdt")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_hhner")
+"texture": SubResource("AtlasTexture_jpbpn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jd34x")
 }],
 "loop": true,
 "name": &"default",
@@ -61,7 +69,7 @@ animations = [{
 size = Vector3(1.2596436, 1.1567383, 1.9614697)
 
 [node name="Enemy" type="Node3D" unique_id=740511559 groups=["enemy"]]
-script = ExtResource("1_cg66v")
+script = ExtResource("1_okdph")
 
 [node name="Visual" type="Node3D" parent="." unique_id=1118079420]
 
@@ -73,17 +81,17 @@ script = ExtResource("1_cg66v")
 transform = Transform3D(0.09599934, 0.0006993897, 0.027993495, -0.003786318, 0.099374905, 0.010501847, -0.027745068, -0.011141633, 0.09542574, 0, 0.7047459, 0.16471386)
 visible = false
 no_depth_test = true
-texture = ExtResource("5_xfst4")
+texture = ExtResource("2_3pusl")
 
 [node name="AuraSprite3D" type="Sprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=123456789]
-transform = Transform3D(0.52, 0, 0, 0, 0.52, 0, 0, 0, 0.52, 0, 1.0577173, 0)
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 1.0577173, 0)
 material_override = SubResource("ShaderMaterial_aura")
 billboard = 2
 alpha_scissor_threshold = 0.12
-texture = ExtResource("4_nyy4h")
+texture = ExtResource("5_1q3e2")
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=1106185488]
-transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0.636, 0)
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0.636, 0)
 billboard = 2
 shaded = true
 double_sided = false
@@ -109,13 +117,13 @@ double_sided = false
 alpha_cut = 1
 
 [node name="Background" type="Sprite3D" parent="HealthBar" unique_id=458944180]
-texture = ExtResource("4_lgqb0")
+texture = ExtResource("6_lrl0h")
 
 [node name="FillPivot" type="Node3D" parent="HealthBar" unique_id=1899751098]
 
 [node name="Fill" type="Sprite3D" parent="HealthBar/FillPivot" unique_id=1014971992]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.01)
-texture = ExtResource("5_nyy4h")
+texture = ExtResource("7_8pqnt")
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="." unique_id=1647206510]
-debug_enabled = true
+debug_path_custom_color = Color(1, 1, 1, 0.14117648)

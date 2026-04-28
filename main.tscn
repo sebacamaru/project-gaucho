@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://cq1ly5mewga7d" path="res://textures/floor.png" id="1_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://dfwvskldv0ksq" path="res://player/player.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://6yl8qhrda7v2" path="res://models/Rancho_LVL01_V2.glb" id="2_jq2sk"]
 [ext_resource type="Environment" uid="uid://kk1k3kd6nma6" path="res://enviroments/test_enviroment.tres" id="3_h2yge"]
 [ext_resource type="Shader" uid="uid://bn0hatxytwtx8" path="res://shaders/radial_blur.gdshader" id="4_1bvp3"]
 [ext_resource type="Shader" uid="uid://bj68r13tkk4fd" path="res://shaders/wind_tree.gdshader" id="5_272bh"]
@@ -9,7 +10,6 @@
 [ext_resource type="Texture2D" uid="uid://cg0g2yj1p0say" path="res://textures/Arbol_02.png" id="6_efxa6"]
 [ext_resource type="Script" uid="uid://dnx4n1en4ks0x" path="res://scripts/screen_fx.gd" id="8_4c57u"]
 [ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://objects/bonfire.tscn" id="9_bonfire"]
-[ext_resource type="PackedScene" uid="uid://cqcjp4ig3nxbv" path="res://enemies/dummy/enemy_dummy.tscn" id="9_kek77"]
 [ext_resource type="Shader" uid="uid://blyv065bw88rg" path="res://shaders/retro.gdshader" id="10_efxa6"]
 [ext_resource type="Theme" uid="uid://dirds6byeqdk2" path="res://ui/main_theme.tres" id="11_dg77c"]
 [ext_resource type="Shader" uid="uid://b4a2ih4x1iaud" path="res://shaders/canvas_item.gdshader" id="11_htxhm"]
@@ -32,7 +32,11 @@
 [ext_resource type="Texture2D" uid="uid://v2kv7720bcv0" path="res://ui/key-e_2.png" id="25_htxhm"]
 [ext_resource type="Texture2D" uid="uid://c5vy1i1x15ipw" path="res://ui/bg-points.png" id="25_lswn8"]
 [ext_resource type="Script" uid="uid://cm80n46eknbiu" path="res://ui/level_up_panel.gd" id="26_a6jrf"]
-[ext_resource type="PackedScene" uid="uid://ccvpj2unjteaq" path="res://models/Rancho_LVL01.glb" id="28_xuqvo"]
+[ext_resource type="PackedScene" uid="uid://dt6h12kf4uwrx" path="res://enemies/pajaro_fantasma/pajaro_fantasma.tscn" id="34_4k2k6"]
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_jq2sk"]
+vertices = PackedVector3Array(-4.248768, 0.32077634, -7.504698, -3.7487679, 0.32077634, -7.754698, -3.7487679, 0.32077634, -8.004698, -4.998768, 0.32077634, -8.504698, -4.748768, 0.32077634, -15.504698, -3.7487679, 0.32077634, -15.754698, -3.7487679, 0.32077634, -16.004698, -4.748768, 0.32077634, -16.254698, -4.998768, 0.32077634, -9.254698, -4.748768, 0.32077634, -17.254698, -9.998768, 0.32077634, -3.0046978, -4.248768, 0.32077634, -9.754698, -3.9987679, 0.32077634, -11.004698, -4.748768, 0.32077634, -11.504698, -4.248768, 0.32077634, -6.504698, -9.248768, 0.32077634, -3.0046978, -4.248768, 0.32077634, -17.504698, -4.248768, 0.32077634, -29.504698, -29.498768, 0.32077634, -29.504698, -29.498768, 0.32077634, -2.2546978, -10.248768, 0.32077634, -2.2546978, -2.9987679, 0.32077634, -16.254698, -2.9987679, 0.32077634, -15.504698, -2.2487679, 0.32077634, -15.504698, -2.9987679, 0.32077634, -17.254698, -1.9987679, 0.32077634, -17.504698, 6.001232, 0.32077634, -17.504698, 6.001232, 0.32077634, -29.504698, 7.751232, 0.32077634, -8.504698, 9.251232, 0.32077634, -8.504698, 9.501232, 0.32077634, -9.254698, 6.501232, 0.32077634, -11.754698, 10.751232, 0.32077634, -9.254698, 11.001232, 0.32077634, -8.504698, 29.501232, 0.32077634, -8.504698, 6.501232, 0.32077634, -17.254698, 29.501232, 0.32077634, -29.504698, -3.7487679, 3.0707765, -16.754698, -3.7487679, 3.0707765, -12.004698, 5.751232, 3.0707765, -11.754698, 5.751232, 3.0707765, -17.004698, -0.99876785, 0.32077634, -16.254698, -0.99876785, 0.32077634, -12.504698, 5.251232, 0.32077634, -12.504698, 5.251232, 0.32077634, -16.254698, -3.2487679, 0.32077634, -8.254698, -2.4987679, 0.32077634, -7.504698, -2.9987679, 0.32077634, -11.504698, -1.9987679, 0.32077634, -11.254698, -3.2487679, 0.32077634, -9.254698, -2.7487679, 0.32077634, -6.004698, 0.0012321472, 0.32077634, -0.7546978, 0.25123215, 0.32077634, -0.7546978, 6.251232, 0.32077634, -11.254698, 7.001232, 0.32077634, -7.504698, 7.001232, 0.32077634, -6.504698, 7.501232, 0.32077634, -6.254698, 10.751232, 0.32077634, -7.754698, 9.501232, 0.32077634, -8.004698, 9.251232, 0.32077634, -6.254698, 8.251232, 0.32077634, 1.9953022, 8.501232, 0.32077634, 2.7453022, 8.001232, 0.32077634, -6.254698, 7.751232, 0.32077634, 1.9953022, 29.501232, 0.32077634, 2.7453022, -8.748768, 0.32077634, -2.7546978, -3.9987679, 0.32077634, -6.004698, -0.74876785, 0.32077634, 0.2453022, -8.748768, 0.32077634, -1.7546978, -5.498768, 0.32077634, 3.7453022, -4.498768, 0.32077634, 3.7453022, -9.248768, 0.32077634, -1.5046978, -5.998768, 0.32077634, 4.495302, 5.501232, 0.32077634, 4.745302, 7.251232, 0.32077634, 3.4953022, 6.751232, 0.32077634, 3.2453022, 4.751232, 0.32077634, 3.7453022, 6.751232, 0.32077634, 2.2453022, 1.0012321, 0.32077634, 0.2453022, 4.001232, 0.32077634, 3.7453022, -2.7487679, 0.32077634, 7.495302, -4.248768, 0.32077634, 5.995302, -5.748768, 0.32077634, 5.995302, -2.7487679, 0.32077634, 10.995302, -1.2487679, 0.32077634, 29.495302, -9.998768, 0.32077634, -1.5046978, -29.498768, 0.32077634, 29.495302, -0.99876785, 0.32077634, 11.245302, -3.7487679, 0.32077634, 5.745302, -2.4987679, 0.32077634, 6.995302, 3.2512321, 0.32077634, 4.245302, 0.75123215, 0.32077634, 0.7453022, -0.49876785, 0.32077634, 0.7453022, -3.7487679, 0.32077634, 4.245302, 1.2512321, 0.32077634, 6.995302, 1.5012321, 0.32077634, 7.745302, 3.2512321, 0.32077634, 7.495302, 5.251232, 0.32077634, 5.995302, 5.751232, 0.32077634, 6.495302, 8.251232, 0.32077634, 3.4953022, 3.7512321, 0.32077634, 8.245302, 1.5012321, 0.32077634, 10.995302, 5.751232, 0.32077634, 7.745302, 29.501232, 0.32077634, 29.495302, -1.7487679, 2.3207765, 7.995302, -1.7487679, 2.3207765, 10.245302, 0.50123215, 2.3207765, 10.245302, 0.50123215, 2.3207765, 7.995302, -1.4987679, 0.32077634, 8.245302, -1.4987679, 0.32077634, 9.995302, 0.25123215, 0.32077634, 9.995302, 0.25123215, 0.32077634, 8.245302)
+polygons = [PackedInt32Array(1, 0, 2), PackedInt32Array(2, 0, 3), PackedInt32Array(5, 4, 6), PackedInt32Array(6, 4, 7), PackedInt32Array(7, 8, 9), PackedInt32Array(9, 8, 10), PackedInt32Array(8, 3, 10), PackedInt32Array(12, 11, 13), PackedInt32Array(13, 11, 8), PackedInt32Array(0, 14, 3), PackedInt32Array(3, 14, 15), PackedInt32Array(3, 15, 10), PackedInt32Array(17, 16, 9), PackedInt32Array(4, 13, 8), PackedInt32Array(9, 10, 17), PackedInt32Array(17, 10, 19), PackedInt32Array(17, 19, 18), PackedInt32Array(7, 4, 8), PackedInt32Array(10, 20, 19), PackedInt32Array(6, 21, 5), PackedInt32Array(5, 21, 22), PackedInt32Array(22, 21, 23), PackedInt32Array(24, 16, 25), PackedInt32Array(25, 16, 17), PackedInt32Array(26, 25, 27), PackedInt32Array(27, 25, 17), PackedInt32Array(24, 25, 21), PackedInt32Array(21, 25, 23), PackedInt32Array(29, 28, 30), PackedInt32Array(30, 28, 31), PackedInt32Array(34, 33, 32), PackedInt32Array(30, 31, 32), PackedInt32Array(32, 31, 35), PackedInt32Array(35, 27, 32), PackedInt32Array(32, 27, 34), PackedInt32Array(34, 27, 36), PackedInt32Array(35, 26, 27), PackedInt32Array(37, 40, 38), PackedInt32Array(38, 40, 39), PackedInt32Array(44, 43, 41), PackedInt32Array(41, 43, 42), PackedInt32Array(2, 45, 1), PackedInt32Array(1, 45, 46), PackedInt32Array(22, 23, 47), PackedInt32Array(47, 23, 48), PackedInt32Array(11, 12, 49), PackedInt32Array(49, 12, 47), PackedInt32Array(45, 49, 46), PackedInt32Array(46, 49, 48), PackedInt32Array(48, 49, 47), PackedInt32Array(51, 50, 52), PackedInt32Array(52, 50, 46), PackedInt32Array(31, 28, 53), PackedInt32Array(53, 28, 54), PackedInt32Array(54, 55, 53), PackedInt32Array(53, 55, 48), PackedInt32Array(48, 55, 46), PackedInt32Array(46, 55, 52), PackedInt32Array(55, 56, 52), PackedInt32Array(58, 57, 59), PackedInt32Array(59, 57, 60), PackedInt32Array(60, 57, 61), PackedInt32Array(63, 62, 60), PackedInt32Array(60, 62, 59), PackedInt32Array(57, 33, 61), PackedInt32Array(61, 33, 34), PackedInt32Array(61, 34, 64), PackedInt32Array(66, 65, 14), PackedInt32Array(14, 65, 15), PackedInt32Array(51, 67, 50), PackedInt32Array(50, 67, 66), PackedInt32Array(66, 67, 68), PackedInt32Array(68, 67, 69), PackedInt32Array(67, 70, 69), PackedInt32Array(68, 65, 66), PackedInt32Array(68, 69, 71), PackedInt32Array(71, 69, 72), PackedInt32Array(74, 73, 75), PackedInt32Array(75, 73, 76), PackedInt32Array(77, 52, 63), PackedInt32Array(63, 52, 56), PackedInt32Array(63, 56, 62), PackedInt32Array(75, 76, 77), PackedInt32Array(77, 76, 79), PackedInt32Array(77, 79, 78), PackedInt32Array(77, 78, 52), PackedInt32Array(81, 80, 82), PackedInt32Array(82, 80, 83), PackedInt32Array(82, 83, 84), PackedInt32Array(71, 72, 85), PackedInt32Array(85, 72, 82), PackedInt32Array(85, 82, 19), PackedInt32Array(19, 82, 86), PackedInt32Array(86, 82, 84), PackedInt32Array(83, 87, 84), PackedInt32Array(85, 19, 20), PackedInt32Array(89, 80, 88), PackedInt32Array(88, 80, 81), PackedInt32Array(91, 90, 92), PackedInt32Array(92, 90, 94), PackedInt32Array(92, 94, 89), PackedInt32Array(92, 89, 93), PackedInt32Array(95, 94, 96), PackedInt32Array(96, 94, 90), PackedInt32Array(89, 88, 93), PackedInt32Array(92, 93, 67), PackedInt32Array(67, 93, 70), PackedInt32Array(91, 78, 90), PackedInt32Array(90, 78, 79), PackedInt32Array(97, 73, 98), PackedInt32Array(98, 73, 74), PackedInt32Array(98, 74, 99), PackedInt32Array(96, 100, 95), PackedInt32Array(95, 100, 101), PackedInt32Array(84, 87, 101), PackedInt32Array(64, 99, 61), PackedInt32Array(99, 64, 102), PackedInt32Array(102, 64, 103), PackedInt32Array(102, 103, 84), PackedInt32Array(102, 98, 99), PackedInt32Array(100, 102, 101), PackedInt32Array(101, 102, 84), PackedInt32Array(107, 106, 104), PackedInt32Array(104, 106, 105), PackedInt32Array(111, 110, 108), PackedInt32Array(108, 110, 109)]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -44,6 +48,18 @@ uv1_scale = Vector3(5, 5, 5)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7dm0k"]
 albedo_color = Color(0.05882353, 0.06666667, 0.08235294, 1)
 normal_enabled = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wind_tree"]
+render_priority = 0
+shader = ExtResource("5_272bh")
+shader_parameter/texture_albedo = ExtResource("6_efxa6")
+shader_parameter/strength = 0.2999999932944
+shader_parameter/speed = 2.0
+shader_parameter/start_y = 0.0
+shader_parameter/curve_scale = 1.5
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_272bh"]
+height = 4.862793
 
 [sub_resource type="BoxMesh" id="BoxMesh_ig7tw"]
 
@@ -65,18 +81,6 @@ shader_parameter/strength = 0.2999999932944
 shader_parameter/speed = 2.0000000298024
 shader_parameter/start_y = 0.0
 shader_parameter/curve_scale = 1.5
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_wind_tree"]
-render_priority = 0
-shader = ExtResource("5_272bh")
-shader_parameter/texture_albedo = ExtResource("6_efxa6")
-shader_parameter/strength = 0.2999999932944
-shader_parameter/speed = 2.0
-shader_parameter/start_y = 0.0
-shader_parameter/curve_scale = 1.5
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_272bh"]
-height = 4.862793
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lquwl"]
 shader = ExtResource("4_1bvp3")
@@ -111,11 +115,11 @@ shader = ExtResource("11_htxhm")
 shader_parameter/player_screen_uv = Vector2(0.5, 0.5)
 shader_parameter/clear_radius = 0.18
 shader_parameter/clear_softness = 0.12
-shader_parameter/fog_alpha = 0.09
-shader_parameter/noise_scale = 0.2
-shader_parameter/noise_speed = 0.5
+shader_parameter/fog_alpha = 0.07
+shader_parameter/noise_scale = 0.3
+shader_parameter/noise_speed = 0.015
 shader_parameter/camera_world_offset = Vector2(0, 0)
-shader_parameter/world_noise_scale = 0.03
+shader_parameter/visible_world_size = Vector2(20, 12)
 shader_parameter/fog_color = Color(0.72156864, 0.54901963, 0.78039217, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a6jrf"]
@@ -135,18 +139,212 @@ frame_1/duration = 0.25
 
 [node name="Main" type="Node3D" unique_id=1046872265]
 
-[node name="Terrain" type="MeshInstance3D" parent="." unique_id=1772764079]
-transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0.0012421608, 0.007929802, -0.004688263)
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1482664797]
+transform = Transform3D(0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 1.1641532e-10, 0, -4.656613e-10)
+navigation_mesh = SubResource("NavigationMesh_jq2sk")
+
+[node name="Terrain" type="MeshInstance3D" parent="NavigationRegion3D" unique_id=1772764079]
+transform = Transform3D(30.000008, 0, 0, 0, 30.000008, 0, 0, 0, 30.000008, 0.0012421608, 0.007929803, -0.004688263)
 material_override = SubResource("StandardMaterial3D_0xm2m")
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_7dm0k")
 surface_material_override/0 = SubResource("StandardMaterial3D_7dm0k")
 
+[node name="Rancho" parent="NavigationRegion3D" unique_id=2107584091 instance=ExtResource("2_jq2sk")]
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 2.1437752, 0, -14.363194)
+
+[node name="arbol" type="StaticBody3D" parent="NavigationRegion3D" unique_id=1166250156]
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, -1.1641534e-10, 0, 4.6566134e-10)
+
+[node name="Sprite3D" type="Sprite3D" parent="NavigationRegion3D/arbol" unique_id=1254649239]
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.3256693, 0)
+material_override = SubResource("ShaderMaterial_wind_tree")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("6_efxa6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/arbol" unique_id=1362298513]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
+shape = SubResource("CylinderShape3D_272bh")
+
+[node name="arbol2" type="StaticBody3D" parent="NavigationRegion3D" unique_id=2114943173]
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, -4.231317, 0, -8.949416)
+
+[node name="Sprite3D" type="Sprite3D" parent="NavigationRegion3D/arbol2" unique_id=1578547710]
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2968638, 0)
+material_override = SubResource("ShaderMaterial_wind_tree")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("6_efxa6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/arbol2" unique_id=953500721]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
+shape = SubResource("CylinderShape3D_272bh")
+
+[node name="arbol3" type="StaticBody3D" parent="NavigationRegion3D" unique_id=1042698981]
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, -9.69178, 0, -2.398144)
+
+[node name="Sprite3D" type="Sprite3D" parent="NavigationRegion3D/arbol3" unique_id=1623729431]
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2491996, 0)
+material_override = SubResource("ShaderMaterial_wind_tree")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("6_efxa6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/arbol3" unique_id=573054011]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
+shape = SubResource("CylinderShape3D_272bh")
+
+[node name="arbol5" type="StaticBody3D" parent="NavigationRegion3D" unique_id=34812634]
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 7.47806, 0, 2.6263134)
+
+[node name="Sprite3D" type="Sprite3D" parent="NavigationRegion3D/arbol5" unique_id=62358795]
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2919338, 0)
+material_override = SubResource("ShaderMaterial_wind_tree")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("6_efxa6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/arbol5" unique_id=1053716353]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
+shape = SubResource("CylinderShape3D_272bh")
+
+[node name="arbol4" type="StaticBody3D" parent="NavigationRegion3D" unique_id=174434765]
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 10.022975, 0, -8.62042)
+
+[node name="Sprite3D" type="Sprite3D" parent="NavigationRegion3D/arbol4" unique_id=959645828]
+transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.3641026, 0)
+material_override = SubResource("ShaderMaterial_wind_tree")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("6_efxa6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/arbol4" unique_id=1010063107]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
+shape = SubResource("CylinderShape3D_272bh")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="NavigationRegion3D" unique_id=597849092]
+transform = Transform3D(3.0000005, 0, 0, 0, 3.0000005, 0, 0, 0, 3.0000005, -0.57465136, 0.32077637, 9.119773)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/StaticBody3D" unique_id=1452081650]
+transform = Transform3D(0.99999994, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
+mesh = SubResource("BoxMesh_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/StaticBody3D" unique_id=536943689]
+transform = Transform3D(0.9999955, 0, 0, 0, 0.9999928, 0, 0, 0, 0.9999971, 0, 0, 0)
+shape = SubResource("BoxShape3D_ig7tw")
+
+[node name="StaticBody3D4" type="StaticBody3D" parent="NavigationRegion3D" unique_id=648411321]
+transform = Transform3D(0.9380525, 0, 0.34649366, 0, 1.0000001, 0, -0.34649366, 0, 0.9380525, 4.511485, 0.32077637, 7.0284357)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/StaticBody3D4" unique_id=314286045]
+transform = Transform3D(0.99999994, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
+mesh = SubResource("BoxMesh_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/StaticBody3D4" unique_id=939868524]
+transform = Transform3D(0.9999955, 0, 0, 0, 0.9999928, 0, 0, 0, 0.9999971, 0, 0, 0)
+shape = SubResource("BoxShape3D_ig7tw")
+
+[node name="StaticBody3D5" type="StaticBody3D" parent="NavigationRegion3D" unique_id=1302659977]
+transform = Transform3D(0.23241004, 0, 0.97261804, 0, 1.0000001, 0, -0.97261804, 0, 0.23241004, 8.34091, 0.32077637, -7.3572373)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/StaticBody3D5" unique_id=384108862]
+transform = Transform3D(0.99999994, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
+mesh = SubResource("BoxMesh_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/StaticBody3D5" unique_id=801788663]
+transform = Transform3D(0.9999955, 0, 0, 0, 0.9999928, 0, 0, 0, 0.9999971, 0, 0, 0)
+shape = SubResource("BoxShape3D_ig7tw")
+
+[node name="StaticBody3D2" type="StaticBody3D" parent="NavigationRegion3D" unique_id=1178001254]
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 4.284514, 1.0000001, 4.9630003)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/StaticBody3D2" unique_id=714489548]
+mesh = SubResource("CylinderMesh_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_1bvp3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/StaticBody3D2" unique_id=710371424]
+shape = SubResource("CylinderShape3D_lquwl")
+
+[node name="StaticBody3D6" type="StaticBody3D" parent="NavigationRegion3D" unique_id=1468754478]
+transform = Transform3D(0.50000006, 0, 0, 0, 0.50000006, 0, 0, 0, 0.50000006, -3.4110005, 0.6000001, -6.864001)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/StaticBody3D6" unique_id=1679056243]
+mesh = SubResource("CylinderMesh_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_1bvp3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/StaticBody3D6" unique_id=1001173448]
+shape = SubResource("CylinderShape3D_lquwl")
+
+[node name="StaticBody3D3" type="StaticBody3D" parent="NavigationRegion3D" unique_id=882408338]
+transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, -4.8547006, 1.0000001, 4.9630003)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/StaticBody3D3" unique_id=1291420831]
+mesh = SubResource("CylinderMesh_ig7tw")
+surface_material_override/0 = SubResource("StandardMaterial3D_1bvp3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/StaticBody3D3" unique_id=981049634]
+shape = SubResource("CylinderShape3D_lquwl")
+
+[node name="arbusto" type="Node3D" parent="." unique_id=1488192637]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -2.254952, 0.40272048, 1.2368393)
+
+[node name="Sprite3D" type="Sprite3D" parent="arbusto" unique_id=1699636193]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03893757, -0.33057332, 0)
+material_override = SubResource("ShaderMaterial_wind")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("5_lquwl")
+
+[node name="arbustos" type="Node3D" parent="." unique_id=768192152]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -8.112312, 0.40272048, 5.6197133)
+
+[node name="Sprite3D" type="Sprite3D" parent="arbustos" unique_id=344380634]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03893757, -0.33057332, 0)
+material_override = SubResource("ShaderMaterial_wind")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("5_lquwl")
+
+[node name="Sprite3D2" type="Sprite3D" parent="arbustos" unique_id=1851524040]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.999855, -0.33057332, -15.243933)
+material_override = SubResource("ShaderMaterial_wind")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("5_lquwl")
+
+[node name="Sprite3D3" type="Sprite3D" parent="arbustos" unique_id=234424960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1801023, -0.33057332, -15.243933)
+material_override = SubResource("ShaderMaterial_wind")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("5_lquwl")
+
+[node name="Sprite3D4" type="Sprite3D" parent="arbustos" unique_id=774741789]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.645527, -0.33057332, -12.078814)
+material_override = SubResource("ShaderMaterial_wind")
+billboard = 2
+shaded = true
+double_sided = false
+texture = ExtResource("5_lquwl")
+
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=554653491]
 environment = ExtResource("3_h2yge")
 
 [node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5960836, 0.02, -6.421582)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.09739, 0.02, -10.158143)
 
 [node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003 groups=["camera"]]
 transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.452898)
@@ -195,197 +393,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.664172, 2.6297908, -8.0785
 light_color = Color(1, 0.55441934, 0.435789, 1)
 shadow_enabled = true
 
-[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=597849092]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -0.5746513, 0.32077634, 9.119772)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=1452081650]
-transform = Transform3D(0.99999994, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
-mesh = SubResource("BoxMesh_ig7tw")
-surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=536943689]
-transform = Transform3D(0.9999955, 0, 0, 0, 0.9999928, 0, 0, 0, 0.9999971, 0, 0, 0)
-shape = SubResource("BoxShape3D_ig7tw")
-
-[node name="StaticBody3D4" type="StaticBody3D" parent="." unique_id=648411321]
-transform = Transform3D(0.93805236, 0, 0.34649363, 0, 1, 0, -0.34649363, 0, 0.93805236, 4.5114846, 0.32077634, 7.0284348)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D4" unique_id=314286045]
-transform = Transform3D(0.99999994, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
-mesh = SubResource("BoxMesh_ig7tw")
-surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D4" unique_id=939868524]
-transform = Transform3D(0.9999955, 0, 0, 0, 0.9999928, 0, 0, 0, 0.9999971, 0, 0, 0)
-shape = SubResource("BoxShape3D_ig7tw")
-
-[node name="StaticBody3D5" type="StaticBody3D" parent="." unique_id=1302659977]
-transform = Transform3D(0.23241001, 0, 0.9726179, 0, 1, 0, -0.9726179, 0, 0.23241001, 8.340909, 0.32077634, -7.3572364)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D5" unique_id=384108862]
-transform = Transform3D(0.99999994, 0, 0, 0, 0.9999999, 0, 0, 0, 0.99999994, 0, 0, 0)
-mesh = SubResource("BoxMesh_ig7tw")
-surface_material_override/0 = SubResource("StandardMaterial3D_h2yge")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D5" unique_id=801788663]
-transform = Transform3D(0.9999955, 0, 0, 0, 0.9999928, 0, 0, 0, 0.9999971, 0, 0, 0)
-shape = SubResource("BoxShape3D_ig7tw")
-
-[node name="StaticBody3D2" type="StaticBody3D" parent="." unique_id=1178001254]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2845135, 1, 4.963)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D2" unique_id=714489548]
-mesh = SubResource("CylinderMesh_ig7tw")
-surface_material_override/0 = SubResource("StandardMaterial3D_1bvp3")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D2" unique_id=710371424]
-shape = SubResource("CylinderShape3D_lquwl")
-
-[node name="StaticBody3D6" type="StaticBody3D" parent="." unique_id=1468754478]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -3.411, 0.6, -6.864)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D6" unique_id=1679056243]
-mesh = SubResource("CylinderMesh_ig7tw")
-surface_material_override/0 = SubResource("StandardMaterial3D_1bvp3")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D6" unique_id=1001173448]
-shape = SubResource("CylinderShape3D_lquwl")
-
-[node name="StaticBody3D3" type="StaticBody3D" parent="." unique_id=882408338]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8547, 1, 4.963)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D3" unique_id=1291420831]
-mesh = SubResource("CylinderMesh_ig7tw")
-surface_material_override/0 = SubResource("StandardMaterial3D_1bvp3")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D3" unique_id=981049634]
-shape = SubResource("CylinderShape3D_lquwl")
-
-[node name="arbusto" type="Node3D" parent="." unique_id=1488192637]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -2.254952, 0.40272045, 1.2368393)
-
-[node name="Sprite3D" type="Sprite3D" parent="arbusto" unique_id=1699636193]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03893757, -0.33057332, 0)
-material_override = SubResource("ShaderMaterial_wind")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("5_lquwl")
-
-[node name="arbol" type="StaticBody3D" parent="." unique_id=1166250156]
-
-[node name="Sprite3D" type="Sprite3D" parent="arbol" unique_id=1254649239]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.3256693, 0)
-material_override = SubResource("ShaderMaterial_wind_tree")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("6_efxa6")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="arbol" unique_id=1362298513]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
-shape = SubResource("CylinderShape3D_272bh")
-
-[node name="arbol2" type="StaticBody3D" parent="." unique_id=2114943173]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2313166, 0, -8.949415)
-
-[node name="Sprite3D" type="Sprite3D" parent="arbol2" unique_id=1578547710]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2968638, 0)
-material_override = SubResource("ShaderMaterial_wind_tree")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("6_efxa6")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="arbol2" unique_id=953500721]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
-shape = SubResource("CylinderShape3D_272bh")
-
-[node name="arbol3" type="StaticBody3D" parent="." unique_id=1042698981]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.691779, 0, -2.3981438)
-
-[node name="Sprite3D" type="Sprite3D" parent="arbol3" unique_id=1623729431]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2491996, 0)
-material_override = SubResource("ShaderMaterial_wind_tree")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("6_efxa6")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="arbol3" unique_id=573054011]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
-shape = SubResource("CylinderShape3D_272bh")
-
-[node name="arbol5" type="StaticBody3D" parent="." unique_id=34812634]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.4780583, 0, 2.6263132)
-
-[node name="Sprite3D" type="Sprite3D" parent="arbol5" unique_id=62358795]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.2919338, 0)
-material_override = SubResource("ShaderMaterial_wind_tree")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("6_efxa6")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="arbol5" unique_id=1053716353]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
-shape = SubResource("CylinderShape3D_272bh")
-
-[node name="arbol4" type="StaticBody3D" parent="." unique_id=174434765]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.022974, 0, -8.6204195)
-
-[node name="Sprite3D" type="Sprite3D" parent="arbol4" unique_id=959645828]
-transform = Transform3D(0.7319399, 0, 0, 0, 0.8898088, 0, 0, 0, 0.5, 0, 1.3641026, 0)
-material_override = SubResource("ShaderMaterial_wind_tree")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("6_efxa6")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="arbol4" unique_id=1010063107]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.1276347, 0.78350437, 0.089071035)
-shape = SubResource("CylinderShape3D_272bh")
-
-[node name="arbustos" type="Node3D" parent="." unique_id=768192152]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -8.112312, 0.40272045, 5.6197133)
-
-[node name="Sprite3D" type="Sprite3D" parent="arbustos" unique_id=344380634]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03893757, -0.33057332, 0)
-material_override = SubResource("ShaderMaterial_wind")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("5_lquwl")
-
-[node name="Sprite3D2" type="Sprite3D" parent="arbustos" unique_id=1851524040]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.999855, -0.33057332, -15.243933)
-material_override = SubResource("ShaderMaterial_wind")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("5_lquwl")
-
-[node name="Sprite3D3" type="Sprite3D" parent="arbustos" unique_id=234424960]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1801023, -0.33057332, -15.243933)
-material_override = SubResource("ShaderMaterial_wind")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("5_lquwl")
-
-[node name="Sprite3D4" type="Sprite3D" parent="arbustos" unique_id=774741789]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.645527, -0.33057332, -12.078814)
-material_override = SubResource("ShaderMaterial_wind")
-billboard = 2
-shaded = true
-double_sided = false
-texture = ExtResource("5_lquwl")
-
 [node name="Bonfire" parent="." unique_id=1587422233 instance=ExtResource("9_bonfire")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.28924, 0, 5.37629)
 
 [node name="Bonfire2" parent="." unique_id=177662689 instance=ExtResource("9_bonfire")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.939523, 0, -4.8608527)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7673643, 0, -8.905445)
 
 [node name="HUD" type="Node3D" parent="." unique_id=2061694178 groups=["screen_fx"]]
 script = ExtResource("8_4c57u")
@@ -1031,21 +1043,5 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Enemy" parent="." unique_id=740511559 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3140539, 0.02, 2.8836334)
-can_chase = false
-
-[node name="Enemy2" parent="." unique_id=513251102 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.942522, 0.02, 18.76274)
-
-[node name="Enemy4" parent="." unique_id=1859527240 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.306, 0.02, -4.9059906)
-
-[node name="Enemy3" parent="." unique_id=538971288 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.322863, 0.02, 22.512047)
-
-[node name="Enemy5" parent="." unique_id=1108511781 instance=ExtResource("9_kek77")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.291798, 0.02, 23.760191)
-
-[node name="Rancho_LVL01" parent="." unique_id=1030208606 instance=ExtResource("28_xuqvo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5986538, 0, -13.969747)
+[node name="Enemy6" parent="." unique_id=1109461743 instance=ExtResource("34_4k2k6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.284819, 0, 4.4788017)

@@ -2,7 +2,9 @@ extends Node3D
 
 # =========================================================
 # Enemy Controller
-# - IA básica de persecución
+# - IA de persecución usando NavigationAgent3D
+# - esquiva obstáculos mediante NavigationMesh
+# - variación de persecución con offset alrededor del jugador
 # - ataque con anticipación y salto
 # - barra de vida animada
 # - feedback visual al recibir daño
@@ -22,6 +24,11 @@ enum State {
 
 signal died
 
+
+# =========================================================
+# STATS / CONFIG GENERAL
+# =========================================================
+
 @export var max_hp: int = 3
 @export var move_speed: float = 1.8
 @export var attack_range: float = 1.2
@@ -35,34 +42,62 @@ signal died
 @export_range(0.0, 1.0, 0.01) var min_visibility: float = 0.2
 @export_range(0.0, 1.0, 0.01) var alpha_cutoff: float = 0.1
 
+
+# =========================================================
+# NAVIGATION / IA
+# =========================================================
+
+# Activa/desactiva el uso de NavigationAgent3D.
+# Si lo desactivás, el enemigo vuelve a perseguir en línea recta.
+@export var use_navigation: bool = true
+
+# Cada cuánto recalcula el destino hacia el jugador.
+# No conviene hacerlo todos los frames porque queda más caro y más robótico.
+@export var repath_interval: float = 0.45
+
+# Radio alrededor del jugador al que el enemigo intenta acercarse.
+# Esto hace que no todos apunten exactamente al centro del jugador.
+# Si querés que vayan directo al jugador, ponelo en 0.
+@export var chase_offset_radius: float = 0.0
+
+# Cada cuánto cambia el punto alrededor del jugador.
+# Más bajo = enemigos más inquietos.
+# Más alto = enemigos más decididos.
+@export var chase_offset_change_interval: float = 2.5
+
+# Distancia mínima al siguiente punto del path.
+# Si está muy bajo pueden temblar; si está muy alto pueden cortar esquinas.
+@export var navigation_path_desired_distance: float = 0.85
+
+# Distancia a la que el NavigationAgent considera que llegó al objetivo.
+@export var navigation_target_desired_distance: float = 0.9
+
+# Radio usado por el NavigationAgent.
+# No reemplaza una colisión física real, pero ayuda al cálculo de navegación.
+@export var navigation_agent_radius: float = 0.35
+
+# Si más adelante activás avoidance entre enemigos, este valor ya queda preparado.
+@export var navigation_agent_height: float = 1.2
+
+
+# =========================================================
+# HIT REACTION
+# =========================================================
+
+@export var hit_stun_duration: float = 0.2
+@export var hit_hop_height: float = 0.4
+@export var hit_hop_duration: float = 0.1
+
+
+# =========================================================
+# STATE
+# =========================================================
+
 var hp: int
 var state := State.CHASE
 var player: Node3D = null
 var is_dying := false
 var can_attack := true
-
-@onready var visual_root = $Visual
-
-# Root principal para movimientos de ataque / squash
-@onready var sprites_root = $Visual/SpritesRoot
-
-# Offset secundario exclusivo para hit reactions
-@onready var hit_offset = $Visual/SpritesRoot/HitOffset
-
-# Sprites reales
-@onready var sprite = $Visual/SpritesRoot/HitOffset/AnimatedSprite3D
-@onready var aura_sprite = $Visual/SpritesRoot/HitOffset/AuraSprite3D
-@onready var root_effect_sprite: Sprite3D = $Visual/SpritesRoot/HitOffset/RootEffectSprite3D
-@onready var hurtbox = $Hurtbox
-
-@onready var hp_bar_root = $HealthBar
-@onready var hp_bar_fill_pivot = $HealthBar/FillPivot
-@onready var hp_bar_background = $HealthBar/Background
-@onready var hp_bar_fill = $HealthBar/FillPivot/Fill
-
-@export var hit_stun_duration: float = 0.2
-@export var hit_hop_height: float = 0.4
-@export var hit_hop_duration: float = 0.1
 
 var sprite_material: ShaderMaterial = null
 var hit_tween: Tween
@@ -72,6 +107,25 @@ var hp_bar_alpha := 0.0
 var is_hit_stunned := false
 var hit_reaction_tween: Tween
 var hit_stun_version := 0
+
+# Timers internos de navegación.
+var repath_timer: float = 0.0
+var chase_offset_timer: float = 0.0
+
+# Offset actual alrededor del jugador.
+# Sirve para que cada enemigo no vaya siempre al mismo punto exacto.
+var current_chase_offset: Vector3 = Vector3.ZERO
+
+# Variación plana de velocidad.
+# Ejemplo:
+# move_speed = 2.0
+# speed_variation = 0.2
+# Resultado posible: entre 1.8 y 2.2
+@export var speed_variation: float = 0.2
+
+# Velocidad real que usa ESTE enemigo.
+# Se calcula una sola vez en _ready().
+var current_move_speed: float = 0.0
 
 # =========================================================
 # BOLEADORAS / ROOT
@@ -85,16 +139,57 @@ var hit_stun_version := 0
 var is_boleadora_rooted: bool = false
 
 
+# =========================================================
+# NODE REFERENCES
+# =========================================================
+
+@onready var visual_root = $Visual
+
+# Root principal para movimientos de ataque / squash.
+@onready var sprites_root = $Visual/SpritesRoot
+
+# Offset secundario exclusivo para hit reactions.
+@onready var hit_offset = $Visual/SpritesRoot/HitOffset
+
+# Sprites reales.
+@onready var sprite = $Visual/SpritesRoot/HitOffset/AnimatedSprite3D
+@onready var aura_sprite = $Visual/SpritesRoot/HitOffset/AuraSprite3D
+@onready var root_effect_sprite: Sprite3D = $Visual/SpritesRoot/HitOffset/RootEffectSprite3D
+@onready var hurtbox = $Hurtbox
+
+@onready var hp_bar_root = $HealthBar
+@onready var hp_bar_fill_pivot = $HealthBar/FillPivot
+@onready var hp_bar_background = $HealthBar/Background
+@onready var hp_bar_fill = $HealthBar/FillPivot/Fill
+
+# IMPORTANTE:
+# Este nodo tiene que existir como hijo directo del enemigo:
+# Enemy
+# └── NavigationAgent3D
+@onready var nav_agent: NavigationAgent3D = $NavigationAgent3D
+
+
+# =========================================================
+# READY / PROCESS
+# =========================================================
+
 func _ready() -> void:
 	hp = max_hp
 	
+	roll_move_speed()
+
 	root_effect_sprite.visible = false
 
 	initialize_health_bar()
 	cache_player_reference()
 	duplicate_aura_material()
+	setup_navigation_agent()
 
-	# En editor: sprite normal, sin shader
+	# Hacemos que el primer cálculo de path ocurra enseguida.
+	repath_timer = 0.0
+	chase_offset_timer = 0.0
+
+	# En editor: sprite normal, sin shader.
 	if Engine.is_editor_hint():
 		sprite.material_override = null
 		return
@@ -106,6 +201,16 @@ func _ready() -> void:
 	call_deferred("_finish_runtime_setup")
 
 
+func roll_move_speed() -> void:
+	var min_speed := move_speed - speed_variation
+	var max_speed := move_speed + speed_variation
+
+	# Evitamos velocidades negativas o absurdamente bajas.
+	min_speed = maxf(0.1, min_speed)
+
+	current_move_speed = randf_range(min_speed, max_speed)
+
+
 func _finish_runtime_setup() -> void:
 	ensure_valid_animation()
 
@@ -113,16 +218,22 @@ func _finish_runtime_setup() -> void:
 	_on_frame_changed()
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if is_dying:
 		return
 
-	# Refresco defensivo: si por alguna razón el shader arrancó
-	# sin textura, intentamos cargarla.
+	# Refresco defensivo:
+	# si por alguna razón el shader arrancó sin textura,
+	# intentamos cargarla de nuevo.
 	if not Engine.is_editor_hint() and sprite_material != null:
 		var tex = sprite_material.get_shader_parameter("albedo_texture")
 		if tex == null:
 			_on_frame_changed()
+
+
+func _physics_process(delta: float) -> void:
+	if is_dying:
+		return
 
 	if not is_instance_valid(player):
 		cache_player_reference()
@@ -150,8 +261,9 @@ func _process(delta: float) -> void:
 
 
 # =========================================================
-# Setup
+# SETUP
 # =========================================================
+
 func initialize_health_bar() -> void:
 	hp_bar_root.visible = true
 	set_hp_bar_alpha(0.0)
@@ -176,6 +288,25 @@ func setup_runtime_sprite_material() -> void:
 	sprite.material_override = sprite_material
 
 
+func setup_navigation_agent() -> void:
+	if nav_agent == null:
+		return
+
+	nav_agent.path_desired_distance = navigation_path_desired_distance
+	nav_agent.target_desired_distance = navigation_target_desired_distance
+	nav_agent.radius = navigation_agent_radius
+	nav_agent.height = navigation_agent_height
+	nav_agent.max_speed = current_move_speed
+
+	# En este sistema lo movemos nosotros manualmente,
+	# así que por ahora dejamos avoidance apagado.
+	nav_agent.avoidance_enabled = false
+
+	# Importante para 2.5D:
+	# evitamos offsets raros de altura en el path.
+	nav_agent.path_height_offset = 0.0
+
+
 func ensure_valid_animation() -> void:
 	if sprite.sprite_frames == null:
 		return
@@ -185,7 +316,7 @@ func ensure_valid_animation() -> void:
 		if names.size() > 0:
 			sprite.animation = names[0]
 
-	# Si no está reproduciendo nada, al menos dejamos un frame válido
+	# Si no está reproduciendo nada, al menos dejamos un frame válido.
 	if sprite.frame < 0:
 		sprite.frame = 0
 
@@ -223,20 +354,127 @@ func _on_frame_changed() -> void:
 
 
 # =========================================================
-# AI / Movement
+# AI / MOVEMENT
 # =========================================================
+
 func update_chase(delta: float) -> void:
-	var to_player := player.global_position - global_position
+	if not is_instance_valid(player):
+		return
+
+	var to_player := get_flat_vector_to_player()
 	var distance := to_player.length()
 
+	# Si está lo suficientemente cerca, intenta atacar.
 	if distance <= attack_range:
 		if can_attack and not is_boleadora_rooted:
 			start_attack()
 		return
 
-	var direction := to_player.normalized()
+	# Si por algún motivo querés probar sin navmesh,
+	# podés desactivar use_navigation desde el inspector.
+	if not use_navigation:
+		update_direct_chase(delta)
+		return
+
+	update_navigation_chase(delta)
+
+
+func update_navigation_chase(delta: float) -> void:
+	if nav_agent == null:
+		return
+
+	repath_timer -= delta
+	chase_offset_timer -= delta
+
+	# Cada tanto cambiamos el offset.
+	# Para debug, si chase_offset_radius está en 0, esto no afecta nada.
+	if chase_offset_timer <= 0.0:
+		chase_offset_timer = chase_offset_change_interval
+		pick_new_chase_offset()
+
+	# Recalculamos el target cada cierto tiempo, no todos los frames.
+	if repath_timer <= 0.0:
+		repath_timer = repath_interval
+		update_navigation_target()
+
+	# Pedimos el próximo punto del path.
+	var next_position := nav_agent.get_next_path_position()
+
+	# Movimiento plano X/Z.
+	var direction := next_position - global_position
+	direction.y = 0.0
+
+	# ---------------------------------------------------------
+	# FIX ANTI-TEMBLEQUE
+	# ---------------------------------------------------------
+	# Si el próximo punto está demasiado cerca en X/Z, no intentamos
+	# corregir milimétricamente. Eso suele causar vibración.
+	#
+	# En vez de eso, usamos una dirección suave hacia el jugador
+	# SOLO como fallback momentáneo.
+	# El path sigue estando controlado por el NavigationAgent.
+	# ---------------------------------------------------------
+	if direction.length() < 0.25:
+		direction = get_flat_vector_to_player()
+
+		# Si incluso hacia el jugador no hay dirección útil, no hacemos nada.
+		if direction.length() < 0.25:
+			return
+
+	direction = direction.normalized()
+
 	global_position += direction * move_speed * delta
 
+
+func update_direct_chase(delta: float) -> void:
+	# Modo viejo / fallback:
+	# persigue al jugador en línea recta.
+	# Ojo: esto atraviesa obstáculos porque no usa navmesh.
+	var direction := get_flat_vector_to_player()
+
+	if direction.length() < 0.05:
+		return
+
+	direction = direction.normalized()
+	global_position += direction * move_speed * delta
+
+
+func update_navigation_target() -> void:
+	if not is_instance_valid(player):
+		return
+
+	# El destino real no es siempre el centro del jugador.
+	# Sumamos un pequeño offset para que los enemigos rodeen un poco.
+	var target_position := player.global_position + current_chase_offset
+
+	# Mantenemos la altura del jugador/terreno coherente.
+	# El NavigationAgent después proyecta esto sobre el navmesh.
+	nav_agent.target_position = target_position
+
+
+func pick_new_chase_offset() -> void:
+	if chase_offset_radius <= 0.0:
+		current_chase_offset = Vector3.ZERO
+		return
+
+	var angle := randf_range(0.0, TAU)
+
+	current_chase_offset = Vector3(
+		cos(angle) * chase_offset_radius,
+		0.0,
+		sin(angle) * chase_offset_radius
+	)
+
+
+func get_flat_vector_to_player() -> Vector3:
+	var to_player := player.global_position - global_position
+	to_player.y = 0.0
+	return to_player
+
+
+# =========================================================
+# ATTACK
+# =========================================================
 
 func start_attack() -> void:
 	# No puede atacar si:
@@ -249,8 +487,7 @@ func start_attack() -> void:
 	state = State.ATTACK
 	can_attack = false
 
-	var direction := player.global_position - global_position
-	direction.y = 0.0
+	var direction := get_flat_vector_to_player()
 
 	if direction.length() > 0.001:
 		direction = direction.normalized()
@@ -260,12 +497,23 @@ func start_attack() -> void:
 	var tween := create_tween()
 	tween.set_parallel(false)
 
+	# Anticipación / estiramiento.
 	tween.tween_property(sprites_root, "scale", Vector3(0.90, 1.10, 1.0), 0.08)
-	tween.tween_property(sprites_root, "position", Vector3(direction.x * 0.38, 0.38, direction.z * 0.38), 0.08)
+
+	# Saltito hacia el jugador.
+	tween.tween_property(
+		sprites_root,
+		"position",
+		Vector3(direction.x * 0.38, 0.38, direction.z * 0.38),
+		0.08
+	)
+
+	# Squash de impacto.
 	tween.parallel().tween_property(sprites_root, "scale", Vector3(1.28, 0.92, 1.0), 0.08)
 
 	apply_attack_damage()
 
+	# Vuelta a la pose normal.
 	tween.tween_property(sprites_root, "position", Vector3.ZERO, 0.10)
 	tween.parallel().tween_property(sprites_root, "scale", Vector3.ONE, 0.10)
 
@@ -285,7 +533,8 @@ func start_attack() -> void:
 	if is_dying:
 		return
 
-	# Si quedó boleado durante el cooldown, tampoco puede volver a atacar.
+	# Si quedó boleado durante el cooldown,
+	# tampoco puede volver a atacar.
 	if is_boleadora_rooted:
 		state = State.CHASE
 		return
@@ -298,8 +547,7 @@ func apply_attack_damage() -> void:
 	if not is_instance_valid(player):
 		return
 
-	var to_player := player.global_position - global_position
-	to_player.y = 0.0
+	var to_player := get_flat_vector_to_player()
 
 	if to_player.length() <= attack_range + 0.15:
 		if player.has_method("take_damage"):
@@ -310,8 +558,9 @@ func apply_attack_damage() -> void:
 
 
 # =========================================================
-# Damage
+# DAMAGE
 # =========================================================
+
 func take_damage(amount: int) -> void:
 	if is_dying:
 		return
@@ -329,7 +578,9 @@ func take_damage(amount: int) -> void:
 
 func flash_hit() -> void:
 	sprite.modulate = Color.BLACK
+
 	await get_tree().create_timer(0.08).timeout
+
 	if is_instance_valid(sprite) and not is_dying:
 		sprite.modulate = Color.WHITE
 
@@ -337,6 +588,7 @@ func flash_hit() -> void:
 # =========================================================
 # BOLEADORAS
 # =========================================================
+
 # Inmovilización indefinida.
 # En esta fase no tiene duración: el enemigo queda quieto hasta morir.
 func apply_boleadora_root() -> void:
@@ -353,6 +605,11 @@ func apply_boleadora_root() -> void:
 	can_attack = false
 	state = State.CHASE
 
+	# Mandamos el target del nav agent a la posición actual
+	# para que no siga intentando caminar hacia un path viejo.
+	if nav_agent != null:
+		nav_agent.target_position = global_position
+
 	# Si justo había alguna animación/tween de hit o ataque,
 	# la cortamos para dejar una pose limpia.
 	if hit_tween and hit_tween.is_valid():
@@ -368,15 +625,16 @@ func apply_boleadora_root() -> void:
 	sprites_root.scale = Vector3.ONE
 	hit_offset.position = Vector3.ZERO
 	hit_offset.scale = Vector3.ONE
-	
-	# Sprite de estado "atrapado"
+
+	# Sprite de estado "atrapado".
 	root_effect_sprite.visible = true
 
 
 # =========================================================
-# Shake visual al recibir daño
-# Solo mueve HitOffset para no interferir con ataques
+# SHAKE VISUAL AL RECIBIR DAÑO
+# Solo mueve HitOffset para no interferir con ataques.
 # =========================================================
+
 func shake_hit() -> void:
 	if hit_tween and hit_tween.is_valid():
 		hit_tween.kill()
@@ -389,7 +647,7 @@ func shake_hit() -> void:
 
 	var strength: float = 0.16
 
-	# Primer impacto
+	# Primer impacto.
 	hit_tween.tween_property(
 		hit_offset,
 		"scale",
@@ -404,7 +662,7 @@ func shake_hit() -> void:
 		0.03
 	)
 
-	# Rebote
+	# Rebote.
 	hit_tween.tween_property(
 		hit_offset,
 		"scale",
@@ -419,7 +677,7 @@ func shake_hit() -> void:
 		0.03
 	)
 
-	# Vuelta a reposo
+	# Vuelta a reposo.
 	hit_tween.tween_property(
 		hit_offset,
 		"scale",
@@ -436,8 +694,9 @@ func shake_hit() -> void:
 
 
 # =========================================================
-# Death
+# DEATH
 # =========================================================
+
 func die() -> void:
 	is_dying = true
 	state = State.DEAD
@@ -464,20 +723,27 @@ func die() -> void:
 
 	tween.tween_method(
 		func(v: float): dissolve_material.set_shader_parameter("dissolve_amount", v),
-		0.0, 1.0, 0.8
+		0.0,
+		1.0,
+		0.8
 	)
 
 	var aura_mat := aura_sprite.material_override as ShaderMaterial
 	if aura_mat:
 		var start_alpha: float = aura_mat.get_shader_parameter("global_alpha")
+
 		tween.tween_method(
 			func(v: float): aura_mat.set_shader_parameter("global_alpha", v),
-			start_alpha, 0.0, 0.4
+			start_alpha,
+			0.0,
+			0.4
 		)
 
 	died.emit()
 	root_effect_sprite.visible = false
+
 	await tween.finished
+
 	queue_free()
 
 
@@ -490,8 +756,9 @@ func fade_out_hp_bar() -> void:
 
 
 # =========================================================
-# Health Bar
+# HEALTH BAR
 # =========================================================
+
 func show_hp_bar() -> void:
 	hp_bar_version += 1
 	var version := hp_bar_version
@@ -532,8 +799,9 @@ func set_hp_bar_alpha(alpha: float) -> void:
 
 
 # =========================================================
-# Facing
+# FACING
 # =========================================================
+
 func update_facing() -> void:
 	if not is_instance_valid(player):
 		return
@@ -549,9 +817,10 @@ func update_facing() -> void:
 
 
 # =========================================================
-# Pequeño salto al ser golpeado
-# Pausa la movilidad por unos milisegundos
+# PEQUEÑO SALTO AL SER GOLPEADO
+# Pausa la movilidad por unos milisegundos.
 # =========================================================
+
 func play_hit_reaction() -> void:
 	hit_stun_version += 1
 	var my_version: int = hit_stun_version
@@ -565,7 +834,7 @@ func play_hit_reaction() -> void:
 
 	hit_reaction_tween = create_tween()
 
-	# Subida rápida
+	# Subida rápida.
 	hit_reaction_tween.tween_property(
 		hit_offset,
 		"position:y",
@@ -573,7 +842,7 @@ func play_hit_reaction() -> void:
 		hit_hop_duration * 0.45
 	)
 
-	# Bajada
+	# Bajada.
 	hit_reaction_tween.tween_property(
 		hit_offset,
 		"position:y",
