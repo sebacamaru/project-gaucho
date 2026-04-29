@@ -2,6 +2,7 @@ extends Node
 
 @onready var camera: Camera3D = get_tree().get_first_node_in_group("camera")
 @onready var flash_rect: ColorRect = $CanvasLayer/FX/DamageRect
+@onready var fps_label: Label = $CanvasLayer/FPSCounter
 
 var shake_strength: float = 0.0
 var shake_fade: float = 20.0
@@ -15,6 +16,7 @@ func _ready() -> void:
 		camera_base_position = camera.position
 
 func _process(delta: float) -> void:
+	fps_label.text = "FPS " + str(Engine.get_frames_per_second())
 	update_shake(delta)
 	
 	if is_instance_valid(camera):

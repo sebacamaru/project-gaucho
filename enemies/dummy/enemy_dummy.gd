@@ -5,12 +5,14 @@ extends Node3D
 # - IA de persecución usando NavigationAgent3D
 # - esquiva obstáculos mediante NavigationMesh
 # - variación de persecución con offset alrededor del jugador
+# - velocidad individual aleatoria por enemigo
 # - ataque con anticipación y salto
 # - barra de vida animada
 # - feedback visual al recibir daño
 # - visibilidad mínima en runtime mediante shader
 # - dissolve al morir
 # - inmovilización indefinida por boleadoras
+# - soporte para enemigos voladores con vaivén visual
 # =========================================================
 
 const ENEMY_DISSOLVE_SHADER = preload("res://shaders/enemy_dissolve.gdshader")
@@ -81,6 +83,62 @@ signal died
 
 
 # =========================================================
+# SPEED VARIATION
+# =========================================================
+
+# Variación plana de velocidad.
+# Ejemplo:
+# move_speed = 2.0
+# speed_variation = 0.2
+# Resultado posible: entre 1.8 y 2.2
+@export var speed_variation: float = 0.2
+
+# Velocidad real que usa ESTE enemigo.
+# Se calcula una sola vez en _ready().
+var current_move_speed: float = 0.0
+
+
+# =========================================================
+# FLYING TYPE / HOVER VISUAL
+# =========================================================
+
+# Si está activo, el enemigo hace un vaivén vertical infinito.
+#
+# IMPORTANTE:
+# Esto NO mueve el nodo Enemy real.
+# Solo mueve $Visual.
+#
+# De esa manera:
+# - no se rompe el NavigationAgent3D
+# - no se alteran las colisiones
+# - no cambia el rango de ataque
+# - no se ensucia el pathfinding
+@export var is_flying_type: bool = false
+
+# Altura máxima del vaivén visual.
+# 0.15 a 0.30 suele quedar bien para sprites 2.5D.
+@export var flying_hover_amplitude: float = 0.22
+
+# Velocidad del vaivén.
+# Más alto = flota más rápido.
+@export var flying_hover_speed: float = 2.4
+
+# Si está activo, cada enemigo recibe un desfase aleatorio.
+# Sirve para que 5 pájaros no suban y bajen todos perfectamente sincronizados.
+@export var flying_random_phase: bool = true
+
+# Tiempo interno del vaivén.
+var flying_hover_time: float = 0.0
+
+# Desfase individual del vaivén.
+var flying_hover_phase: float = 0.0
+
+# Posición original de $Visual.
+# El hover siempre se calcula desde esta posición base.
+var visual_root_base_position: Vector3 = Vector3.ZERO
+
+
+# =========================================================
 # HIT REACTION
 # =========================================================
 
@@ -116,16 +174,6 @@ var chase_offset_timer: float = 0.0
 # Sirve para que cada enemigo no vaya siempre al mismo punto exacto.
 var current_chase_offset: Vector3 = Vector3.ZERO
 
-# Variación plana de velocidad.
-# Ejemplo:
-# move_speed = 2.0
-# speed_variation = 0.2
-# Resultado posible: entre 1.8 y 2.2
-@export var speed_variation: float = 0.2
-
-# Velocidad real que usa ESTE enemigo.
-# Se calcula una sola vez en _ready().
-var current_move_speed: float = 0.0
 
 # =========================================================
 # BOLEADORAS / ROOT
@@ -175,8 +223,14 @@ var is_boleadora_rooted: bool = false
 
 func _ready() -> void:
 	hp = max_hp
-	
+
+	# Calcula una velocidad única para este enemigo.
+	# Esto evita que todos los enemigos caminen exactamente igual.
 	roll_move_speed()
+
+	# Prepara el sistema visual de flotación.
+	# Aunque is_flying_type esté apagado, guardamos la posición base.
+	setup_flying_hover()
 
 	root_effect_sprite.visible = false
 
@@ -218,9 +272,13 @@ func _finish_runtime_setup() -> void:
 	_on_frame_changed()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if is_dying:
 		return
+
+	# El hover es solo visual y se calcula en _process,
+	# porque no necesita física ni navegación.
+	update_flying_hover(delta)
 
 	# Refresco defensivo:
 	# si por alguna razón el shader arrancó sin textura,
@@ -354,6 +412,46 @@ func _on_frame_changed() -> void:
 
 
 # =========================================================
+# FLYING TYPE / HOVER VISUAL
+# =========================================================
+
+func setup_flying_hover() -> void:
+	if visual_root == null:
+		return
+
+	# Guardamos la posición original del nodo Visual.
+	# El vaivén siempre parte desde esta posición.
+	visual_root_base_position = visual_root.position
+
+	# Esto evita que todos los enemigos voladores floten sincronizados.
+	if flying_random_phase:
+		flying_hover_phase = randf_range(0.0, TAU)
+	else:
+		flying_hover_phase = 0.0
+
+
+func update_flying_hover(delta: float) -> void:
+	if visual_root == null:
+		return
+
+	# Si no es volador, nos aseguramos de que vuelva a su posición base.
+	# Esto ayuda si activás/desactivás el flag durante pruebas.
+	if not is_flying_type:
+		visual_root.position = visual_root_base_position
+		return
+
+	flying_hover_time += delta * flying_hover_speed
+
+	# Movimiento senoidal simple:
+	# sube y baja suavemente de forma infinita.
+	var hover_offset := sin(flying_hover_time + flying_hover_phase) * flying_hover_amplitude
+
+	# Solo tocamos Y del nodo Visual.
+	# El Enemy real queda quieto en su altura de navegación.
+	visual_root.position.y = visual_root_base_position.y + hover_offset
+
+
+# =========================================================
 # AI / MOVEMENT
 # =========================================================
 
@@ -423,7 +521,9 @@ func update_navigation_chase(delta: float) -> void:
 
 	direction = direction.normalized()
 
-	global_position += direction * move_speed * delta
+	# Usamos current_move_speed, no move_speed,
+	# para respetar la variación individual de velocidad.
+	global_position += direction * current_move_speed * delta
 
 
 func update_direct_chase(delta: float) -> void:
@@ -436,7 +536,9 @@ func update_direct_chase(delta: float) -> void:
 		return
 
 	direction = direction.normalized()
-	global_position += direction * move_speed * delta
+
+	# Usamos current_move_speed también en modo directo.
+	global_position += direction * current_move_speed * delta
 
 
 func update_navigation_target() -> void:
@@ -501,6 +603,8 @@ func start_attack() -> void:
 	tween.tween_property(sprites_root, "scale", Vector3(0.90, 1.10, 1.0), 0.08)
 
 	# Saltito hacia el jugador.
+	# Esto mueve SpritesRoot, no Visual.
+	# Por eso puede convivir bien con el hover del Flying Type.
 	tween.tween_property(
 		sprites_root,
 		"position",
@@ -621,6 +725,10 @@ func apply_boleadora_root() -> void:
 		hit_reaction_tween.kill()
 
 	# Dejamos el enemigo en una pose neutral.
+	#
+	# Ojo:
+	# NO tocamos visual_root.position porque eso cortaría el hover.
+	# Si el enemigo es volador, puede seguir flotando visualmente incluso atrapado.
 	sprites_root.position = Vector3.ZERO
 	sprites_root.scale = Vector3.ONE
 	hit_offset.position = Vector3.ZERO

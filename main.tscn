@@ -344,7 +344,7 @@ texture = ExtResource("5_lquwl")
 environment = ExtResource("3_h2yge")
 
 [node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.09739, 0.02, -10.158143)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6889138, 0.02, -4.8675203)
 
 [node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003 groups=["camera"]]
 transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.452898)
@@ -403,6 +403,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7673643, 0, -8.905445)
 script = ExtResource("8_4c57u")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="HUD" unique_id=1223706100]
+
+[node name="FPSCounter" type="Label" parent="HUD/CanvasLayer" unique_id=282869717]
+offset_left = 8.0
+offset_top = 15.0
+offset_right = 88.0
+offset_bottom = 38.0
+text = "60"
 
 [node name="FX" type="Control" parent="HUD/CanvasLayer" unique_id=386258776]
 layout_mode = 3
@@ -1045,3 +1052,12 @@ autowrap_mode = 3
 
 [node name="Enemy6" parent="." unique_id=1109461743 instance=ExtResource("34_4k2k6")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.284819, 0, 4.4788017)
+
+[node name="Enemy7" parent="." unique_id=740511559 instance=ExtResource("34_4k2k6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.219017, 0, 9.976234)
+
+[node name="Enemy8" parent="." unique_id=968924534 instance=ExtResource("34_4k2k6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1073322, 0, 14.280207)
+
+[node name="Enemy9" parent="." unique_id=884282240 instance=ExtResource("34_4k2k6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.428621, 0, -14.4361515)

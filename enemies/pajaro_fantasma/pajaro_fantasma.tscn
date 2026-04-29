@@ -70,6 +70,9 @@ size = Vector3(1.2596436, 1.1567383, 1.9614697)
 
 [node name="Enemy" type="Node3D" unique_id=740511559 groups=["enemy"]]
 script = ExtResource("1_okdph")
+is_flying_type = true
+flying_hover_amplitude = 0.42
+flying_hover_speed = 12.0
 
 [node name="Visual" type="Node3D" parent="." unique_id=1118079420]
 
@@ -91,7 +94,7 @@ alpha_scissor_threshold = 0.12
 texture = ExtResource("5_1q3e2")
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=1106185488]
-transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0.636, 0)
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 1.2, 0)
 billboard = 2
 shaded = true
 double_sided = false
@@ -126,4 +129,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.01)
 texture = ExtResource("7_8pqnt")
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="." unique_id=1647206510]
+debug_enabled = true
 debug_path_custom_color = Color(1, 1, 1, 0.14117648)
