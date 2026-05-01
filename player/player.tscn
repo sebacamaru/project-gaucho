@@ -20,9 +20,9 @@
 [ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="13_s7qer"]
 [ext_resource type="Texture2D" uid="uid://c8n72u20b52gi" path="res://weapons/fogonazo_v2.png" id="13_wodsf"]
 [ext_resource type="Texture2D" uid="uid://doeerjfwgekv1" path="res://weapons/smoke.png" id="14_32hag"]
-[ext_resource type="Texture2D" uid="uid://ce1due3x16bvc" path="res://weapons/boleadoras.png" id="14_e7oew"]
 [ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="14_g4c7l"]
 [ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="15_knn7v"]
+[ext_resource type="Texture2D" uid="uid://cl1hym44qg7vr" path="res://weapons/boleadoras_.png" id="19_s7qer"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
 radius = 0.2993164
@@ -214,6 +214,10 @@ billboard_keep_scale = true
 
 [sub_resource type="QuadMesh" id="QuadMesh_g1dw6"]
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_7pqkx"]
+atlas = ExtResource("19_s7qer")
+region = Rect2(0, 0, 288, 500)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_qjkh3"]
 
 [sub_resource type="Gradient" id="Gradient_qjkh3"]
@@ -325,11 +329,10 @@ texture = ExtResource("5_qjkh3")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
 
 [node name="BoleadorasSprite3D" type="Sprite3D" parent="Weapon/Grip/BoleadorasPivot" unique_id=1044141247]
-transform = Transform3D(0.09990483, -0.0043619387, -1.906664e-10, 0, -4.371139e-09, 0.10000001, -0.0043619387, -0.09990483, -4.366979e-09, 0.028738484, 2.8799105e-08, 0.6582196)
+transform = Transform3D(0.34966686, -0.015266785, -6.6733236e-10, 0, -1.5298985e-08, 0.35, -0.015266785, -0.34966686, -1.5284424e-08, 0.028738484, 2.8799105e-08, 0.6582196)
 layers = 2
-shaded = true
 no_depth_test = true
-texture = ExtResource("14_e7oew")
+texture = SubResource("AtlasTexture_7pqkx")
 
 [node name="ShotgunSprite3D" type="Sprite3D" parent="Weapon/Grip" unique_id=885775104]
 transform = Transform3D(0.6993337, -0.030533573, -1.3346649e-09, 0, -3.059797e-08, 0.7, -0.030533573, -0.6993337, -3.056885e-08, -0.23498704, 0, 0.010259777)

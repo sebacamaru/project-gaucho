@@ -1,13 +1,16 @@
 [gd_scene format=3 uid="uid://dt6h12kf4uwrx"]
 
 [ext_resource type="Script" uid="uid://c4i2t7ql523d1" path="res://enemies/dummy/enemy_dummy.gd" id="1_okdph"]
-[ext_resource type="Texture2D" uid="uid://ce1due3x16bvc" path="res://weapons/boleadoras.png" id="2_3pusl"]
+[ext_resource type="Texture2D" uid="uid://cl1hym44qg7vr" path="res://weapons/boleadoras_.png" id="2_w2ytb"]
 [ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="3_ye4w8"]
 [ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="4_owp1k"]
 [ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="5_1q3e2"]
 [ext_resource type="Texture2D" uid="uid://dyr8f3dvllxlo" path="res://sprites/hpbar_enemy_background.png" id="6_lrl0h"]
 [ext_resource type="Texture2D" uid="uid://dfeg8swy2acuj" path="res://enemies/pajaro_fantasma/pajaro_fantasma.png" id="6_w2ytb"]
 [ext_resource type="Texture2D" uid="uid://brbs4avkx1oba" path="res://sprites/hpbar_enemy_fill.png" id="7_8pqnt"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8wbm7"]
+atlas = ExtResource("2_w2ytb")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aura"]
 render_priority = -1
@@ -66,7 +69,7 @@ animations = [{
 }]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_66vfd"]
-size = Vector3(1.2596436, 1.1567383, 1.9614697)
+size = Vector3(0.9042969, 1.1567383, 0.98535156)
 
 [node name="Enemy" type="Node3D" unique_id=740511559 groups=["enemy"]]
 script = ExtResource("1_okdph")
@@ -81,10 +84,12 @@ flying_hover_speed = 12.0
 [node name="HitOffset" type="Node3D" parent="Visual/SpritesRoot" unique_id=1054193098]
 
 [node name="RootEffectSprite3D" type="Sprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=297557798]
-transform = Transform3D(0.09599934, 0.0006993897, 0.027993495, -0.003786318, 0.099374905, 0.010501847, -0.027745068, -0.011141633, 0.09542574, 0, 0.7047459, 0.16471386)
+transform = Transform3D(0.28799805, 0.0020981308, 0.083980516, -0.011358956, 0.29812476, 0.03150555, -0.08323523, -0.033424895, 0.28627726, 0, 1.1811899, 0.16471386)
 visible = false
 no_depth_test = true
-texture = ExtResource("2_3pusl")
+texture = SubResource("AtlasTexture_8wbm7")
+region_enabled = true
+region_rect = Rect2(931, 0, 322, 500)
 
 [node name="AuraSprite3D" type="Sprite3D" parent="Visual/SpritesRoot/HitOffset" unique_id=123456789]
 transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 1.0577173, 0)
@@ -129,5 +134,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.01)
 texture = ExtResource("7_8pqnt")
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="." unique_id=1647206510]
-debug_enabled = true
 debug_path_custom_color = Color(1, 1, 1, 0.14117648)
