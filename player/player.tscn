@@ -16,12 +16,14 @@
 [ext_resource type="Texture2D" uid="uid://bvo5w64okmdta" path="res://sprites/lampara3.png" id="10_c35mf"]
 [ext_resource type="Texture2D" uid="uid://8vs0nd5g63p3" path="res://player/dash.png" id="11_2ieo8"]
 [ext_resource type="Script" uid="uid://cm1qtch4li2b5" path="res://player/attack_hitbox.gd" id="11_ebec5"]
+[ext_resource type="Script" uid="uid://ckw860yis82wb" path="res://scripts/billboard_rotating.gd" id="11_g4c7l"]
 [ext_resource type="Texture2D" uid="uid://b5jknl4ypt7wm" path="res://weapons/escopeta.png" id="12_kb6p2"]
 [ext_resource type="Shader" uid="uid://bfw52c1f0bfi2" path="res://shaders/black_aura.gdshader" id="13_s7qer"]
 [ext_resource type="Texture2D" uid="uid://c8n72u20b52gi" path="res://weapons/fogonazo_v2.png" id="13_wodsf"]
 [ext_resource type="Texture2D" uid="uid://doeerjfwgekv1" path="res://weapons/smoke.png" id="14_32hag"]
 [ext_resource type="Texture2D" uid="uid://c3ho53busneap" path="res://enemies/dummy/enemy_dummy.png" id="14_g4c7l"]
 [ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="15_knn7v"]
+[ext_resource type="Script" uid="uid://is1lwchokpsu" path="res://scripts/billboard_line_anchor.gd" id="19_knn7v"]
 [ext_resource type="Texture2D" uid="uid://cl1hym44qg7vr" path="res://weapons/boleadoras_.png" id="19_s7qer"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
@@ -235,6 +237,7 @@ script = ExtResource("3_yllr7")
 
 [node name="WeaponComponent" type="Node" parent="." unique_id=1343772771]
 script = ExtResource("3_ebec5")
+facon_attack_visual_arc_deg = 180.0
 boleadora_projectile_scene = ExtResource("5_c35mf")
 
 [node name="StaminaComponent" type="Node" parent="." unique_id=1336586301]
@@ -269,12 +272,30 @@ offset = Vector2(30, -140)
 shaded = true
 texture = ExtResource("12_kb6p2")
 
-[node name="LampPivot" type="Node3D" parent="Sprites" unique_id=504348815]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.89538383, 0.48107594, -0.3591329)
+[node name="LampPivot" type="Node3D" parent="Sprites" unique_id=504348815 node_paths=PackedStringArray("sprite_3d", "sub_viewport", "sprite_2d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.895, 0.785025, 0)
+script = ExtResource("11_g4c7l")
+rotation_mode = 2
+sprite_3d = NodePath("LightSprite3D")
+sub_viewport = NodePath("SubViewport")
+sprite_2d = NodePath("SubViewport/LightSprite2D")
+source_texture = ExtResource("10_c35mf")
+sprite_3d_pixel_size = 0.011
 
 [node name="LightSprite3D" type="Sprite3D" parent="Sprites/LampPivot" unique_id=58954727]
 transform = Transform3D(0.035, 0, 0, 0, 0.035, 0, 0, 0, 0.035, 0.010198177, 0.06721133, 0)
 layers = 2
+billboard = 2
+shaded = true
+texture = ExtResource("10_c35mf")
+
+[node name="SubViewport" type="SubViewport" parent="Sprites/LampPivot" unique_id=1960198633]
+transparent_bg = true
+size = Vector2i(2084, 2084)
+render_target_update_mode = 4
+
+[node name="LightSprite2D" type="Sprite2D" parent="Sprites/LampPivot/SubViewport" unique_id=256407443]
+position = Vector2(1024, 1024)
 texture = ExtResource("10_c35mf")
 
 [node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Sprites" unique_id=1888602037]
@@ -313,26 +334,38 @@ shaded = true
 texture = ExtResource("6_boad6")
 
 [node name="Weapon" type="Node3D" parent="." unique_id=326247383]
-transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, 0.5925225, 0)
+transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, 0.8981583, 0)
 
 [node name="Grip" type="Node3D" parent="Weapon" unique_id=1618366307]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.279, -0.3)
 
-[node name="FaconSprite3D" type="Sprite3D" parent="Weapon/Grip" unique_id=280945246]
+[node name="FaconPivot" type="Node3D" parent="Weapon/Grip" unique_id=481516447 node_paths=PackedStringArray("sprite_3d", "sub_viewport", "sprite_2d", "debug_line")]
+script = ExtResource("19_knn7v")
+sprite_3d = NodePath("FaconSprite3D")
+sub_viewport = NodePath("SubViewport")
+sprite_2d = NodePath("SubViewport/FaconSprite2D")
+source_texture = ExtResource("5_qjkh3")
+debug_line = NodePath("../../../AimDebugLayer/GripMouseLine")
+debug_line_enabled = false
+texture_pivot_px = Vector2(4, 64)
+attack_forward_offset_world = 0.4
+attack_extra_swing_angle_deg = -45.0
+
+[node name="FaconSprite3D" type="Sprite3D" parent="Weapon/Grip/FaconPivot" unique_id=280945246]
 transform = Transform3D(0.8991434, -0.03925745, -1.7159975e-09, 0, -3.934025e-08, 0.9, -0.03925745, -0.8991434, -3.9302808e-08, 0, 0, 0)
 layers = 2
+billboard = 2
 shaded = true
 no_depth_test = true
+render_priority = 1
 texture = ExtResource("5_qjkh3")
 
-[node name="BoleadorasPivot" type="Node3D" parent="Weapon/Grip" unique_id=814586623]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
+[node name="SubViewport" type="SubViewport" parent="Weapon/Grip/FaconPivot" unique_id=1757302147]
+transparent_bg = true
+size = Vector2i(256, 256)
+render_target_update_mode = 4
 
-[node name="BoleadorasSprite3D" type="Sprite3D" parent="Weapon/Grip/BoleadorasPivot" unique_id=1044141247]
-transform = Transform3D(0.34966686, -0.015266785, -6.6733236e-10, 0, -1.5298985e-08, 0.35, -0.015266785, -0.34966686, -1.5284424e-08, 0.028738484, 2.8799105e-08, 0.6582196)
-layers = 2
-no_depth_test = true
-texture = SubResource("AtlasTexture_7pqkx")
+[node name="FaconSprite2D" type="Sprite2D" parent="Weapon/Grip/FaconPivot/SubViewport" unique_id=1202506582]
+texture = ExtResource("5_qjkh3")
 
 [node name="ShotgunSprite3D" type="Sprite3D" parent="Weapon/Grip" unique_id=885775104]
 transform = Transform3D(0.6993337, -0.030533573, -1.3346649e-09, 0, -3.059797e-08, 0.7, -0.030533573, -0.6993337, -3.056885e-08, -0.23498704, 0, 0.010259777)
@@ -342,6 +375,15 @@ shaded = true
 no_depth_test = true
 render_priority = 20
 texture = ExtResource("12_kb6p2")
+
+[node name="BoleadorasPivot" type="Node3D" parent="Weapon/Grip" unique_id=814586623]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
+
+[node name="BoleadorasSprite3D" type="Sprite3D" parent="Weapon/Grip/BoleadorasPivot" unique_id=1044141247]
+transform = Transform3D(0.34966686, -0.015266785, -6.6733236e-10, 0, -1.5298985e-08, 0.35, -0.015266785, -0.34966686, -1.5284424e-08, 0.028738484, 2.8799105e-08, 0.6582196)
+layers = 2
+no_depth_test = true
+texture = SubResource("AtlasTexture_7pqkx")
 
 [node name="Tip" type="Marker3D" parent="Weapon/Grip" unique_id=315593578]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.030748412, 0, 1.1431422)
@@ -384,6 +426,7 @@ gradient = SubResource("Gradient_qjkh3")
 
 [node name="LightPivot" type="Node3D" parent="." unique_id=1078475222]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.59966755)
+visible = false
 
 [node name="OmniLight3D" type="OmniLight3D" parent="LightPivot" unique_id=162856023]
 light_color = Color(0.9318787, 0.45774436, 0, 1)
@@ -402,6 +445,7 @@ omni_range = 3.9415617
 
 [node name="OmniLight3D2" type="OmniLight3D" parent="." unique_id=856661052]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07798672, 0.8553407, 0.29288912)
+visible = false
 light_color = Color(1, 0.78039217, 0.8352941, 1)
 light_energy = 0.05
 light_cull_mask = 3
@@ -414,3 +458,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017588645, 0.74204564, 0)
 visible = false
 billboard = 2
 texture = ExtResource("11_2ieo8")
+
+[node name="AimDebugLayer" type="CanvasLayer" parent="." unique_id=1701208138]
+
+[node name="GripMouseLine" type="Line2D" parent="AimDebugLayer" unique_id=1943076630]
+default_color = Color(1, 0, 0, 1)

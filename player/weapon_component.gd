@@ -1,6 +1,10 @@
 extends Node
 class_name WeaponComponent
 
+# =========================================================
+# WEAPON COMPONENT
+# =========================================================
+#
 # Este componente centraliza la lógica de combate del player.
 #
 # Diseño actual:
@@ -8,20 +12,37 @@ class_name WeaponComponent
 #   - ataque primario
 #   - NO usa stamina
 #   - tiene cooldown propio
+#   - su lógica real sigue usando el sistema original:
+#     weapon_pivot rota en mundo y el hitbox/trail/tip siguen siendo robustos
+#   - su visual puede ser un Sprite3D con Y-Billboard + SubViewport,
+#     actualizado en modo MANUAL desde este componente
 #
 # - Escopeta:
 #   - ataque secundario en 2 fases
 #   - mantener botón derecho = apuntar
 #   - soltar botón derecho = consumir stamina y disparar
 #
-# Objetivos de esta versión:
+# - Boleadoras:
+#   - mantener botón = apuntar
+#   - soltar botón = lanzar proyectil
+#
+# Objetivos:
 # - que el facón siga siendo rápido y divertido
 # - que dash / escopeta no bloqueen el facón por culpa de la stamina
 # - mantener la escopeta como ataque más pesado y comprometido
+# - conservar el sistema original de apuntado como autoridad
+# - permitir que el facón visual use billboard/shaded sin romper el aim
+# =========================================================
+
+
+# =========================================================
+# SEÑALES
+# =========================================================
 
 signal attack_started(weapon_name: String)
 signal attack_finished(weapon_name: String)
 signal boleadora_count_changed(current: int, max: int)
+
 
 # =========================================================
 # CONFIGURACIÓN GENERAL
@@ -31,6 +52,7 @@ signal boleadora_count_changed(current: int, max: int)
 @export var facon_level: int = 1
 @export var shotgun_unlocked: bool = false
 @export var boleadoras_unlocked: bool = false
+
 
 # =========================================================
 # ESTADO INTERNO
@@ -53,7 +75,7 @@ var is_shotgun_aiming: bool = false
 # Mientras sea true:
 # - se oculta el facón
 # - se muestran las boleadoras
-# - el grip sigue al mouse (ya resuelto por el player)
+# - el grip sigue al mouse
 var is_boleadoras_aiming: bool = false
 
 # Cooldown propio del facón.
@@ -82,9 +104,10 @@ var current_attack_knockback: float = 0.0
 # Valor en radianes por segundo.
 var boleadoras_spin_speed: float = 18.0
 
-# Cantidad máxima de enemigos atrapados por la boleadora
+# Cantidad máxima de enemigos atrapados por la boleadora.
 @export var max_boleadora_targets: int = 3
 var active_boleadora_targets: Array[Node] = []
+
 
 # =========================================================
 # STATS BASE DEL FACÓN
@@ -111,6 +134,7 @@ var facon_base_stats := {
 	"cooldown": 0.10,
 }
 
+
 # =========================================================
 # STATS BASE DE LA ESCOPETA
 # =========================================================
@@ -128,6 +152,22 @@ var shotgun_base_stats := {
 }
 
 # =========================================================
+# FACÓN - VISUAL BILLBOARD
+# =========================================================
+
+# Durante el ataque, limitamos cuánto rota visualmente el PNG del facón.
+# La lógica real del arma sigue usando el arco completo.
+@export var facon_attack_visual_arc_deg: float = 70.0
+
+# Si está en true, durante el ataque el facón visual queda casi fijo
+# apuntando hacia la dirección base del golpe.
+# Si está en false, hace un mini-swing visual limitado.
+@export var facon_freeze_visual_rotation_during_attack: bool = false
+
+# Ángulo base del ataque actual.
+var facon_attack_base_angle: float = 0.0
+
+# =========================================================
 # REFERENCIAS
 # =========================================================
 
@@ -137,7 +177,21 @@ var shotgun_base_stats := {
 @onready var weapon_pivot: Node3D = player.get_node("Weapon")
 @onready var weapon_grip: Node3D = player.get_node("Weapon/Grip")
 
-@onready var facon_sprite: Sprite3D = player.get_node("Weapon/Grip/FaconSprite3D")
+# Nodo visual raíz del facón.
+# Este nodo tiene el script BillboardRotatingSpriteVisual.
+#
+# IMPORTANTE:
+# En el inspector, este nodo debería estar en:
+# Rotation Mode: MANUAL
+#
+# Este componente le pasa el ángulo real.
+# El visual NO calcula el mouse por su cuenta.
+@onready var facon_visual: Node3D = player.get_node("Weapon/Grip/FaconPivot")
+
+# Sprite3D visible del facón.
+# Si usás el sistema SubViewport, este Sprite3D muestra la textura generada.
+@onready var facon_sprite: Sprite3D = player.get_node("Weapon/Grip/FaconPivot/FaconSprite3D")
+
 @onready var shotgun_front_sprite: Sprite3D = player.get_node("Weapon/Grip/ShotgunSprite3D")
 @onready var boleadoras_pivot: Node3D = player.get_node("Weapon/Grip/BoleadorasPivot")
 @onready var boleadoras_sprite: Sprite3D = player.get_node("Weapon/Grip/BoleadorasPivot/BoleadorasSprite3D")
@@ -164,6 +218,11 @@ var shotgun_base_stats := {
 @export var sapukai_facon_damage_mult: float = 1.7
 @export var sapukai_facon_speed_mult: float = 1.6
 
+
+# =========================================================
+# READY
+# =========================================================
+
 func _ready() -> void:
 	if muzzle_flash_light:
 		muzzle_flash_light.light_energy = 0.0
@@ -183,6 +242,10 @@ func _ready() -> void:
 	show_facon_visual()
 	update_shotgun_back_visual()
 
+
+# =========================================================
+# PHYSICS PROCESS
+# =========================================================
 
 func _physics_process(delta: float) -> void:
 	# =========================================================
@@ -261,6 +324,7 @@ func can_start_shotgun_action() -> bool:
 
 	return true
 
+
 # Chequeo específico de las boleadoras.
 func can_start_boleadoras_action() -> bool:
 	if is_attacking:
@@ -276,6 +340,7 @@ func can_start_boleadoras_action() -> bool:
 		return false
 
 	return true
+
 
 # =========================================================
 # FACÓN
@@ -361,7 +426,7 @@ func start_facon_attack() -> void:
 	player.skill_used.emit("skill_1")
 	attack_started.emit("facon")
 
-	# Visual frontal del facón
+	# Visual frontal del facón.
 	show_facon_visual()
 
 	# Pequeño empuje hacia adelante del grip.
@@ -379,6 +444,10 @@ func start_facon_attack() -> void:
 
 	var attack_base_angle: float = player.aim_angle
 	var aim_dir: Vector3 = player.aim_dir
+	
+	# Guardamos el ángulo base del ataque para estabilizar
+	# la rotación visual del facón billboard.
+	facon_attack_base_angle = attack_base_angle
 
 	var half_arc: float = deg_to_rad(float(stats["swing_arc_deg"])) * 0.5
 	var start_angle: float
@@ -393,6 +462,12 @@ func start_facon_attack() -> void:
 	else:
 		start_angle = attack_base_angle + half_arc
 		end_angle = attack_base_angle - half_arc
+
+	# Swing visual extra del facón billboard.
+	# No afecta hitbox ni lógica, solo el Sprite2D interno.
+	if facon_visual != null and facon_visual.has_method("begin_attack_extra_swing"):
+		var visual_duration: float = float(stats["swing_duration"]) + float(stats["return_duration"])
+		facon_visual.begin_attack_extra_swing(visual_duration, swing_side)
 
 	update_weapon_swing(start_angle, float(stats["weapon_radius"]))
 
@@ -461,16 +536,20 @@ func start_facon_attack() -> void:
 
 	_finish_attack_state()
 
+	if facon_visual != null and facon_visual.has_method("end_attack_extra_swing"):
+		facon_visual.end_attack_extra_swing()
+
 	# Recién al terminar, arrancamos el cooldown propio del facón.
 	facon_cooldown_timer = float(stats["cooldown"])
 
 	attack_finished.emit("facon")
-	
+
 	print("SAPUKAI ACTIVO:", sapukai != null and sapukai.is_active)
 	print("FACON DAMAGE:", stats["damage"])
 	print("SWING:", stats["swing_duration"])
 	print("RETURN:", stats["return_duration"])
 	print("COOLDOWN:", stats["cooldown"])
+
 
 # =========================================================
 # ESCOPETA
@@ -634,7 +713,7 @@ func release_boleadoras() -> void:
 			boleadora_stamina_recharge_rate,
 			boleadora_stamina_recovery_delay
 		)
-	
+
 	player.skill_used.emit("boleadoras")
 	launch_boleadora()
 	show_facon_visual()
@@ -907,7 +986,7 @@ func register_boleadora_target(enemy: Node) -> void:
 
 	active_boleadora_targets.append(enemy)
 
-	# Si el enemigo emite señal de muerte, lo escuchamos
+	# Si el enemigo emite señal de muerte, lo escuchamos.
 	if enemy.has_signal("died"):
 		if not enemy.died.is_connected(_on_boleadora_target_died):
 			enemy.died.connect(_on_boleadora_target_died.bind(enemy), CONNECT_ONE_SHOT)
@@ -926,32 +1005,127 @@ func _on_boleadora_target_died(enemy: Node) -> void:
 		max_boleadora_targets
 	)
 
+
 # =========================================================
 # VISUAL / APOYO
 # =========================================================
 
 func update_weapon_idle() -> void:
-	# Si estamos atacando o apuntando con la escopeta,
-	# no queremos que el idle pise esa pose.
 	if is_attacking or is_shotgun_aiming or is_boleadoras_aiming:
 		return
 
-	var facon_stats := get_facon_stats()
-
 	weapon_pivot.rotation.y = player.aim_angle
-	facon_sprite.position = Vector3(0.0, 0.0, float(facon_stats["weapon_radius"]))
+
+	# El facón visual line-anchored no necesita offset local.
+	facon_sprite.position = Vector3.ZERO
 
 	shotgun_front_sprite.position = Vector3.ZERO
 
 	weapon_grip.position = grip_base_position
 	weapon_grip.rotation = grip_base_rotation
 
+	if facon_visual != null:
+		facon_visual.look_from_anchor_to_mouse(weapon_grip.global_position)
+
 	update_shotgun_back_visual()
 
 
 func update_weapon_swing(angle: float, radius: float) -> void:
+	# -----------------------------------------------------
+	# Sistema real del arma
+	# -----------------------------------------------------
+	# Esto sigue moviendo hitbox, tip, trail y lógica del ataque.
 	weapon_pivot.rotation.y = angle
-	facon_sprite.position = Vector3(0.0, 0.0, radius)
+
+	# El Sprite3D del facón visual NO debería desplazarse con radius.
+	# El anclaje ya lo controla BillboardLineAnchoredSpriteVisual
+	# usando global_position = weapon_grip.global_position.
+	facon_sprite.position = Vector3.ZERO
+
+	# -----------------------------------------------------
+	# Visual line-anchored
+	# -----------------------------------------------------
+	# Durante el ataque, el mouse deja de importar.
+	# El facón visual se alinea a la línea Grip → Tip.
+	if facon_visual != null:
+		facon_visual.look_from_anchor_to_world_target(
+			weapon_grip.global_position,
+			weapon_tip.global_position
+		)
+
+
+func get_facon_visual_angle_for_swing(real_swing_angle: float) -> float:
+	# Si no estamos en un ataque real de facón, usamos el ángulo normal.
+	if not is_attacking or current_attack_damage <= 0:
+		return real_swing_angle
+
+	# Opción ultra estable:
+	# el arma real hace el swing completo, pero el PNG visual
+	# queda mirando hacia la dirección base del ataque.
+	if facon_freeze_visual_rotation_during_attack:
+		return facon_attack_base_angle
+
+	# Opción recomendada:
+	# limitamos el arco visual para evitar rotaciones raras del billboard.
+	var max_visual_delta: float = deg_to_rad(facon_attack_visual_arc_deg) * 0.5
+
+	# Diferencia angular entre el swing real y el ángulo base.
+	var delta: float = wrapf(
+		real_swing_angle - facon_attack_base_angle,
+		-PI,
+		PI
+	)
+
+	# Clamp visual.
+	delta = clamp(delta, -max_visual_delta, max_visual_delta)
+
+	return facon_attack_base_angle + delta
+
+
+func update_facon_billboard_visual(_angle: float) -> void:
+	if facon_visual == null:
+		return
+
+	if not facon_visual.has_method("set_manual_angle_radians"):
+		return
+
+	var cam: Camera3D = camera
+
+	if cam == null:
+		cam = player.get_viewport().get_camera_3d()
+
+	if cam == null:
+		return
+
+	# -----------------------------------------------------
+	# Fuente robusta:
+	# usamos la posición real del arma en pantalla.
+	#
+	# weapon_grip = base / mano
+	# weapon_tip  = punta real del arma
+	#
+	# Esto evita depender del mouse directamente.
+	# -----------------------------------------------------
+	var origin_3d: Vector3 = weapon_grip.global_position
+	var tip_3d: Vector3 = weapon_tip.global_position
+
+	if cam.is_position_behind(origin_3d):
+		return
+
+	if cam.is_position_behind(tip_3d):
+		return
+
+	var origin_2d: Vector2 = cam.unproject_position(origin_3d)
+	var tip_2d: Vector2 = cam.unproject_position(tip_3d)
+
+	var screen_dir: Vector2 = tip_2d - origin_2d
+
+	if screen_dir.length_squared() < 1.0:
+		return
+
+	var screen_angle_rad: float = atan2(screen_dir.y, screen_dir.x)
+
+	facon_visual.call("set_manual_angle_radians", screen_angle_rad)
 
 
 func get_current_weapon_radius() -> float:
@@ -1037,6 +1211,9 @@ func cancel_attack_visuals() -> void:
 	weapon_grip.rotation = grip_base_rotation
 
 	show_facon_visual()
+
+	if facon_visual != null and facon_visual.has_method("end_attack_extra_swing"):
+		facon_visual.end_attack_extra_swing()
 
 
 func play_muzzle_flash() -> void:
@@ -1164,6 +1341,11 @@ func show_facon_visual() -> void:
 	facon_sprite.visible = true
 	facon_sprite.modulate.a = 1.0
 
+	# Si el nodo FaconPivot fue ocultado manualmente,
+	# lo reactivamos para asegurar que el SubViewport visual aparezca.
+	if facon_visual != null:
+		facon_visual.visible = true
+
 	# Ocultamos visuales alternativos.
 	shotgun_front_sprite.visible = false
 	shotgun_front_sprite.flip_h = false
@@ -1211,10 +1393,12 @@ func update_shotgun_front_flip() -> void:
 	# Si en tu asset base mira a la derecha, invertí el operador.
 	shotgun_front_sprite.flip_h = player.aim_dir.x <= 0.0
 
+
 func update_boleadoras_flip() -> void:
 	# Si la textura base mira a la izquierda, esta línea está bien.
 	# Si en tu asset base mira a la derecha, invertí el operador.
 	boleadoras_sprite.flip_h = player.aim_dir.x <= 0.0
+
 
 func fade_sprite_alpha(sprite: Sprite3D, from_alpha: float, to_alpha: float, duration: float) -> Tween:
 	sprite.modulate.a = from_alpha

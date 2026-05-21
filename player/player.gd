@@ -48,6 +48,9 @@ var lamp_base_rotation: Vector3
 # Qué tan rápido vuelve al centro cuando deja de moverse
 @export var lamp_return_speed: float = 8.0
 
+var lamp_current_angle_rad: float = 0.0
+var lamp_base_angle_rad: float = 0.0
+
 # =========================
 # HABILIDADES
 # =========================
@@ -76,6 +79,7 @@ var last_input_dir: Vector2 = Vector2.DOWN
 @onready var weapon_pivot: Node3D = $Weapon
 
 # Sprite de luz falsa de la lámpara
+@onready var lamp_visual: Node3D = $Sprites/LampPivot
 @onready var light_sprite: Sprite3D = $Sprites/LampPivot/LightSprite3D
 
 # =========================
@@ -104,6 +108,23 @@ var dash_smear_spawn_timer: float = 0.0
 
 # Intervalo de spawn entre ghosts del dash
 @export var dash_smear_spawn_interval: float = 0.03
+
+# =========================
+# AIM / MOUSE
+# =========================
+
+# Distancia mínima en mundo desde el player hasta el mouse
+# para aceptar una nueva dirección de apuntado.
+# Si el mouse está más cerca que esto, mantenemos el último aim estable.
+@export var aim_deadzone_world: float = 0.35
+
+# Distancia un poco mayor para volver a activar el aim.
+# Esto evita parpadeos entrando/saliendo justo del borde.
+@export var aim_resume_world: float = 0.45
+
+var is_mouse_inside_aim_deadzone: bool = false
+
+@export var aim_deadzone_screen_px: float = 70.0
 
 # =========================
 # SEÑALES
@@ -283,25 +304,38 @@ func get_dash_direction_to_mouse() -> Vector3:
 
 
 func update_cursor() -> void:
-	var mouse_pos = get_viewport().get_mouse_position()
-	var ray_origin = camera.project_ray_origin(mouse_pos)
-	var ray_dir = camera.project_ray_normal(mouse_pos)
+	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
 
-	# Intersectar el rayo del mouse con un plano horizontal
-	# a la altura actual del player
-	var plane = Plane(Vector3.UP, global_position.y)
+	# -----------------------------------------------------
+	# Deadzone en pantalla
+	# -----------------------------------------------------
+	# Si el mouse está encima del cuerpo del jugador,
+	# no actualizamos aim_dir ni aim_angle.
+	# Mantenemos la última dirección válida.
+	# -----------------------------------------------------
+	var player_screen_pos: Vector2 = camera.unproject_position(global_position + Vector3(0.0, 0.8, 0.0))
+	var mouse_to_player_px: float = mouse_pos.distance_to(player_screen_pos)
+
+	if mouse_to_player_px < aim_deadzone_screen_px:
+		return
+
+	var ray_origin: Vector3 = camera.project_ray_origin(mouse_pos)
+	var ray_dir: Vector3 = camera.project_ray_normal(mouse_pos)
+
+	var plane := Plane(Vector3.UP, global_position.y)
 	var hit = plane.intersects_ray(ray_origin, ray_dir)
 
-	if hit:
-		var dir = hit - global_position
-		dir.y = 0.0
+	if hit == null:
+		return
 
-		# Evitar normalizar vectores casi nulos
-		if dir.length_squared() > 0.0001:
-			aim_dir = dir.normalized()
-			aim_angle = atan2(dir.x, dir.z)
-			cursor.rotation.y = aim_angle
-			handle_flip(dir)
+	var dir: Vector3 = hit - global_position
+	dir.y = 0.0
+
+	if dir.length_squared() > 0.0001:
+		aim_dir = dir.normalized()
+		aim_angle = atan2(dir.x, dir.z)
+		cursor.rotation.y = aim_angle
+		handle_flip(dir)
 
 
 func handle_flip(dir: Vector3) -> void:
@@ -425,29 +459,47 @@ func update_pivot_light() -> void:
 
 
 func update_lamp_swing(delta: float, input_dir: Vector2) -> void:
-	# Si está muerto, que vuelva a la posición normal
-	if is_dead:
-		light_sprite.rotation = light_sprite.rotation.lerp(lamp_base_rotation, lamp_return_speed * delta)
+	if lamp_visual == null:
 		return
 
-	# Si el player se está moviendo, aplicamos balanceo
+	# Si está muerto, que vuelva a la posición normal.
+	if is_dead:
+		lamp_current_angle_rad = lerp_angle(
+			lamp_current_angle_rad,
+			lamp_base_angle_rad,
+			lamp_return_speed * delta
+		)
+
+		lamp_visual.set_manual_angle_radians(lamp_current_angle_rad)
+		return
+
+	# Si el player se está moviendo, aplicamos balanceo.
 	if input_dir.length() > 0.0:
 		lamp_swing_time += delta * lamp_swing_speed
 
-		# Balanceo con seno
-		var swing_angle_rad = deg_to_rad(lamp_swing_angle_deg) * sin(lamp_swing_time)
+		# Balanceo con seno.
+		var swing_angle_rad := deg_to_rad(lamp_swing_angle_deg) * sin(lamp_swing_time)
 
-		# Partimos de la rotación base
-		var target_rotation := lamp_base_rotation
+		# Ángulo final de la lámpara.
+		var target_angle := lamp_base_angle_rad + swing_angle_rad
 
-		# Balancear en Z
-		target_rotation.z += swing_angle_rad
+		# Interpolación suave.
+		lamp_current_angle_rad = lerp_angle(
+			lamp_current_angle_rad,
+			target_angle,
+			10.0 * delta
+		)
 
-		# Interpolación suave para evitar rigidez
-		light_sprite.rotation = light_sprite.rotation.lerp(target_rotation, 10.0 * delta)
+		lamp_visual.set_manual_angle_radians(lamp_current_angle_rad)
 	else:
-		# Si no se mueve, volver suavemente al centro
-		light_sprite.rotation = light_sprite.rotation.lerp(lamp_base_rotation, lamp_return_speed * delta)
+		# Si no se mueve, vuelve suavemente al centro.
+		lamp_current_angle_rad = lerp_angle(
+			lamp_current_angle_rad,
+			lamp_base_angle_rad,
+			lamp_return_speed * delta
+		)
+
+		lamp_visual.set_manual_angle_radians(lamp_current_angle_rad)
 
 
 func _on_skill_unlocked(slot_name: String) -> void:
