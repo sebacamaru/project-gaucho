@@ -4,7 +4,6 @@
 [ext_resource type="PackedScene" uid="uid://dfwvskldv0ksq" path="res://player/player.tscn" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://6yl8qhrda7v2" path="res://models/Rancho_LVL01_V2.glb" id="2_jq2sk"]
 [ext_resource type="Environment" uid="uid://kk1k3kd6nma6" path="res://enviroments/test_enviroment.tres" id="3_h2yge"]
-[ext_resource type="Shader" uid="uid://bn0hatxytwtx8" path="res://shaders/radial_blur.gdshader" id="4_1bvp3"]
 [ext_resource type="Script" uid="uid://dnx4n1en4ks0x" path="res://scripts/screen_fx.gd" id="8_4c57u"]
 [ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://objects/bonfire.tscn" id="9_bonfire"]
 [ext_resource type="Shader" uid="uid://blyv065bw88rg" path="res://shaders/retro.gdshader" id="10_efxa6"]
@@ -44,19 +43,16 @@ normal_enabled = true
 [sub_resource type="BoxShape3D" id="BoxShape3D_qsp4k"]
 size = Vector3(10.837681, 2.7218018, 5.167053)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_lquwl"]
-shader = ExtResource("4_1bvp3")
-shader_parameter/strength = 0.02000000095
-shader_parameter/center = Vector2(0.5, 0.5)
-shader_parameter/focus_radius = 0.14499999675896
-shader_parameter/focus_softness = 0.2999999932944
-shader_parameter/darkness = 0.3999999910592
-shader_parameter/darkness_radius = 0.3999999910592
-shader_parameter/darkness_softness = 0.124999997206
-shader_parameter/samples = 12
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dg77c"]
 shader = ExtResource("10_efxa6")
+shader_parameter/radial_strength = 0.010000000475
+shader_parameter/radial_center = Vector2(0.5, 0.5)
+shader_parameter/radial_focus_radius = 0.15
+shader_parameter/radial_focus_softness = 0.1
+shader_parameter/radial_darkness = 0.3499999921768
+shader_parameter/radial_darkness_radius = 0.3999999910592
+shader_parameter/radial_darkness_softness = 0.1499999966472
+shader_parameter/radial_samples = 12
 shader_parameter/soft_amount = 2.0
 shader_parameter/saturation = 0.798000037905
 shader_parameter/contrast = 1.12000002945
@@ -155,7 +151,7 @@ spot_range = 13.461458
 spot_angle = 89.99
 
 [node name="Bonfire" parent="." unique_id=1587422233 instance=ExtResource("9_bonfire")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2733562, 0.14137536, 3.3417516)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2733562, 0.14137536, 2.5567613)
 
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1482664797]
 transform = Transform3D(0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 1.1641532e-10, 0, -4.656613e-10)
@@ -168,9 +164,10 @@ mesh = SubResource("PlaneMesh_7dm0k")
 surface_material_override/0 = SubResource("StandardMaterial3D_7dm0k")
 
 [node name="Rancho" parent="NavigationRegion3D" unique_id=2107584091 instance=ExtResource("2_jq2sk")]
-transform = Transform3D(1.0000001, 0, 0, 0, 1.0000001, 0, 0, 0, 1.0000001, 2.1437752, 0, -4.1899953)
+transform = Transform3D(0.9, 0, 0, 0, 0.9, 0, 0, 0, 0.9, 2.1437752, 0, -4.1899953)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="NavigationRegion3D/Rancho" unique_id=1067997241]
+transform = Transform3D(0.99999976, 0, 0, 0, 0.99999976, 0, 0, 0, 1.31068, 0, 0, -0.753675)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Rancho/StaticBody3D" unique_id=155639850]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1823025, 1.3717651, 0)
@@ -199,16 +196,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ColorRect" type="ColorRect" parent="HUD/CanvasLayer/FX" unique_id=1289151269]
-material = SubResource("ShaderMaterial_lquwl")
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Shader" type="ColorRect" parent="HUD/CanvasLayer/FX" unique_id=373592998]
+[node name="RetroShader" type="ColorRect" parent="HUD/CanvasLayer/FX" unique_id=373592998]
 material = SubResource("ShaderMaterial_dg77c")
 layout_mode = 1
 anchors_preset = 15

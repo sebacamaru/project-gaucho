@@ -308,7 +308,6 @@ alpha_cut = 1
 render_priority = 1
 sprite_frames = SubResource("SpriteFrames_hg6s5")
 animation = &"Idle"
-frame_progress = 0.23386756
 
 [node name="SapukaiSprite3D" type="Sprite3D" parent="Sprites" unique_id=911739539]
 transform = Transform3D(0.52, 0, 0, 0, 0.52, 0, 0, 0, 0.52, 0, 1.0577173, 0)
@@ -356,7 +355,6 @@ layers = 2
 billboard = 2
 shaded = true
 no_depth_test = true
-render_priority = 1
 texture = ExtResource("5_qjkh3")
 
 [node name="SubViewport" type="SubViewport" parent="Weapon/Grip/FaconPivot" unique_id=1757302147]
