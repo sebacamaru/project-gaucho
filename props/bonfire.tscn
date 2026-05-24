@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dy352efhy7nbg"]
 
-[ext_resource type="Script" uid="uid://cnadjcpkvxaxo" path="res://objects/fire_light.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cnadjcpkvxaxo" path="res://scripts/fire_light.gd" id="1_script"]
 
 [sub_resource type="Gradient" id="Gradient_sparks"]
 offsets = PackedFloat32Array(0, 0.35, 0.75, 1)

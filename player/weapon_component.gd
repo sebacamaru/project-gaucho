@@ -171,11 +171,11 @@ var facon_attack_base_angle: float = 0.0
 # REFERENCIAS
 # =========================================================
 
-@onready var player := get_parent()
+@onready var player := get_parent().get_parent()
 @onready var camera: Camera3D = player.get_viewport().get_camera_3d()
 
-@onready var weapon_pivot: Node3D = player.get_node("Weapon")
-@onready var weapon_grip: Node3D = player.get_node("Weapon/Grip")
+@onready var weapon_pivot: Node3D = player.get_node("Gameplay/Weapon")
+@onready var weapon_grip: Node3D = player.get_node("Gameplay/Weapon/Grip")
 
 # Nodo visual raíz del facón.
 # Este nodo tiene el script BillboardRotatingSpriteVisual.
@@ -186,29 +186,29 @@ var facon_attack_base_angle: float = 0.0
 #
 # Este componente le pasa el ángulo real.
 # El visual NO calcula el mouse por su cuenta.
-@onready var facon_visual: Node3D = player.get_node("Weapon/Grip/FaconPivot")
+@onready var facon_visual: Node3D = player.get_node("Gameplay/Weapon/Grip/FaconPivot")
 
 # Sprite3D visible del facón.
 # Si usás el sistema SubViewport, este Sprite3D muestra la textura generada.
-@onready var facon_sprite: Sprite3D = player.get_node("Weapon/Grip/FaconPivot/FaconSprite3D")
+@onready var facon_sprite: Sprite3D = player.get_node("Gameplay/Weapon/Grip/FaconPivot/FaconSprite3D")
 
-@onready var shotgun_front_sprite: Sprite3D = player.get_node("Weapon/Grip/ShotgunSprite3D")
-@onready var boleadoras_pivot: Node3D = player.get_node("Weapon/Grip/BoleadorasPivot")
-@onready var boleadoras_sprite: Sprite3D = player.get_node("Weapon/Grip/BoleadorasPivot/BoleadorasSprite3D")
+@onready var shotgun_front_sprite: Sprite3D = player.get_node("Gameplay/Weapon/Grip/ShotgunSprite3D")
+@onready var boleadoras_pivot: Node3D = player.get_node("Gameplay/Weapon/Grip/BoleadorasPivot")
+@onready var boleadoras_sprite: Sprite3D = player.get_node("Gameplay/Weapon/Grip/BoleadorasPivot/BoleadorasSprite3D")
 
-@onready var shotgun_back_pivot: Node3D = player.get_node("Sprites/ShotgunPivot")
-@onready var shotgun_back_sprite: Sprite3D = player.get_node("Sprites/ShotgunPivot/ShotgunSprite3D")
+@onready var shotgun_back_pivot: Node3D = player.get_node("Gameplay/Sprites/ShotgunPivot")
+@onready var shotgun_back_sprite: Sprite3D = player.get_node("Gameplay/Sprites/ShotgunPivot/ShotgunSprite3D")
 
-@onready var shotgun_muzzle: Marker3D = player.get_node("Weapon/Grip/Muzzle")
-@onready var weapon_tip: Marker3D = player.get_node("Weapon/Grip/Tip")
-@onready var attack_hitbox: Area3D = player.get_node("Weapon/Grip/AttackHitbox")
+@onready var shotgun_muzzle: Marker3D = player.get_node("Gameplay/Weapon/Grip/Muzzle")
+@onready var weapon_tip: Marker3D = player.get_node("Gameplay/Weapon/Grip/Tip")
+@onready var attack_hitbox: Area3D = player.get_node("Gameplay/Weapon/Grip/AttackHitbox")
 
-@onready var trail: Line2D = player.get_node("Trail")
-@onready var anim_sprite: AnimatedSprite3D = player.get_node("Sprites/AnimatedSprite3D")
-@onready var muzzle_flash: Sprite3D = player.get_node("Weapon/Grip/Muzzle/MuzzleFlash")
-@onready var muzzle_flash_light: OmniLight3D = player.get_node("Weapon/Grip/Muzzle/MuzzleFlashLight")
-@onready var muzzle_smoke: Sprite3D = player.get_node("Weapon/Grip/Muzzle/MuzzleSmoke")
-@onready var shotgun_preview: ShotgunPreview = player.get_node("ShotgunPreview")
+@onready var trail: Line2D = player.get_node("Gameplay/Trail")
+@onready var anim_sprite: AnimatedSprite3D = player.get_node("Gameplay/Sprites/AnimatedSprite3D")
+@onready var muzzle_flash: Sprite3D = player.get_node("Gameplay/Weapon/Grip/Muzzle/MuzzleFlash")
+@onready var muzzle_flash_light: OmniLight3D = player.get_node("Gameplay/Weapon/Grip/Muzzle/MuzzleFlashLight")
+@onready var muzzle_smoke: Sprite3D = player.get_node("Gameplay/Weapon/Grip/Muzzle/MuzzleSmoke")
+@onready var shotgun_preview: ShotgunPreview = player.get_node("Gameplay/ShotgunPreview")
 
 @export var boleadora_projectile_scene: PackedScene
 @export var boleadora_stamina_recharge_rate: float = 240.0
@@ -1030,7 +1030,7 @@ func update_weapon_idle() -> void:
 	update_shotgun_back_visual()
 
 
-func update_weapon_swing(angle: float, radius: float) -> void:
+func update_weapon_swing(angle: float, _radius: float) -> void:
 	# -----------------------------------------------------
 	# Sistema real del arma
 	# -----------------------------------------------------

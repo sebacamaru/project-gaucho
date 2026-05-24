@@ -2,7 +2,7 @@ extends Node
 
 @onready var camera: Camera3D = get_tree().get_first_node_in_group("camera")
 @onready var flash_rect: ColorRect = $CanvasLayer/FX/DamageRect
-@onready var fps_label: Label = $CanvasLayer/FPSCounter
+@onready var fps_label: Label = $CanvasLayer/UI/FPSCounter
 
 var shake_strength: float = 0.0
 var shake_fade: float = 20.0

@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://6yl8qhrda7v2" path="res://models/Rancho_LVL01_V2.glb" id="2_jq2sk"]
 [ext_resource type="Environment" uid="uid://kk1k3kd6nma6" path="res://enviroments/test_enviroment.tres" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://dnx4n1en4ks0x" path="res://scripts/screen_fx.gd" id="8_4c57u"]
-[ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://objects/bonfire.tscn" id="9_bonfire"]
+[ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://props/bonfire.tscn" id="9_bonfire"]
 [ext_resource type="Shader" uid="uid://blyv065bw88rg" path="res://shaders/retro.gdshader" id="10_efxa6"]
 [ext_resource type="Theme" uid="uid://dirds6byeqdk2" path="res://ui/main_theme.tres" id="11_dg77c"]
 [ext_resource type="Shader" uid="uid://b4a2ih4x1iaud" path="res://shaders/canvas_item.gdshader" id="11_htxhm"]
@@ -28,6 +28,11 @@
 [ext_resource type="Texture2D" uid="uid://v2kv7720bcv0" path="res://ui/key-e_2.png" id="25_htxhm"]
 [ext_resource type="Texture2D" uid="uid://c5vy1i1x15ipw" path="res://ui/bg-points.png" id="25_lswn8"]
 [ext_resource type="Script" uid="uid://cm80n46eknbiu" path="res://ui/level_up_panel.gd" id="26_a6jrf"]
+[ext_resource type="FontFile" uid="uid://c7s8vcmspnt02" path="res://fonts/GoogleSansCode-Regular.ttf" id="28_htxhm"]
+[ext_resource type="Script" uid="uid://vyy3o3uydmja" path="res://scripts/dialogue_box.gd" id="28_jq2sk"]
+[ext_resource type="Script" uid="uid://6hq457ot8aei" path="res://scripts/test_cutscene_trigger.gd" id="29_kq58d"]
+[ext_resource type="PackedScene" uid="uid://cb2ku74srsttc" path="res://props/tree_3.tscn" id="29_qsp4k"]
+[ext_resource type="Script" uid="uid://dhr3qqwgf68vc" path="res://scripts/cutscene_director.gd" id="31_seu75"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -41,7 +46,7 @@ albedo_color = Color(0.05882353, 0.06666667, 0.08235294, 1)
 normal_enabled = true
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_qsp4k"]
-size = Vector3(10.837681, 2.7218018, 5.167053)
+size = Vector3(10.837681, 2.7218018, 7.0916824)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dg77c"]
 shader = ExtResource("10_efxa6")
@@ -49,7 +54,7 @@ shader_parameter/radial_strength = 0.010000000475
 shader_parameter/radial_center = Vector2(0.5, 0.5)
 shader_parameter/radial_focus_radius = 0.15
 shader_parameter/radial_focus_softness = 0.1
-shader_parameter/radial_darkness = 0.3499999921768
+shader_parameter/radial_darkness = 0.2999999932944
 shader_parameter/radial_darkness_radius = 0.3999999910592
 shader_parameter/radial_darkness_softness = 0.1499999966472
 shader_parameter/radial_samples = 12
@@ -95,14 +100,41 @@ frame_0/duration = 0.25
 frame_1/texture = ExtResource("25_htxhm")
 frame_1/duration = 0.25
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_htxhm"]
+bg_color = Color(0, 0, 0, 0.3019608)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.8, 0.8, 0.8, 0.25490198)
+border_blend = true
+shadow_color = Color(0, 0, 0, 0.23529412)
+shadow_size = 6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kq58d"]
+size = Vector3(3.758667, 1, 2.6152344)
+
 [node name="Main" type="Node3D" unique_id=1046872265]
 
-[node name="MoonDirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1938864677]
+[node name="Lighting" type="Node3D" parent="." unique_id=162552155]
+
+[node name="AmbientDirectionalLight3D" type="DirectionalLight3D" parent="Lighting" unique_id=1938864677]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 63.856697, 28.63123)
 light_color = Color(0.28912425, 0.45707583, 0.77193, 1)
 light_energy = 0.1
 
-[node name="MoonSpotLight3D" type="SpotLight3D" parent="." unique_id=1060570751]
+[node name="MoonDirectionalLight3D" type="DirectionalLight3D" parent="Lighting" unique_id=1916188350]
+transform = Transform3D(-0.8171616, -0.26122007, 0.51382005, 0.08809691, 0.82434356, 0.5591929, -0.56963664, 0.5022169, -0.6506092, 2.9530053, 1.8204947, 7.77651)
+light_color = Color(0.21799606, 0.29818037, 0.35680544, 1)
+light_energy = 0.2
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+shadow_enabled = true
+directional_shadow_max_distance = 50.0
+directional_shadow_pancake_size = 10.0
+sky_mode = 1
+
+[node name="MoonSpotLight3D" type="SpotLight3D" parent="Lighting" unique_id=1060570751]
 transform = Transform3D(0.9998416, 0, -0.017801404, 0.016209649, 0.41332698, 0.9104384, 0.0073578004, -0.91058266, 0.4132615, -1.5400631, 141.96977, 85.91313)
 light_color = Color(0.91800773, 0.94581145, 0.9870172, 1)
 light_energy = 1.5
@@ -116,77 +148,41 @@ spot_attenuation = 0.69
 spot_angle = 58.19
 spot_angle_attenuation = 0.45062566
 
-[node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.513413, 0.02, 0.1611824)
+[node name="Objects" type="Node3D" parent="." unique_id=150403929]
 
-[node name="Camera3D" type="Camera3D" parent="Player" unique_id=1737377003 groups=["camera"]]
-transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.452898)
-environment = ExtResource("3_h2yge")
-v_offset = 3.0
-fov = 32.0
-size = 24.0
+[node name="Bonfire" parent="Objects" unique_id=1587422233 instance=ExtResource("9_bonfire")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4728205, 0.14137536, -28.985584)
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Player" unique_id=1916188350]
-transform = Transform3D(-0.8171615, -0.26122007, 0.51382005, 0.0880969, 0.82434344, 0.5591929, -0.5696366, 0.5022168, -0.6506092, 1.4395924, 1.8004947, 7.6153274)
-visible = false
-light_color = Color(0.21799606, 0.29818037, 0.35680544, 1)
-light_energy = 0.3
-light_indirect_energy = 0.0
-light_volumetric_fog_energy = 0.0
-shadow_enabled = true
-directional_shadow_max_distance = 50.0
-directional_shadow_pancake_size = 10.0
-sky_mode = 1
-
-[node name="SpotLight3D" type="SpotLight3D" parent="Player" unique_id=792049639]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -0.104022026, 3.4522276, 1.5746944)
-visible = false
-light_color = Color(0.89336044, 0.7348915, 0.7835873, 1)
-light_size = 1.0
-shadow_enabled = true
-shadow_opacity = 0.4
-shadow_blur = 0.935
-shadow_caster_mask = 4294967293
-spot_range = 13.461458
-spot_angle = 89.99
-
-[node name="Bonfire" parent="." unique_id=1587422233 instance=ExtResource("9_bonfire")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2733562, 0.14137536, 2.5567613)
-
-[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1482664797]
+[node name="Colliders" type="NavigationRegion3D" parent="." unique_id=1482664797]
 transform = Transform3D(0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 1.1641532e-10, 0, -4.656613e-10)
 
-[node name="Terrain" type="MeshInstance3D" parent="NavigationRegion3D" unique_id=1772764079]
-transform = Transform3D(86.079796, 0, 0, 0, 30.00001, 0, 0, 0, 86.079796, 0.0012421608, 0.007929803, -0.004688263)
+[node name="Terrain" type="MeshInstance3D" parent="Colliders" unique_id=1772764079]
+transform = Transform3D(86.079796, 0, 0, 0, 30.000011, 0, 0, 0, 86.079796, -0.011594296, 0.007929803, -0.0026178358)
 material_override = SubResource("StandardMaterial3D_0xm2m")
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_7dm0k")
 surface_material_override/0 = SubResource("StandardMaterial3D_7dm0k")
+metadata/_edit_lock_ = true
 
-[node name="Rancho" parent="NavigationRegion3D" unique_id=2107584091 instance=ExtResource("2_jq2sk")]
-transform = Transform3D(0.9, 0, 0, 0, 0.9, 0, 0, 0, 0.9, 2.1437752, 0, -4.1899953)
+[node name="Rancho" parent="Colliders" unique_id=2107584091 instance=ExtResource("2_jq2sk")]
+transform = Transform3D(0.9000002, 0, 0, 0, 0.9000002, 0, 0, 0, 0.9000002, 3.5951164, 0, -36.178867)
 
-[node name="StaticBody3D" type="StaticBody3D" parent="NavigationRegion3D/Rancho" unique_id=1067997241]
-transform = Transform3D(0.99999976, 0, 0, 0, 0.99999976, 0, 0, 0, 1.31068, 0, 0, -0.753675)
+[node name="StaticBody3D" type="StaticBody3D" parent="Colliders/Rancho" unique_id=1067997241]
+transform = Transform3D(0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0.3259449)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Rancho/StaticBody3D" unique_id=155639850]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1823025, 1.3717651, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Colliders/Rancho/StaticBody3D" unique_id=155639850]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.1823022, 1.3717651, -1.2840667)
 shape = SubResource("BoxShape3D_qsp4k")
 debug_fill = false
+
+[node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.513413, 0.02, -32.20519)
 
 [node name="HUD" type="Node3D" parent="." unique_id=2061694178 groups=["screen_fx"]]
 visible = false
 script = ExtResource("8_4c57u")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="HUD" unique_id=1223706100]
-
-[node name="FPSCounter" type="Label" parent="HUD/CanvasLayer" unique_id=282869717]
-offset_left = 8.0
-offset_top = 15.0
-offset_right = 88.0
-offset_bottom = 38.0
-theme_override_font_sizes/font_size = 8
-text = "60"
 
 [node name="FX" type="Control" parent="HUD/CanvasLayer" unique_id=386258776]
 layout_mode = 3
@@ -611,6 +607,16 @@ text = "000000089"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="FPSCounter" type="Label" parent="HUD/CanvasLayer/UI" unique_id=282869717]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 15.0
+offset_right = 88.0
+offset_bottom = 38.0
+theme_override_colors/font_color = Color(1, 1, 1, 0.48235294)
+theme_override_font_sizes/font_size = 8
+text = "60"
+
 [node name="LevelUpPanel" type="Control" parent="HUD/CanvasLayer" unique_id=550018480]
 layout_mode = 3
 anchors_preset = 15
@@ -818,5 +824,88 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 
+[node name="DialogueBox" type="Control" parent="HUD/CanvasLayer" unique_id=1788802973]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("28_jq2sk")
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/CanvasLayer/DialogueBox" unique_id=1498198805]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = -217.0
+offset_right = 3.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/margin_left = 260
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 260
+theme_override_constants/margin_bottom = 40
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD/CanvasLayer/DialogueBox/MarginContainer" unique_id=2018400583]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_htxhm")
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/CanvasLayer/DialogueBox/MarginContainer/PanelContainer" unique_id=98056053]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/CanvasLayer/DialogueBox/MarginContainer/PanelContainer/MarginContainer" unique_id=1367024119]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 14
+
+[node name="SpeakerLabel" type="Label" parent="HUD/CanvasLayer/DialogueBox/MarginContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=681668153]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.6392157)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7529412)
+theme_override_fonts/font = ExtResource("28_htxhm")
+theme_override_font_sizes/font_size = 16
+text = "Dash"
+clip_text = true
+
+[node name="TextLabel" type="RichTextLabel" parent="HUD/CanvasLayer/DialogueBox/MarginContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=925711429]
+custom_minimum_size = Vector2(0, 55)
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/line_separation = 3
+theme_override_fonts/normal_font = ExtResource("28_htxhm")
+theme_override_font_sizes/normal_font_size = 17
+text = "Permite hacer un dash para escapar de los enemigos rápidamente. Esto es una prueba de una segunda línea de texto a ver cómo queda."
+
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=554653491]
 environment = ExtResource("3_h2yge")
+
+[node name="TestCutsceneTrigger" type="Area3D" parent="." unique_id=1544678157]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22.146776)
+script = ExtResource("29_kq58d")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TestCutsceneTrigger" unique_id=438482820]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3793335, 0.5196028, 0.8076172)
+shape = SubResource("BoxShape3D_kq58d")
+
+[node name="CutsceneTarget" type="Marker3D" parent="TestCutsceneTrigger" unique_id=1621748028]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6791863, 0, 1.5920734)
+
+[node name="Tree3" parent="." unique_id=131978818 instance=ExtResource("29_qsp4k")]
+transform = Transform3D(1.3251815, 0, 0, 0, 1.3012912, 0, 0, 0, 1, -0.14745092, 1.2000017, -22.833376)
+
+[node name="CutsceneDirector" type="Node" parent="." unique_id=777504864]
+script = ExtResource("31_seu75")
+hud_fade_out_duration = 1.0
+hud_fade_in_duration = 0.5

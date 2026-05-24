@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://ddvhwcgy5vme2"]
+
+[ext_resource type="Texture2D" uid="uid://canpbllqnknlb" path="res://sprites/props_level_1.png" id="1_81qy5"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gg5fa"]
+atlas = ExtResource("1_81qy5")
+region = Rect2(802, 495.5, 197, 90)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_81qy5"]
+size = Vector3(1.5613403, 0.7597656, 0.43342635)
+
+[node name="Stone3" type="Sprite3D" unique_id=26437692]
+billboard = 2
+shaded = true
+alpha_cut = 1
+texture = SubResource("AtlasTexture_gg5fa")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=270380223]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=129926501]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.060333252, 0.12011719, -0.16893472)
+shape = SubResource("BoxShape3D_81qy5")

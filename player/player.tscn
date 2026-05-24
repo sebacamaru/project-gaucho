@@ -25,10 +25,21 @@
 [ext_resource type="Texture2D" uid="uid://ufd5rpvky703" path="res://enemies/dummy/enemy_aura.png" id="15_knn7v"]
 [ext_resource type="Script" uid="uid://is1lwchokpsu" path="res://scripts/billboard_line_anchor.gd" id="19_knn7v"]
 [ext_resource type="Texture2D" uid="uid://cl1hym44qg7vr" path="res://weapons/boleadoras_.png" id="19_s7qer"]
+[ext_resource type="Environment" uid="uid://kk1k3kd6nma6" path="res://enviroments/test_enviroment.tres" id="26_7pqkx"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_rkbax"]
-radius = 0.2993164
+radius = 0.21728516
 height = 1.1818542
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yw30f"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 0.21568628)
+albedo_texture = ExtResource("3_g1dw6")
+texture_repeat = false
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_g1dw6"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hg6s5"]
 atlas = ExtResource("2_boad6")
@@ -206,16 +217,6 @@ shader_parameter/global_alpha = 0.55999998748288
 shader_parameter/edge_fade = 0.3999999910592
 shader_parameter/texture_albedo = ExtResource("14_g4c7l")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yw30f"]
-transparency = 1
-shading_mode = 0
-albedo_color = Color(0, 0, 0, 0.21568628)
-albedo_texture = ExtResource("3_g1dw6")
-texture_repeat = false
-billboard_keep_scale = true
-
-[sub_resource type="QuadMesh" id="QuadMesh_g1dw6"]
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_7pqkx"]
 atlas = ExtResource("19_s7qer")
 region = Rect2(0, 0, 288, 500)
@@ -229,50 +230,83 @@ colors = PackedColorArray(0.91764706, 0.5254902, 0.12941177, 0.20784314, 1, 0.16
 [node name="Player" type="CharacterBody3D" unique_id=746990048 groups=["player"]]
 script = ExtResource("1_rkbax")
 
-[node name="PlayerProgress" type="Node" parent="." unique_id=7405254]
-script = ExtResource("2_rgyib")
-
-[node name="LevelUpManager" type="Node" parent="." unique_id=442941095]
-script = ExtResource("3_yllr7")
-
-[node name="WeaponComponent" type="Node" parent="." unique_id=1343772771]
-script = ExtResource("3_ebec5")
-facon_attack_visual_arc_deg = 180.0
-boleadora_projectile_scene = ExtResource("5_c35mf")
-
-[node name="StaminaComponent" type="Node" parent="." unique_id=1336586301]
-script = ExtResource("3_hg6s5")
-
-[node name="DashSkill" type="Node" parent="." unique_id=457987336]
-script = ExtResource("4_8t03j")
-
-[node name="SapukaiComponent" type="Node" parent="." unique_id=1787568450]
-script = ExtResource("8_65viv")
-drain_per_second = 20.0
-
-[node name="ShotgunPreview" type="MeshInstance3D" parent="." unique_id=647233454]
-transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, -0.0023024678, 1.1253486)
-script = ExtResource("7_tqiix")
-
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2061340717]
 transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -0.011559576, 0.7167245, -0.06719446)
 shape = SubResource("CapsuleShape3D_rkbax")
 
-[node name="Sprites" type="Node3D" parent="." unique_id=166186264]
+[node name="ShadowBlob" type="MeshInstance3D" parent="." unique_id=353868600]
+transform = Transform3D(-2.321343e-08, 1.1711669, 1.3113433e-08, 0, -5.119332e-08, 0.3, 0.5310622, 5.1193407e-08, 5.7320657e-16, 0, 0, 0)
+layers = 2
+material_override = SubResource("StandardMaterial3D_yw30f")
+cast_shadow = 0
+mesh = SubResource("QuadMesh_g1dw6")
+
+[node name="Camera" type="Node3D" parent="." unique_id=321141994]
+
+[node name="Camera3D" type="Camera3D" parent="Camera" unique_id=1104481784 groups=["camera"]]
+transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 15, 16.452898)
+environment = ExtResource("26_7pqkx")
+v_offset = 3.0
+fov = 42.0
+size = 24.0
+
+[node name="SpotLight3D" type="SpotLight3D" parent="Camera" unique_id=1973967497]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -0.104022026, 3.4522276, 1.5746944)
+light_color = Color(0.89336044, 0.7348915, 0.7835873, 1)
+light_energy = 0.5
+light_size = 1.0
+shadow_enabled = true
+shadow_opacity = 0.4
+shadow_blur = 0.935
+shadow_caster_mask = 4294967293
+spot_range = 13.461458
+spot_angle = 89.99
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Camera" unique_id=511141315]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07798672, 0.8553407, 0.29288912)
+light_color = Color(1, 0.78039217, 0.8352941, 1)
+light_energy = 0.05
+light_cull_mask = 3
+shadow_enabled = true
+shadow_caster_mask = 4294967293
+omni_range = 2.1171534
+
+[node name="PlayerOmniLight3D" type="OmniLight3D" parent="Camera" unique_id=450624340]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1197009, 0.8492935)
+light_color = Color(0.83705765, 0.61059535, 0.5223428, 1)
+light_energy = 0.2
+light_cull_mask = 3
+shadow_enabled = true
+shadow_caster_mask = 4294967293
+omni_range = 3.9415617
+
+[node name="Gameplay" type="Node3D" parent="." unique_id=169742089]
+
+[node name="ShotgunPreview" type="MeshInstance3D" parent="Gameplay" unique_id=647233454]
+transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, -0.0023024678, 1.1253486)
+script = ExtResource("7_tqiix")
+
+[node name="DashSmear" type="Sprite3D" parent="Gameplay" unique_id=322008958]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017588645, 0.74204564, 0)
+visible = false
+billboard = 2
+texture = ExtResource("11_2ieo8")
+
+[node name="Sprites" type="Node3D" parent="Gameplay" unique_id=166186264]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, 1, 0.032826692, 0, 0.044555485)
 
-[node name="ShotgunPivot" type="Node3D" parent="Sprites" unique_id=1453662760]
+[node name="ShotgunPivot" type="Node3D" parent="Gameplay/Sprites" unique_id=1453662760]
 transform = Transform3D(0.85684353, -0.51557654, 0, 0.51557654, 0.85684353, 0, 0, 0, 1, 0, 1.407, 0)
 visible = false
 
-[node name="ShotgunSprite3D" type="Sprite3D" parent="Sprites/ShotgunPivot" unique_id=1696374587]
+[node name="ShotgunSprite3D" type="Sprite3D" parent="Gameplay/Sprites/ShotgunPivot" unique_id=1696374587]
 transform = Transform3D(0.49787924, 0.046002828, 0, -0.046002828, 0.49787924, 0, 0, 0, 0.5, -0.44352275, 0.19330901, -0.12658834)
 layers = 2
 offset = Vector2(30, -140)
 shaded = true
 texture = ExtResource("12_kb6p2")
 
-[node name="LampPivot" type="Node3D" parent="Sprites" unique_id=504348815 node_paths=PackedStringArray("sprite_3d", "sub_viewport", "sprite_2d")]
+[node name="LampPivot" type="Node3D" parent="Gameplay/Sprites" unique_id=504348815 node_paths=PackedStringArray("sprite_3d", "sub_viewport", "sprite_2d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.895, 0.785025, 0)
 script = ExtResource("11_g4c7l")
 rotation_mode = 2
@@ -282,23 +316,23 @@ sprite_2d = NodePath("SubViewport/LightSprite2D")
 source_texture = ExtResource("10_c35mf")
 sprite_3d_pixel_size = 0.011
 
-[node name="LightSprite3D" type="Sprite3D" parent="Sprites/LampPivot" unique_id=58954727]
+[node name="LightSprite3D" type="Sprite3D" parent="Gameplay/Sprites/LampPivot" unique_id=58954727]
 transform = Transform3D(0.035, 0, 0, 0, 0.035, 0, 0, 0, 0.035, 0.010198177, 0.06721133, 0)
 layers = 2
 billboard = 2
 shaded = true
 texture = ExtResource("10_c35mf")
 
-[node name="SubViewport" type="SubViewport" parent="Sprites/LampPivot" unique_id=1960198633]
+[node name="SubViewport" type="SubViewport" parent="Gameplay/Sprites/LampPivot" unique_id=1960198633]
 transparent_bg = true
 size = Vector2i(2084, 2084)
 render_target_update_mode = 4
 
-[node name="LightSprite2D" type="Sprite2D" parent="Sprites/LampPivot/SubViewport" unique_id=256407443]
+[node name="LightSprite2D" type="Sprite2D" parent="Gameplay/Sprites/LampPivot/SubViewport" unique_id=256407443]
 position = Vector2(1024, 1024)
 texture = ExtResource("10_c35mf")
 
-[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Sprites" unique_id=1888602037]
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Gameplay/Sprites" unique_id=1888602037]
 transform = Transform3D(0.9999667, -0.0029977006, -0.0075933808, 0.0031342707, 0.9998324, 0.01803623, 0.007538036, -0.01805943, 0.9998085, 0, 0.7797992, -0.002997756)
 layers = 2
 pixel_size = 0.008
@@ -309,7 +343,7 @@ render_priority = 1
 sprite_frames = SubResource("SpriteFrames_hg6s5")
 animation = &"Idle"
 
-[node name="SapukaiSprite3D" type="Sprite3D" parent="Sprites" unique_id=911739539]
+[node name="SapukaiSprite3D" type="Sprite3D" parent="Gameplay/Sprites" unique_id=911739539]
 transform = Transform3D(0.52, 0, 0, 0, 0.52, 0, 0, 0, 0.52, 0, 1.0577173, 0)
 visible = false
 material_override = SubResource("ShaderMaterial_7pqkx")
@@ -317,27 +351,21 @@ billboard = 2
 alpha_scissor_threshold = 0.12
 texture = ExtResource("15_knn7v")
 
-[node name="ShadowBlob" type="MeshInstance3D" parent="." unique_id=353868600]
-transform = Transform3D(-2.321343e-08, 1.1711669, 1.3113433e-08, 0, -5.119332e-08, 0.3, 0.5310622, 5.1193407e-08, 5.7320657e-16, 0, 0, 0)
-layers = 2
-material_override = SubResource("StandardMaterial3D_yw30f")
-cast_shadow = 0
-mesh = SubResource("QuadMesh_g1dw6")
+[node name="LampOmniLight3D" type="OmniLight3D" parent="Gameplay/Sprites" unique_id=2068141654]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.90641844, 0.8099412, 0.21258545)
+light_color = Color(0.9318787, 0.45774436, 0, 1)
+light_energy = 0.3
+shadow_enabled = true
+shadow_opacity = 0.18
+shadow_blur = 1.13
+omni_range = 7.109692
 
-[node name="Cursor" type="Node3D" parent="." unique_id=995533642]
-visible = false
-
-[node name="Sprite3D" type="Sprite3D" parent="Cursor" unique_id=592215944]
-transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, 0.99999994, 0, -0.99999994, -4.3711385e-08, 0, 0.01, 0)
-shaded = true
-texture = ExtResource("6_boad6")
-
-[node name="Weapon" type="Node3D" parent="." unique_id=326247383]
+[node name="Weapon" type="Node3D" parent="Gameplay" unique_id=326247383]
 transform = Transform3D(0.825, 0, 0, 0, 0.825, 0, 0, 0, 0.825, 0, 0.8981583, 0)
 
-[node name="Grip" type="Node3D" parent="Weapon" unique_id=1618366307]
+[node name="Grip" type="Node3D" parent="Gameplay/Weapon" unique_id=1618366307]
 
-[node name="FaconPivot" type="Node3D" parent="Weapon/Grip" unique_id=481516447 node_paths=PackedStringArray("sprite_3d", "sub_viewport", "sprite_2d", "debug_line")]
+[node name="FaconPivot" type="Node3D" parent="Gameplay/Weapon/Grip" unique_id=481516447 node_paths=PackedStringArray("sprite_3d", "sub_viewport", "sprite_2d", "debug_line")]
 script = ExtResource("19_knn7v")
 sprite_3d = NodePath("FaconSprite3D")
 sub_viewport = NodePath("SubViewport")
@@ -349,23 +377,24 @@ texture_pivot_px = Vector2(4, 64)
 attack_forward_offset_world = 0.4
 attack_extra_swing_angle_deg = -45.0
 
-[node name="FaconSprite3D" type="Sprite3D" parent="Weapon/Grip/FaconPivot" unique_id=280945246]
+[node name="FaconSprite3D" type="Sprite3D" parent="Gameplay/Weapon/Grip/FaconPivot" unique_id=280945246]
 transform = Transform3D(0.8991434, -0.03925745, -1.7159975e-09, 0, -3.934025e-08, 0.9, -0.03925745, -0.8991434, -3.9302808e-08, 0, 0, 0)
 layers = 2
+cast_shadow = 0
 billboard = 2
 shaded = true
 no_depth_test = true
 texture = ExtResource("5_qjkh3")
 
-[node name="SubViewport" type="SubViewport" parent="Weapon/Grip/FaconPivot" unique_id=1757302147]
+[node name="SubViewport" type="SubViewport" parent="Gameplay/Weapon/Grip/FaconPivot" unique_id=1757302147]
 transparent_bg = true
 size = Vector2i(256, 256)
 render_target_update_mode = 4
 
-[node name="FaconSprite2D" type="Sprite2D" parent="Weapon/Grip/FaconPivot/SubViewport" unique_id=1202506582]
+[node name="FaconSprite2D" type="Sprite2D" parent="Gameplay/Weapon/Grip/FaconPivot/SubViewport" unique_id=1202506582]
 texture = ExtResource("5_qjkh3")
 
-[node name="ShotgunSprite3D" type="Sprite3D" parent="Weapon/Grip" unique_id=885775104]
+[node name="ShotgunSprite3D" type="Sprite3D" parent="Gameplay/Weapon/Grip" unique_id=885775104]
 transform = Transform3D(0.6993337, -0.030533573, -1.3346649e-09, 0, -3.059797e-08, 0.7, -0.030533573, -0.6993337, -3.056885e-08, -0.23498704, 0, 0.010259777)
 layers = 2
 offset = Vector2(0, -140)
@@ -374,28 +403,28 @@ no_depth_test = true
 render_priority = 20
 texture = ExtResource("12_kb6p2")
 
-[node name="BoleadorasPivot" type="Node3D" parent="Weapon/Grip" unique_id=814586623]
+[node name="BoleadorasPivot" type="Node3D" parent="Gameplay/Weapon/Grip" unique_id=814586623]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
 
-[node name="BoleadorasSprite3D" type="Sprite3D" parent="Weapon/Grip/BoleadorasPivot" unique_id=1044141247]
+[node name="BoleadorasSprite3D" type="Sprite3D" parent="Gameplay/Weapon/Grip/BoleadorasPivot" unique_id=1044141247]
 transform = Transform3D(0.34966686, -0.015266785, -6.6733236e-10, 0, -1.5298985e-08, 0.35, -0.015266785, -0.34966686, -1.5284424e-08, 0.028738484, 2.8799105e-08, 0.6582196)
 layers = 2
 no_depth_test = true
 texture = SubResource("AtlasTexture_7pqkx")
 
-[node name="Tip" type="Marker3D" parent="Weapon/Grip" unique_id=315593578]
+[node name="Tip" type="Marker3D" parent="Gameplay/Weapon/Grip" unique_id=315593578]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.030748412, 0, 1.1431422)
 
-[node name="Muzzle" type="Marker3D" parent="Weapon/Grip" unique_id=376091390]
+[node name="Muzzle" type="Marker3D" parent="Gameplay/Weapon/Grip" unique_id=376091390]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.030748412, 0.14283428, 1.7469817)
 
-[node name="MuzzleFlash" type="Sprite3D" parent="Weapon/Grip/Muzzle" unique_id=1699016552]
+[node name="MuzzleFlash" type="Sprite3D" parent="Gameplay/Weapon/Grip/Muzzle" unique_id=1699016552]
 transform = Transform3D(-0.20000002, 0.34641013, 1.5142069e-08, 0, -1.7484554e-08, 0.4, 0.34641013, 0.20000002, 8.742279e-09, 0.2, 0, 2.4)
 visible = false
 double_sided = false
 texture = ExtResource("13_wodsf")
 
-[node name="MuzzleSmoke" type="Sprite3D" parent="Weapon/Grip/Muzzle" unique_id=1501103746]
+[node name="MuzzleSmoke" type="Sprite3D" parent="Gameplay/Weapon/Grip/Muzzle" unique_id=1501103746]
 transform = Transform3D(0.39999998, 0, 0, 0, -1.7484554e-08, 0.4, 0, -0.39999998, -1.7484556e-08, 0, 0, 0)
 visible = false
 billboard = 1
@@ -403,61 +432,83 @@ double_sided = false
 no_depth_test = true
 texture = ExtResource("14_32hag")
 
-[node name="MuzzleFlashLight" type="OmniLight3D" parent="Weapon/Grip/Muzzle" unique_id=944237359]
+[node name="MuzzleFlashLight" type="OmniLight3D" parent="Gameplay/Weapon/Grip/Muzzle" unique_id=944237359]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.1897774)
 light_color = Color(0.8986768, 0.3582287, 0.27241528, 1)
 omni_range = 3.0
 
-[node name="AttackHitbox" type="Area3D" parent="Weapon/Grip" unique_id=546413398]
+[node name="AttackHitbox" type="Area3D" parent="Gameplay/Weapon/Grip" unique_id=546413398]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.27900004, 0.7513554)
 monitorable = false
 script = ExtResource("11_ebec5")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Weapon/Grip/AttackHitbox" unique_id=1332808175]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Gameplay/Weapon/Grip/AttackHitbox" unique_id=1332808175]
 shape = SubResource("BoxShape3D_qjkh3")
 disabled = true
 debug_color = Color(0.9346362, 0.94212234, 0, 0.41960785)
 
-[node name="Trail" type="Line2D" parent="." unique_id=1756742114]
-default_color = Color(1, 0, 0.46666667, 1)
-gradient = SubResource("Gradient_qjkh3")
-
-[node name="LightPivot" type="Node3D" parent="." unique_id=1078475222]
+[node name="LightPivot" type="Node3D" parent="Gameplay" unique_id=1078475222]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.59966755)
-visible = false
 
-[node name="OmniLight3D" type="OmniLight3D" parent="LightPivot" unique_id=162856023]
+[node name="OmniLight3D" type="OmniLight3D" parent="Gameplay/LightPivot" unique_id=162856023]
 light_color = Color(0.9318787, 0.45774436, 0, 1)
+light_energy = 0.3
+shadow_enabled = true
 shadow_opacity = 0.18
 shadow_blur = 1.13
 omni_range = 7.109692
 
-[node name="OmniLight3D2" type="OmniLight3D" parent="LightPivot" unique_id=964562754]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1197009, 0.8492935)
-light_color = Color(0.83705765, 0.61059535, 0.5223428, 1)
-light_energy = 0.2
-light_cull_mask = 3
-shadow_enabled = true
-shadow_caster_mask = 4294967293
-omni_range = 3.9415617
+[node name="Trail" type="Line2D" parent="Gameplay" unique_id=1756742114]
+default_color = Color(1, 0, 0.46666667, 1)
+gradient = SubResource("Gradient_qjkh3")
 
-[node name="OmniLight3D2" type="OmniLight3D" parent="." unique_id=856661052]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07798672, 0.8553407, 0.29288912)
-visible = false
-light_color = Color(1, 0.78039217, 0.8352941, 1)
-light_energy = 0.05
-light_cull_mask = 3
-shadow_enabled = true
-shadow_caster_mask = 4294967293
-omni_range = 2.1171534
+[node name="AimDebugLayer" type="CanvasLayer" parent="Gameplay" unique_id=1701208138]
 
-[node name="DashSmear" type="Sprite3D" parent="." unique_id=322008958]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017588645, 0.74204564, 0)
-visible = false
-billboard = 2
-texture = ExtResource("11_2ieo8")
-
-[node name="AimDebugLayer" type="CanvasLayer" parent="." unique_id=1701208138]
-
-[node name="GripMouseLine" type="Line2D" parent="AimDebugLayer" unique_id=1943076630]
+[node name="GripMouseLine" type="Line2D" parent="Gameplay/AimDebugLayer" unique_id=1943076630]
 default_color = Color(1, 0, 0, 1)
+
+[node name="Cursor" type="Node3D" parent="Gameplay/AimDebugLayer" unique_id=995533642]
+visible = false
+
+[node name="Sprite3D" type="Sprite3D" parent="Gameplay/AimDebugLayer/Cursor" unique_id=592215944]
+transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, 0.99999994, 0, -0.99999994, -4.3711385e-08, 0, 0.01, 0)
+modulate = Color(1, 1, 1, 0.2901961)
+shaded = true
+texture = ExtResource("6_boad6")
+
+[node name="Cutscene" type="Node3D" parent="." unique_id=1332657718]
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="Cutscene" unique_id=614179087]
+transform = Transform3D(0.9999667, -0.0029977006, -0.0075933808, 0.0031342707, 0.9998324, 0.01803623, 0.007538036, -0.01805943, 0.9998085, 0, 0.7797992, -0.002997756)
+visible = false
+layers = 2
+pixel_size = 0.008
+billboard = 2
+shaded = true
+alpha_cut = 1
+render_priority = 1
+sprite_frames = SubResource("SpriteFrames_hg6s5")
+animation = &"Idle"
+
+[node name="Components" type="Node" parent="." unique_id=1476746152]
+
+[node name="PlayerProgress" type="Node" parent="Components" unique_id=7405254]
+script = ExtResource("2_rgyib")
+
+[node name="LevelUpManager" type="Node" parent="Components" unique_id=442941095]
+script = ExtResource("3_yllr7")
+
+[node name="WeaponComponent" type="Node" parent="Components" unique_id=1343772771]
+script = ExtResource("3_ebec5")
+facon_attack_visual_arc_deg = 180.0
+boleadora_projectile_scene = ExtResource("5_c35mf")
+
+[node name="StaminaComponent" type="Node" parent="Components" unique_id=1336586301]
+script = ExtResource("3_hg6s5")
+
+[node name="DashSkill" type="Node" parent="Components" unique_id=457987336]
+script = ExtResource("4_8t03j")
+
+[node name="SapukaiComponent" type="Node" parent="Components" unique_id=1787568450]
+script = ExtResource("8_65viv")
+drain_per_second = 20.0

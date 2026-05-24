@@ -36,7 +36,7 @@ var is_active: bool = false
 @onready var player: Node = get_parent().get_parent().get_parent()
 
 # Referencia al componente de armas del player.
-@onready var weapon_component: WeaponComponent = player.get_node("WeaponComponent")
+@onready var weapon_component: WeaponComponent = player.get_node("../Components/WeaponComponent")
 
 # Referencia al componente Sapukai del player.
 # Si no existe, no rompemos nada.

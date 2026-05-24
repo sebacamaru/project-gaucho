@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://cdgqfav5om3o1"]
+
+[ext_resource type="Shader" uid="uid://b8i0s6h7awhhv" path="res://shaders/wind_sprite3d.gdshader" id="1_wvot1"]
+[ext_resource type="Texture2D" uid="uid://canpbllqnknlb" path="res://sprites/props_level_1.png" id="2_6gon0"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wvot1"]
+render_priority = 0
+shader = ExtResource("1_wvot1")
+shader_parameter/sprite_texture = ExtResource("2_6gon0")
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/wind_strength = 0.20000000298023
+shader_parameter/wind_speed = 1.6
+shader_parameter/wind_frequency = 5.0
+shader_parameter/root_lock = 0.36999999172976
+shader_parameter/bend_power = 1.8
+shader_parameter/secondary_wave_amount = 0.25
+shader_parameter/alpha_discard = 0.02
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6gon0"]
+atlas = ExtResource("2_6gon0")
+region = Rect2(762, 235.5, 243, 149)
+
+[node name="Grass2" type="Sprite3D" unique_id=249079647]
+material_override = SubResource("ShaderMaterial_wvot1")
+cast_shadow = 0
+billboard = 2
+shaded = true
+alpha_cut = 1
+texture = SubResource("AtlasTexture_6gon0")

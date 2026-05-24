@@ -22,7 +22,7 @@ class_name LevelUpManager
 # 👉 NUEVO: referencia al SapukaiComponent
 @onready var sapukai = player.get_node("SapukaiComponent")
 
-@onready var level_up_panel: LevelUpPanel = get_node("../../HUD/CanvasLayer/LevelUpPanel")
+@onready var level_up_panel: LevelUpPanel = get_node("../../../HUD/CanvasLayer/LevelUpPanel")
 
 
 # =========================================================
