@@ -95,6 +95,42 @@ signal cutscene_walk_finished
 
 
 # =========================================================
+# CUTSCENE → GAMEPLAY FADE
+# =========================================================
+#
+# Cuando el player sale de cutscene, el nodo Gameplay vuelve
+# con un fade in suave en vez de aparecer seco.
+#
+# Importante:
+# Gameplay es Node3D y no tiene alpha propio.
+# Por eso fadeamos recursivamente:
+# - nodos con propiedad modulate, como Sprite3D / AnimatedSprite3D
+# - luces Light3D, bajando/subiendo light_energy
+# =========================================================
+
+@export var use_gameplay_fade_in: bool = true
+@export_range(0.0, 2.0, 0.01) var gameplay_fade_in_duration: float = 0.25
+
+@export var gameplay_fade_trans: Tween.TransitionType = Tween.TRANS_SINE
+@export var gameplay_fade_ease: Tween.EaseType = Tween.EASE_OUT
+
+var _gameplay_fade_tween: Tween = null
+
+# Estado original de cada nodo fadeado.
+# Guardamos alpha original o energía original para restaurar exacto.
+var _gameplay_fade_original_state: Dictionary = {}
+
+# Si está activo, los AnimatedSprite3D no participan del fade in de Gameplay.
+# Útil para que el cuerpo del player aparezca instantáneo, pero armas/luces/etc.
+# sí entren suave.
+@export var exclude_animated_sprites_from_gameplay_fade: bool = true
+
+# Grupo opcional para excluir nodos puntuales del fade.
+# Podés poner cualquier nodo en el grupo "no_gameplay_fade".
+@export var gameplay_fade_excluded_group: StringName = &"no_gameplay_fade"
+
+
+# =========================================================
 # NODOS / COMPONENTES
 # =========================================================
 
@@ -472,6 +508,9 @@ func _exit_cutscene_mode() -> void:
 		gameplay_root.visible = true
 		_set_process_tree(gameplay_root, true)
 
+		if use_gameplay_fade_in:
+			_start_gameplay_fade_in()
+
 	# Restauramos animación base del gameplay.
 	if anim_sprite != null and not is_dead:
 		anim_sprite.play("Idle")
@@ -643,6 +682,191 @@ func cutscene_face_direction(direction: Vector3) -> void:
 		var facing_left := direction.x < 0.0
 		cutscene_anim_sprite.flip_h = facing_left
 
+
+# =========================================================
+# GAMEPLAY FADE IN
+# =========================================================
+
+func _start_gameplay_fade_in() -> void:
+	if gameplay_root == null:
+		return
+
+	# Si había un fade anterior, restauramos antes de arrancar otro.
+	_kill_gameplay_fade_tween(true)
+
+	if gameplay_fade_in_duration <= 0.0:
+		return
+
+	var fade_targets: Array[Node] = []
+	_collect_gameplay_fade_targets(gameplay_root, fade_targets)
+
+	if fade_targets.is_empty():
+		return
+
+	_gameplay_fade_original_state.clear()
+
+	_gameplay_fade_tween = create_tween()
+	_gameplay_fade_tween.set_parallel(true)
+	_gameplay_fade_tween.set_trans(gameplay_fade_trans)
+	_gameplay_fade_tween.set_ease(gameplay_fade_ease)
+
+	var tween_count := 0
+
+	for node in fade_targets:
+		if node == null:
+			continue
+
+		if not is_instance_valid(node):
+			continue
+
+		# -----------------------------------------------------
+		# Nodos visuales con modulate
+		# -----------------------------------------------------
+		# Sprite3D, AnimatedSprite3D, CanvasItem, etc.
+		if _node_has_property(node, "modulate"):
+			var modulate_value = node.get("modulate")
+
+			if modulate_value is Color:
+				var original_color: Color = modulate_value
+
+				_gameplay_fade_original_state[node] = {
+					"type": "modulate",
+					"color": original_color
+				}
+
+				var transparent_color := original_color
+				transparent_color.a = 0.0
+				node.set("modulate", transparent_color)
+
+				_gameplay_fade_tween.tween_property(
+					node,
+					"modulate:a",
+					original_color.a,
+					gameplay_fade_in_duration
+				)
+
+				tween_count += 1
+
+		# -----------------------------------------------------
+		# Luces 3D
+		# -----------------------------------------------------
+		# Para que la lámpara/luz del arma no aparezca seca,
+		# fadeamos light_energy.
+		elif node is Light3D:
+			var light := node as Light3D
+			var original_energy := light.light_energy
+
+			_gameplay_fade_original_state[node] = {
+				"type": "light",
+				"energy": original_energy
+			}
+
+			light.light_energy = 0.0
+
+			_gameplay_fade_tween.tween_property(
+				light,
+				"light_energy",
+				original_energy,
+				gameplay_fade_in_duration
+			)
+
+			tween_count += 1
+
+	if tween_count <= 0:
+		_kill_gameplay_fade_tween(false)
+		_gameplay_fade_original_state.clear()
+		return
+
+	_gameplay_fade_tween.finished.connect(_on_gameplay_fade_in_finished)
+
+
+func _on_gameplay_fade_in_finished() -> void:
+	# Restauramos exacto por seguridad.
+	_restore_gameplay_fade_original_state()
+
+	_gameplay_fade_tween = null
+	_gameplay_fade_original_state.clear()
+
+
+func _kill_gameplay_fade_tween(restore_original_state: bool = false) -> void:
+	if _gameplay_fade_tween != null and _gameplay_fade_tween.is_valid():
+		_gameplay_fade_tween.kill()
+
+	_gameplay_fade_tween = null
+
+	if restore_original_state:
+		_restore_gameplay_fade_original_state()
+
+
+func _restore_gameplay_fade_original_state() -> void:
+	for node in _gameplay_fade_original_state.keys():
+		if node == null:
+			continue
+
+		if not is_instance_valid(node):
+			continue
+
+		var state: Dictionary = _gameplay_fade_original_state[node]
+		var state_type: String = str(state.get("type", ""))
+
+		match state_type:
+			"modulate":
+				var original_color: Color = state.get("color", Color.WHITE)
+				node.set("modulate", original_color)
+
+			"light":
+				if node is Light3D:
+					var light := node as Light3D
+					light.light_energy = float(state.get("energy", light.light_energy))
+
+
+func _collect_gameplay_fade_targets(root: Node, result: Array[Node]) -> void:
+	if root == null:
+		return
+
+	# ---------------------------------------------------------
+	# EXCLUSIONES
+	# ---------------------------------------------------------
+	# Si el nodo está en el grupo de exclusión, no se fadea.
+	# Igual seguimos revisando sus hijos, por si alguno sí debería fadearse.
+	var skip_this_node := false
+
+	if gameplay_fade_excluded_group != &"" and root.is_in_group(gameplay_fade_excluded_group):
+		skip_this_node = true
+
+	# Evitar fade en AnimatedSprite3D.
+	# Esto normalmente afecta al sprite principal del player.
+	if exclude_animated_sprites_from_gameplay_fade and root is AnimatedSprite3D:
+		skip_this_node = true
+
+	# ---------------------------------------------------------
+	# COLECCIÓN DE TARGETS
+	# ---------------------------------------------------------
+	if not skip_this_node:
+		# Si el nodo tiene modulate, probablemente pueda fadearse.
+		# Ej: Sprite3D, MeshInstance3D con modulate, CanvasItem, etc.
+		if _node_has_property(root, "modulate"):
+			result.append(root)
+
+		# Luces 3D.
+		elif root is Light3D:
+			result.append(root)
+
+	# Revisamos hijos.
+	for child in root.get_children():
+		_collect_gameplay_fade_targets(child, result)
+
+
+func _node_has_property(node: Object, property_name: String) -> bool:
+	if node == null:
+		return false
+
+	for property_info in node.get_property_list():
+		if str(property_info.get("name", "")) == property_name:
+			return true
+
+	return false
+	
 
 # =========================================================
 # DASH

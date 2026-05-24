@@ -30,7 +30,7 @@
 [ext_resource type="Script" uid="uid://cm80n46eknbiu" path="res://ui/level_up_panel.gd" id="26_a6jrf"]
 [ext_resource type="FontFile" uid="uid://c7s8vcmspnt02" path="res://fonts/GoogleSansCode-Regular.ttf" id="28_htxhm"]
 [ext_resource type="Script" uid="uid://vyy3o3uydmja" path="res://scripts/dialogue_box.gd" id="28_jq2sk"]
-[ext_resource type="Script" uid="uid://6hq457ot8aei" path="res://scripts/test_cutscene_trigger.gd" id="29_kq58d"]
+[ext_resource type="Script" uid="uid://6hq457ot8aei" path="res://cutscenes/test_cutscene_trigger.gd" id="29_kq58d"]
 [ext_resource type="PackedScene" uid="uid://cb2ku74srsttc" path="res://props/tree_3.tscn" id="29_qsp4k"]
 [ext_resource type="Script" uid="uid://dhr3qqwgf68vc" path="res://scripts/cutscene_director.gd" id="31_seu75"]
 

@@ -490,6 +490,355 @@ func wait_seconds(seconds: float) -> void:
 
 
 # =========================================================
+# ACCIONES DE CUTSCENE: COMANDOS
+# =========================================================
+#
+# Este bloque permite ejecutar cutscenes como una lista de comandos.
+#
+# Ejemplo:
+#
+# await director.run_commands(player, [
+#	{"type": "camera_zoom", "value": 28.0, "duration": 0.45},
+#	{"type": "say", "speaker": "Rick", "text": "Texto..."},
+#	{"type": "walk_player_to_marker", "marker": $CutsceneTarget, "speed": 2.5},
+#	{"type": "wait", "seconds": 0.35},
+#	{"type": "camera_restore", "duration": 0.45}
+# ], self)
+#
+# La idea:
+# - El director hace begin()
+# - Ejecuta cada comando
+# - Si hay skip/cancel, corta
+# - Si todo terminó bien, hace end()
+# =========================================================
+
+func run_commands(
+	player_override: Node,
+	commands: Array,
+	command_owner: Node = null,
+	auto_begin: bool = true,
+	auto_end: bool = true
+) -> bool:
+	if commands.is_empty():
+		push_warning("CutsceneDirector: run_commands() recibió una lista vacía.")
+		return false
+
+	# ---------------------------------------------------------
+	# Inicio automático de cutscene
+	# ---------------------------------------------------------
+	if auto_begin:
+		var started: bool = begin(player_override)
+
+		if not started:
+			return false
+
+		# Esperamos un frame para que Godot actualice:
+		# - visibilidad del HUD
+		# - modo cutscene del player
+		# - cámara activa
+		# - DialogueBox
+		await get_tree().process_frame
+
+	# ---------------------------------------------------------
+	# Ejecución de comandos
+	# ---------------------------------------------------------
+	for command in commands:
+		if _commands_should_abort():
+			return false
+
+		await _run_cutscene_command(command, command_owner)
+
+		if _commands_should_abort():
+			return false
+
+	# ---------------------------------------------------------
+	# Fin automático
+	# ---------------------------------------------------------
+	if auto_end and is_running:
+		end()
+
+	return true
+
+
+func _run_cutscene_command(command_data: Variant, command_owner: Node = null) -> void:
+	if typeof(command_data) != TYPE_DICTIONARY:
+		push_warning("CutsceneDirector: comando inválido. Se esperaba Dictionary.")
+		return
+
+	var command: Dictionary = command_data
+	var type: String = str(command.get("type", "")).strip_edges().to_lower()
+
+	match type:
+		"camera_zoom":
+			await _command_camera_zoom(command)
+
+		"camera_restore":
+			await _command_camera_restore(command)
+
+		"say":
+			await _command_say(command)
+
+		"say_many":
+			await _command_say_many(command)
+
+		"wait":
+			await _command_wait(command)
+
+		"walk_player_to_marker":
+			await _command_walk_player_to_marker(command, command_owner)
+
+		"walk_player_to_position":
+			await _command_walk_player_to_position(command)
+
+		"player_anim", "play_player_anim":
+			_command_player_anim(command)
+
+		"player_face_direction", "face_player_direction":
+			_command_player_face_direction(command)
+
+		"close_dialogue":
+			await close_dialogue()
+
+		_:
+			push_warning("CutsceneDirector: tipo de comando desconocido: %s" % type)
+
+
+func _commands_should_abort() -> bool:
+	# Si tu director tiene skip completo implementado,
+	# usamos was_skip_requested().
+	if has_method("was_skip_requested"):
+		var skipped: bool = bool(call("was_skip_requested"))
+
+		if skipped:
+			return true
+
+	# Si el director dejó de correr, asumimos que fue cancelado
+	# o terminado externamente.
+	if not is_running:
+		return true
+
+	return false
+
+
+# =========================================================
+# COMMAND: CAMERA ZOOM
+# =========================================================
+
+func _command_camera_zoom(command: Dictionary) -> void:
+	var zoom_value := _command_get_float(command, ["value", "zoom_value", "fov", "size"], 28.0)
+	var duration := _command_get_float(command, ["duration", "time"], -1.0)
+
+	await camera_zoom_to(zoom_value, duration)
+
+
+# =========================================================
+# COMMAND: CAMERA RESTORE
+# =========================================================
+
+func _command_camera_restore(command: Dictionary) -> void:
+	var duration := _command_get_float(command, ["duration", "time"], -1.0)
+
+	await camera_restore(duration)
+
+
+# =========================================================
+# COMMAND: SAY
+# =========================================================
+
+func _command_say(command: Dictionary) -> void:
+	var speaker := str(command.get("speaker", ""))
+	var text := str(command.get("text", ""))
+	var close_after: bool = bool(command.get("close_after", true))
+
+	if text.strip_edges() == "":
+		return
+
+	await say(speaker, text, close_after)
+
+
+# =========================================================
+# COMMAND: SAY MANY
+# =========================================================
+
+func _command_say_many(command: Dictionary) -> void:
+	var lines: Array = command.get("lines", [])
+
+	if lines.is_empty():
+		return
+
+	await say_many(lines)
+
+
+# =========================================================
+# COMMAND: WAIT
+# =========================================================
+
+func _command_wait(command: Dictionary) -> void:
+	var seconds := _command_get_float(command, ["seconds", "duration", "time"], 0.0)
+
+	if seconds <= 0.0:
+		return
+
+	await wait_seconds(seconds)
+
+
+# =========================================================
+# COMMAND: WALK PLAYER TO MARKER
+# =========================================================
+
+func _command_walk_player_to_marker(command: Dictionary, command_owner: Node = null) -> void:
+	var target_node := _command_resolve_node3d(command, command_owner)
+
+	if target_node == null:
+		push_warning("CutsceneDirector: walk_player_to_marker no encontró target.")
+		return
+
+	var walk_speed := _command_get_float(command, ["speed", "walk_speed"], 2.5)
+
+	await walk_player_to(target_node.global_position, walk_speed)
+
+
+# =========================================================
+# COMMAND: WALK PLAYER TO POSITION
+# =========================================================
+
+func _command_walk_player_to_position(command: Dictionary) -> void:
+	var position_value = command.get("position", null)
+
+	if not (position_value is Vector3):
+		push_warning("CutsceneDirector: walk_player_to_position necesita position: Vector3.")
+		return
+
+	var walk_speed := _command_get_float(command, ["speed", "walk_speed"], 2.5)
+
+	await walk_player_to(position_value, walk_speed)
+
+
+# =========================================================
+# COMMAND: PLAYER ANIM
+# =========================================================
+
+func _command_player_anim(command: Dictionary) -> void:
+	var anim_name := str(command.get("anim", command.get("animation", ""))).strip_edges()
+
+	if anim_name == "":
+		return
+
+	player_play_anim(anim_name)
+
+
+# =========================================================
+# COMMAND: PLAYER FACE DIRECTION
+# =========================================================
+
+func _command_player_face_direction(command: Dictionary) -> void:
+	var direction_value = command.get("direction", Vector3.ZERO)
+	var direction := _command_parse_direction(direction_value)
+
+	if direction.length_squared() <= 0.0001:
+		return
+
+	player_face_direction(direction)
+
+
+# =========================================================
+# COMMAND HELPERS
+# =========================================================
+
+func _command_get_float(command: Dictionary, keys: Array, default_value: float) -> float:
+	for key in keys:
+		if command.has(key):
+			return float(command[key])
+
+	return default_value
+
+
+func _command_resolve_node3d(command: Dictionary, command_owner: Node = null) -> Node3D:
+	# Formas soportadas:
+	#
+	# {"marker": $CutsceneTarget}
+	# {"target": $CutsceneTarget}
+	# {"node": $CutsceneTarget}
+	# {"marker_path": ^"CutsceneTarget"}
+	# {"target_path": ^"../Markers/Target"}
+	#
+	# Si usás NodePath, se resuelve relativo al command_owner.
+	# En general, command_owner será el CutsceneEvent.
+
+	var node_value = null
+
+	if command.has("marker"):
+		node_value = command["marker"]
+	elif command.has("target"):
+		node_value = command["target"]
+	elif command.has("node"):
+		node_value = command["node"]
+
+	if node_value is Node3D:
+		return node_value
+
+	if node_value is NodePath:
+		return _command_get_node3d_from_path(node_value, command_owner)
+
+	if typeof(node_value) == TYPE_STRING:
+		return _command_get_node3d_from_path(NodePath(node_value), command_owner)
+
+	var path_value = null
+
+	if command.has("marker_path"):
+		path_value = command["marker_path"]
+	elif command.has("target_path"):
+		path_value = command["target_path"]
+	elif command.has("node_path"):
+		path_value = command["node_path"]
+
+	if path_value is NodePath:
+		return _command_get_node3d_from_path(path_value, command_owner)
+
+	if typeof(path_value) == TYPE_STRING:
+		return _command_get_node3d_from_path(NodePath(path_value), command_owner)
+
+	return null
+
+
+func _command_get_node3d_from_path(path: NodePath, command_owner: Node = null) -> Node3D:
+	if path == NodePath():
+		return null
+
+	if command_owner != null:
+		var node_from_owner := command_owner.get_node_or_null(path) as Node3D
+
+		if node_from_owner != null:
+			return node_from_owner
+
+	var node_from_director := get_node_or_null(path) as Node3D
+
+	if node_from_director != null:
+		return node_from_director
+
+	return null
+
+
+func _command_parse_direction(value: Variant) -> Vector3:
+	if value is Vector3:
+		return value.normalized()
+
+	var text := str(value).strip_edges().to_lower()
+
+	match text:
+		"left", "izquierda":
+			return Vector3.LEFT
+		"right", "derecha":
+			return Vector3.RIGHT
+		"up", "arriba", "forward":
+			return Vector3.FORWARD
+		"down", "abajo", "back":
+			return Vector3.BACK
+
+	return Vector3.ZERO
+
+
+# =========================================================
 # ACCIONES DE CUTSCENE: DIÁLOGO
 # =========================================================
 
