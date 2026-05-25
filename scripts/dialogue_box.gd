@@ -14,6 +14,19 @@ class_name DialogueBox
 # - avanzar cuando el texto ya terminó
 # - fade in / fade out suave
 # - force_close robusto para skip completo de cutscene
+# - pausas internas dentro del texto mediante tags:
+#
+#   [pause]
+#   [pause=0.5]
+#   [p]
+#   [p=0.5]
+#
+# Ejemplo:
+#
+# "¿Me escuchá’? [pause=0.45] Todo tranquilo por acá… [pause=0.65] no veo nada raro."
+#
+# El tag NO se muestra en pantalla.
+# Solo agrega una pausa durante el typewriter.
 #
 # Estructura esperada:
 #
@@ -46,6 +59,16 @@ class_name DialogueBox
 # Caracteres por segundo del typewriter.
 # Más alto = texto más rápido.
 @export var chars_per_second: float = 42.0
+
+# Pausa default cuando usás [pause] o [p] sin valor.
+@export_range(0.0, 5.0, 0.01) var default_inline_pause_seconds: float = 0.45
+
+# Multiplicador global de pausas internas.
+#
+# 1.0 = normal
+# 0.5 = pausas más cortas
+# 2.0 = pausas más largas
+@export_range(0.0, 5.0, 0.01) var inline_pause_scale: float = 1.0
 
 # Acciones que sirven para avanzar diálogo.
 #
@@ -91,6 +114,20 @@ var _is_open: bool = false
 var _is_typing: bool = false
 var _is_waiting_for_advance: bool = false
 var _skip_typewriter_requested: bool = false
+
+# Pausas internas del typewriter.
+#
+# Key:
+# - cantidad de caracteres visibles donde se dispara la pausa.
+#
+# Value:
+# - segundos de pausa.
+#
+# Ejemplo:
+# Texto limpio: "Hola mundo"
+# Pausa después de "Hola":
+# _typewriter_pauses[4] = 0.5
+var _typewriter_pauses: Dictionary = {}
 
 # True cuando force_close() fue llamado.
 # Sirve para cortar awaits internos sin dejar la caja colgada.
@@ -161,6 +198,8 @@ func _is_advance_event(event: InputEvent) -> bool:
 
 func _request_advance() -> void:
 	# Si el texto todavía está tipeando, el primer input lo completa.
+	#
+	# Esto también corta una pausa inline en progreso.
 	if _is_typing:
 		_skip_typewriter_requested = true
 		return
@@ -228,6 +267,7 @@ func close_box() -> void:
 	_is_typing = false
 	_is_waiting_for_advance = false
 	_skip_typewriter_requested = false
+	_typewriter_pauses.clear()
 
 	await _fade_to(0.0, fade_out_duration)
 
@@ -248,6 +288,7 @@ func force_close() -> void:
 	# - await close_box()
 	# - await advance_requested
 	# - typewriter en progreso
+	# - pausa inline en progreso
 
 	_force_close_requested = true
 
@@ -261,6 +302,7 @@ func force_close() -> void:
 	_is_typing = false
 	_is_waiting_for_advance = false
 	_skip_typewriter_requested = true
+	_typewriter_pauses.clear()
 
 	visible = false
 	modulate.a = 0.0
@@ -279,6 +321,7 @@ func force_close() -> void:
 
 func complete_current_text() -> void:
 	# Completa el typewriter desde afuera.
+	# También corta cualquier pausa inline activa.
 	_skip_typewriter_requested = true
 
 
@@ -287,21 +330,40 @@ func complete_current_text() -> void:
 # =========================================================
 
 func _type_text(text: String) -> void:
-	_full_text = text
+	# Antes de tipear, parseamos tags inline.
+	#
+	# Ejemplo de entrada:
+	# "Hola [pause=0.5] mundo"
+	#
+	# Resultado:
+	# _full_text = "Hola  mundo"
+	# _typewriter_pauses = {5: 0.5}
+	var parsed_text := _parse_pause_tags(text)
+
+	_full_text = str(parsed_text.get("text", ""))
+	_typewriter_pauses = parsed_text.get("pauses", {})
+
 	_skip_typewriter_requested = false
 	_is_typing = true
 
-	_set_text_full(text)
+	_set_text_full(_full_text)
 	_set_visible_characters(0)
 
 	if chars_per_second <= 0.0:
-		_set_visible_characters(_get_text_length(text))
+		_set_visible_characters(_get_text_length(_full_text))
 		_is_typing = false
+		_skip_typewriter_requested = false
 		return
 
-	var total_chars := _get_text_length(text)
+	var total_chars := _get_text_length(_full_text)
 	var current_chars := 0
 	var delay := 1.0 / chars_per_second
+
+	# Soporte para pausa al inicio del texto:
+	# "[pause=0.5] Hola"
+	if _typewriter_pauses.has(0):
+		var initial_pause := float(_typewriter_pauses[0]) * inline_pause_scale
+		await _wait_typewriter_seconds(initial_pause)
 
 	while current_chars < total_chars:
 		if _skip_typewriter_requested:
@@ -316,7 +378,24 @@ func _type_text(text: String) -> void:
 		current_chars += 1
 		_set_visible_characters(current_chars)
 
-		await get_tree().create_timer(delay).timeout
+		# Si hay una pausa justo después de este carácter,
+		# esperamos antes de seguir mostrando el próximo.
+		if _typewriter_pauses.has(current_chars):
+			var pause_seconds := float(_typewriter_pauses[current_chars]) * inline_pause_scale
+
+			if pause_seconds > 0.0:
+				await _wait_typewriter_seconds(pause_seconds)
+
+		if _skip_typewriter_requested:
+			break
+
+		if _force_close_requested:
+			return
+
+		if not _is_open:
+			return
+
+		await _wait_typewriter_seconds(delay)
 
 	# Si se cerró por skip durante el último await,
 	# no intentamos tocar más la UI.
@@ -331,6 +410,127 @@ func _type_text(text: String) -> void:
 
 	_is_typing = false
 	_skip_typewriter_requested = false
+
+
+func _parse_pause_tags(raw_text: String) -> Dictionary:
+	# Convierte tags de pausa en datos internos del typewriter.
+	#
+	# Tags soportados:
+	#
+	# [pause]
+	# [pause=0.5]
+	# [p]
+	# [p=0.5]
+	#
+	# El tag no se muestra en pantalla.
+	#
+	# Ejemplo:
+	#
+	# "Hola [pause=0.5] mundo"
+	#
+	# Devuelve:
+	#
+	# {
+	#   "text": "Hola  mundo",
+	#   "pauses": {
+	#       5: 0.5
+	#   }
+	# }
+	#
+	# Nota:
+	# Si tenés dos pausas en el mismo punto, se suman.
+
+	var clean_text := ""
+	var pauses: Dictionary = {}
+
+	var i := 0
+
+	while i < raw_text.length():
+		var current_char := raw_text.substr(i, 1)
+
+		if current_char == "[":
+			var close_index := raw_text.find("]", i)
+
+			if close_index != -1:
+				var tag := raw_text.substr(i + 1, close_index - i - 1).strip_edges().to_lower()
+				var pause_seconds := _parse_pause_tag_seconds(tag)
+
+				# pause_seconds >= 0 significa:
+				# "sí, era un tag de pausa válido".
+				if pause_seconds >= 0.0:
+					var pause_at_char := clean_text.length()
+
+					pauses[pause_at_char] = float(pauses.get(pause_at_char, 0.0)) + pause_seconds
+
+					i = close_index + 1
+					continue
+
+		clean_text += current_char
+		i += 1
+
+	return {
+		"text": clean_text,
+		"pauses": pauses
+	}
+
+
+func _parse_pause_tag_seconds(tag: String) -> float:
+	# Devuelve:
+	# - segundos de pausa si el tag es válido
+	# - -1.0 si no era un tag de pausa
+	#
+	# Ejemplos:
+	#
+	# "pause"     => default_inline_pause_seconds
+	# "p"         => default_inline_pause_seconds
+	# "pause=0.5" => 0.5
+	# "p=0.5"     => 0.5
+
+	if tag == "pause" or tag == "p":
+		return default_inline_pause_seconds
+
+	if tag.begins_with("pause="):
+		var raw_value := tag.substr("pause=".length())
+		return max(float(raw_value), 0.0)
+
+	if tag.begins_with("p="):
+		var raw_value := tag.substr("p=".length())
+		return max(float(raw_value), 0.0)
+
+	return -1.0
+
+
+func _wait_typewriter_seconds(seconds: float) -> void:
+	# Wait cancelable para typewriter y pausas inline.
+	#
+	# Lo usamos en vez de:
+	#
+	# await get_tree().create_timer(seconds).timeout
+	#
+	# porque necesitamos que:
+	# - force_close()
+	# - complete_current_text()
+	# - click para completar texto
+	#
+	# puedan cortar la espera casi instantáneamente.
+
+	if seconds <= 0.0:
+		return
+
+	var elapsed := 0.0
+
+	while elapsed < seconds:
+		if _force_close_requested:
+			return
+
+		if _skip_typewriter_requested:
+			return
+
+		if not _is_open:
+			return
+
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
 
 
 # =========================================================

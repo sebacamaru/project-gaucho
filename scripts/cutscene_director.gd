@@ -35,8 +35,24 @@ class_name CutsceneDirector
 #     ├── UI
 #     ├── LevelUpPanel
 #     └── DialogueBox
+
+# =========================================================
+# COMANDOS DISPONIBLES:
 # =========================================================
 
+# {"type": "camera_zoom", "value": 28.0, "duration": 0.45}
+# {"type": "camera_restore", "duration": 0.45}
+# {"type": "say", "speaker": "Rick", "text": "Texto del diálogo.", "close_after": true}
+# {"type": "say_many", "lines": [{"speaker": "Rick", "text": "Primera línea."}, {"speaker": "Gaucho", "text": "Segunda línea."}]}
+# {"type": "wait", "seconds": 0.5}
+# {"type": "walk_player_to_marker", "marker_path": ^"CutsceneTarget", "speed": 2.5}
+# {"type": "walk_player_to_marker", "marker": $CutsceneTarget, "speed": 2.5}
+# {"type": "walk_player_to_position", "position": Vector3(4.0, 0.0, 8.0), "speed": 2.5}
+# {"type": "player_anim", "anim": "Idle"}
+# {"type": "play_player_anim", "animation": "Walk"}
+# {"type": "player_face_direction", "direction": "left"}
+# {"type": "face_player_direction", "direction": Vector3.RIGHT}
+# "type": "close_dialogue"}
 
 # =========================================================
 # CONFIGURACIÓN: PLAYER

@@ -33,6 +33,7 @@
 [ext_resource type="Script" uid="uid://6hq457ot8aei" path="res://cutscenes/test_cutscene_trigger.gd" id="29_kq58d"]
 [ext_resource type="PackedScene" uid="uid://cb2ku74srsttc" path="res://props/tree_3.tscn" id="29_qsp4k"]
 [ext_resource type="Script" uid="uid://dhr3qqwgf68vc" path="res://scripts/cutscene_director.gd" id="31_seu75"]
+[ext_resource type="Script" uid="uid://d20cqxavfm1hu" path="res://cutscenes/level_1_scene_1.gd" id="34_4k2k6"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -116,6 +117,18 @@ size = Vector3(3.758667, 1, 2.6152344)
 
 [node name="Main" type="Node3D" unique_id=1046872265]
 
+[node name="CutsceneDirector" type="Node" parent="." unique_id=777504864]
+script = ExtResource("31_seu75")
+hud_fade_out_duration = 1.0
+hud_fade_in_duration = 0.5
+
+[node name="IntroCutscene" type="Node" parent="." unique_id=241376135]
+script = ExtResource("34_4k2k6")
+play_on_ready = true
+
+[node name="CutsceneTarget1" type="Marker3D" parent="IntroCutscene" unique_id=1621748028]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4427524, 0, -30.901625)
+
 [node name="Lighting" type="Node3D" parent="." unique_id=162552155]
 
 [node name="AmbientDirectionalLight3D" type="DirectionalLight3D" parent="Lighting" unique_id=1938864677]
@@ -176,7 +189,7 @@ shape = SubResource("BoxShape3D_qsp4k")
 debug_fill = false
 
 [node name="Player" parent="." unique_id=746990048 instance=ExtResource("1_ig7tw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.513413, 0.02, -32.20519)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7580291, 0.02, -32.900642)
 
 [node name="HUD" type="Node3D" parent="." unique_id=2061694178 groups=["screen_fx"]]
 visible = false
@@ -825,7 +838,6 @@ vertical_alignment = 1
 autowrap_mode = 3
 
 [node name="DialogueBox" type="Control" parent="HUD/CanvasLayer" unique_id=1788802973]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -833,6 +845,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("28_jq2sk")
+chars_per_second = 84.0
 
 [node name="MarginContainer" type="MarginContainer" parent="HUD/CanvasLayer/DialogueBox" unique_id=1498198805]
 layout_mode = 1
@@ -872,7 +885,7 @@ theme_override_constants/separation = 14
 
 [node name="SpeakerLabel" type="Label" parent="HUD/CanvasLayer/DialogueBox/MarginContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=681668153]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 0.6392157)
+theme_override_colors/font_color = Color(0.7871145, 0.5673875, 0.58948433, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7529412)
 theme_override_fonts/font = ExtResource("28_htxhm")
 theme_override_font_sizes/font_size = 16
@@ -899,13 +912,5 @@ script = ExtResource("29_kq58d")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3793335, 0.5196028, 0.8076172)
 shape = SubResource("BoxShape3D_kq58d")
 
-[node name="CutsceneTarget" type="Marker3D" parent="TestCutsceneTrigger" unique_id=1621748028]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6791863, 0, 1.5920734)
-
 [node name="Tree3" parent="." unique_id=131978818 instance=ExtResource("29_qsp4k")]
 transform = Transform3D(1.3251815, 0, 0, 0, 1.3012912, 0, 0, 0, 1, -0.14745092, 1.2000017, -22.833376)
-
-[node name="CutsceneDirector" type="Node" parent="." unique_id=777504864]
-script = ExtResource("31_seu75")
-hud_fade_out_duration = 1.0
-hud_fade_in_duration = 0.5
