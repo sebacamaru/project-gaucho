@@ -84,9 +84,6 @@ func _ready() -> void:
 	var cursor = load("res://ui/cursor.png")
 	Input.set_custom_mouse_cursor(cursor, Input.CURSOR_ARROW, Vector2(8, 8))
 
-	# Inicializa el timer visual del jefe.
-	update_boss_timer()
-
 	# Si no encontramos player, no podemos conectar el resto de la UI.
 	if not player:
 		return
@@ -158,20 +155,6 @@ func _process(delta: float) -> void:
 		boss_time_left -= delta
 		if boss_time_left < 0.0:
 			boss_time_left = 0.0
-
-	update_boss_timer()
-
-
-# -----------------------------------------------------------------------------
-# Boss timer
-# -----------------------------------------------------------------------------
-
-func update_boss_timer() -> void:
-	var total_seconds: int = int(ceil(boss_time_left))
-	var minutes: int = floori(total_seconds / 60.0)
-	var seconds: int = total_seconds % 60
-
-	boss_timer_label.text = "Jefe en %d:%02d" % [minutes, seconds]
 
 
 # -----------------------------------------------------------------------------

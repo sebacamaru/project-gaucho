@@ -17,10 +17,12 @@ extends CharacterBody3D
 #    - Input de combate
 #
 # 2) Cutscene mode:
-#    - Se bloquea el input de gameplay
-#    - Se oculta todo el nodo Gameplay
-#    - Se muestra el nodo Cutscene
-#    - El player queda preparado para actuar como "actor" simple
+#    - Se bloquea el input de gameplay.
+#    - Se cancelan acciones activas de combate.
+#    - Por defecto se usa el visual de Gameplay para la cutscene.
+#    - Se ocultan solo nodos problemáticos: armas, cursor, dash smear, etc.
+#    - Se mantiene visible el cuerpo del player, lámpara y luces.
+#    - Opcionalmente se puede volver al modo viejo usando Cutscene/AnimatedSprite3D.
 #
 # Estructura esperada:
 #
@@ -60,18 +62,19 @@ extends CharacterBody3D
 # CUTSCENE MODE
 # =========================================================
 #
-# Este bloque es la base para que el Player pueda entrar y salir
-# de cutscenes sin mezclar lógica de combate, armas, lámpara, etc.
+# Este bloque permite que el Player pueda entrar y salir
+# de cutscenes sin mezclar input de combate, armas, dash, etc.
 # =========================================================
 
 # Nodo raíz de todo lo jugable/visual del player.
 @onready var gameplay_root: Node3D = $Gameplay
 
 # Nodo raíz de todo lo usado exclusivamente en cutscenes.
+# Ahora queda como alternativa opcional.
 @onready var cutscene_root: Node3D = $Cutscene
 
 # Sprite simple para cutscenes.
-# Usamos get_node_or_null para que no explote si todavía no lo creaste.
+# Se usa solamente si use_gameplay_visuals_in_cutscene = false.
 @onready var cutscene_anim_sprite: AnimatedSprite3D = get_node_or_null("Cutscene/AnimatedSprite3D")
 
 # True cuando el player está siendo controlado por una cutscene.
@@ -95,17 +98,67 @@ signal cutscene_walk_finished
 
 
 # =========================================================
+# CUTSCENE VISUAL MODE
+# =========================================================
+#
+# Hay dos estrategias posibles:
+#
+# A) use_gameplay_visuals_in_cutscene = true
+#    - Se mantiene visible Gameplay.
+#    - Se usa el AnimatedSprite3D real del jugador.
+#    - Se mantiene lámpara/luz.
+#    - Se ocultan solo armas, cursor, dash smear, etc.
+#
+# B) use_gameplay_visuals_in_cutscene = false
+#    - Se oculta Gameplay entero.
+#    - Se muestra Cutscene/AnimatedSprite3D.
+#    - Es el comportamiento viejo.
+#
+# Para Gualiche conviene A, porque la lámpara está integrada
+# al visual real del player.
+# =========================================================
+
+@export var use_gameplay_visuals_in_cutscene: bool = true
+
+# Nodos de Gameplay que se ocultan mientras corre una cutscene.
+#
+# Importante:
+# Estos paths son relativos al Player.
+#
+# Podés agregar/quitar desde el Inspector sin tocar código.
+@export var gameplay_nodes_to_hide_in_cutscene: Array[NodePath] = [
+	^"Gameplay/Weapon",
+	^"Gameplay/AimDebugLayer",
+	^"Gameplay/DashSmear",
+	^"Gameplay/Trail",
+	^"Gameplay/Sprites/ShotgunPivot",
+	^"Gameplay/Sprites/SapukaiSprite3D"
+]
+
+# Guarda la visibilidad original de cada nodo ocultado durante cutscene.
+# Así al salir restauramos exactamente como estaba.
+var _cutscene_hidden_gameplay_nodes_state: Dictionary = {}
+
+# Si está activo, al usar visuales de Gameplay en cutscene,
+# NO se hace fade in del Gameplay completo al volver.
+#
+# Esto evita que el cuerpo/lámpara/luz hagan un fade raro,
+# porque en este modo nunca desaparecieron.
+@export var disable_full_gameplay_fade_when_using_gameplay_visuals: bool = true
+
+
+# =========================================================
 # CUTSCENE → GAMEPLAY FADE
 # =========================================================
 #
-# Cuando el player sale de cutscene, el nodo Gameplay vuelve
-# con un fade in suave en vez de aparecer seco.
+# Cuando el player sale de cutscene, el nodo Gameplay puede volver
+# con un fade in suave.
 #
-# Importante:
-# Gameplay es Node3D y no tiene alpha propio.
-# Por eso fadeamos recursivamente:
-# - nodos con propiedad modulate, como Sprite3D / AnimatedSprite3D
-# - luces Light3D, bajando/subiendo light_energy
+# Esto tiene más sentido cuando use_gameplay_visuals_in_cutscene = false,
+# porque en ese caso Gameplay realmente estuvo oculto completo.
+#
+# Si use_gameplay_visuals_in_cutscene = true, por defecto NO aplicamos
+# el fade completo, porque el cuerpo/lámpara ya estaban visibles.
 # =========================================================
 
 @export var use_gameplay_fade_in: bool = true
@@ -121,8 +174,7 @@ var _gameplay_fade_tween: Tween = null
 var _gameplay_fade_original_state: Dictionary = {}
 
 # Si está activo, los AnimatedSprite3D no participan del fade in de Gameplay.
-# Útil para que el cuerpo del player aparezca instantáneo, pero armas/luces/etc.
-# sí entren suave.
+# Útil para que el cuerpo del player aparezca instantáneo.
 @export var exclude_animated_sprites_from_gameplay_fade: bool = true
 
 # Grupo opcional para excluir nodos puntuales del fade.
@@ -306,7 +358,7 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		move_and_slide()
 		return
-	
+
 	if Input.is_action_just_pressed("debug_cutscene"):
 		set_cutscene_mode(not is_cutscene_mode)
 
@@ -317,7 +369,7 @@ func _physics_process(delta: float) -> void:
 	# - no dash
 	# - no ataque
 	# - no armas
-	# - no lámpara interactiva
+	# - no lámpara interactiva con mouse
 	# - no cursor/aim
 	#
 	# Solo procesamos movimiento simple de actor, si lo hubiera.
@@ -376,13 +428,8 @@ func _physics_process(delta: float) -> void:
 		# =========================================================
 		# VELOCIDAD DE MOVIMIENTO
 		# =========================================================
-		#
-		# Partimos de la velocidad base del player.
 		var move_speed: float = speed
 
-		# Si Sapukai está activo, aumentamos la velocidad.
-		# El multiplicador vive en SapukaiComponent,
-		# así mantenemos todo centralizado.
 		if sapukai != null:
 			move_speed *= sapukai.get_move_speed_mult()
 
@@ -401,39 +448,32 @@ func _physics_process(delta: float) -> void:
 	# =========================
 	# INPUT DE ATAQUE
 	# =========================
-	# Ataque principal: facón, siempre disponible.
 	if Input.is_action_just_pressed("facon") and not is_dashing:
 		weapon_component.try_primary_attack()
 
-	# Ataque secundario: escopeta.
 	if Input.is_action_just_pressed("escopeta"):
 		weapon_component.try_start_shotgun_aim()
 
 	if Input.is_action_just_released("escopeta"):
 		weapon_component.release_shotgun()
 
-	# Ataque terciario: boleadoras.
 	if Input.is_action_just_pressed("boleadoras"):
 		weapon_component.try_start_boleadoras_aim()
 
 	if Input.is_action_just_released("boleadoras"):
 		weapon_component.release_boleadoras()
 
-	# Activar modo Sapukai.
 	if Input.is_action_just_pressed("sapukai"):
 		sapukai.try_activate()
 
 	# =========================
 	# VISUAL DEL ARMA
 	# =========================
-	# Cuando no está atacando, el arma acompaña el cursor.
-	# Durante el ataque, el propio WeaponComponent controla el swing.
 	weapon_component.update_weapon_idle()
 
 	# =========================
 	# ANIMACIÓN DEL PERSONAJE
 	# =========================
-	# Si no está atacando ni dashing, usar animación de caminar/idle.
 	if not weapon_component.is_attacking and not is_dashing:
 		update_animation(input_dir)
 
@@ -461,31 +501,43 @@ func _enter_cutscene_mode() -> void:
 	# ---------------------------------------------------------
 	# Cancelar acciones de gameplay
 	# ---------------------------------------------------------
-	# Esto evita bugs típicos:
-	# - facón en medio del swing
-	# - escopeta apuntando
-	# - boleadoras cargadas
-	# - dash activo
-	# - knockback arrastrándose
-	# ---------------------------------------------------------
 	_cancel_gameplay_actions_for_cutscene()
 
-	# Ocultamos todo el gameplay visual.
-	if gameplay_root != null:
-		gameplay_root.visible = false
-		_set_process_tree(gameplay_root, false)
+	# ---------------------------------------------------------
+	# Visual de cutscene
+	# ---------------------------------------------------------
+	if use_gameplay_visuals_in_cutscene:
+		# Usamos el visual real del gameplay:
+		# cuerpo, lámpara y luces quedan visibles.
+		if gameplay_root != null:
+			gameplay_root.visible = true
 
-	# Mostramos el actor de cutscene.
-	if cutscene_root != null:
-		cutscene_root.visible = true
-		_set_process_tree(cutscene_root, true)
+		# Ocultamos solo nodos de combate/aim/debug.
+		_hide_gameplay_nodes_for_cutscene()
 
-	# Animación inicial de cutscene.
-	if cutscene_anim_sprite != null:
-		cutscene_anim_sprite.visible = true
+		# Apagamos el actor alternativo de cutscene para que no haya doble sprite.
+		if cutscene_root != null:
+			cutscene_root.visible = false
+			_set_process_tree(cutscene_root, false)
 
-		if cutscene_anim_sprite.sprite_frames != null and cutscene_anim_sprite.sprite_frames.has_animation("Idle"):
-			cutscene_anim_sprite.play("Idle")
+		# Animación inicial usando el sprite real.
+		cutscene_play_anim("Idle")
+	else:
+		# Comportamiento viejo:
+		# ocultar Gameplay completo y usar Cutscene/AnimatedSprite3D.
+		if gameplay_root != null:
+			gameplay_root.visible = false
+			_set_process_tree(gameplay_root, false)
+
+		if cutscene_root != null:
+			cutscene_root.visible = true
+			_set_process_tree(cutscene_root, true)
+
+		if cutscene_anim_sprite != null:
+			cutscene_anim_sprite.visible = true
+
+			if cutscene_anim_sprite.sprite_frames != null and cutscene_anim_sprite.sprite_frames.has_animation("Idle"):
+				cutscene_anim_sprite.play("Idle")
 
 	print("Player entró en modo cutscene")
 
@@ -498,18 +550,39 @@ func _exit_cutscene_mode() -> void:
 	# Frenamos movimiento residual.
 	velocity = Vector3.ZERO
 
-	# Ocultamos actor de cutscene.
-	if cutscene_root != null:
-		cutscene_root.visible = false
-		_set_process_tree(cutscene_root, false)
+	if use_gameplay_visuals_in_cutscene:
+		# Restauramos nodos ocultos de Gameplay.
+		if gameplay_root != null:
+			gameplay_root.visible = true
 
-	# Volvemos a mostrar gameplay.
-	if gameplay_root != null:
-		gameplay_root.visible = true
-		_set_process_tree(gameplay_root, true)
+		_restore_gameplay_nodes_after_cutscene()
 
-		if use_gameplay_fade_in:
-			_start_gameplay_fade_in()
+		# Mantenemos apagado el actor alternativo.
+		if cutscene_root != null:
+			cutscene_root.visible = false
+			_set_process_tree(cutscene_root, false)
+	else:
+		# Comportamiento viejo:
+		# apagamos actor de cutscene y restauramos gameplay entero.
+		if cutscene_root != null:
+			cutscene_root.visible = false
+			_set_process_tree(cutscene_root, false)
+
+		if gameplay_root != null:
+			gameplay_root.visible = true
+			_set_process_tree(gameplay_root, true)
+
+	# Fade opcional al volver.
+	#
+	# Si estamos usando visuales de Gameplay durante cutscene,
+	# por defecto NO fadeamos todo Gameplay, porque ya estaba visible.
+	var should_fade_gameplay := use_gameplay_fade_in
+
+	if use_gameplay_visuals_in_cutscene and disable_full_gameplay_fade_when_using_gameplay_visuals:
+		should_fade_gameplay = false
+
+	if should_fade_gameplay:
+		_start_gameplay_fade_in()
 
 	# Restauramos animación base del gameplay.
 	if anim_sprite != null and not is_dead:
@@ -542,8 +615,6 @@ func _cancel_gameplay_actions_for_cutscene() -> void:
 		if weapon_component.has_method("cancel_attack_visuals"):
 			weapon_component.cancel_attack_visuals()
 
-		# Por seguridad, soltamos armas cargadas si existen estos métodos.
-		# Usamos has_method para no depender de que todos existan siempre.
 		if weapon_component.has_method("release_shotgun"):
 			weapon_component.release_shotgun()
 
@@ -554,8 +625,9 @@ func _cancel_gameplay_actions_for_cutscene() -> void:
 func _set_process_tree(root: Node, enabled: bool) -> void:
 	# Activa/desactiva process en un subárbol.
 	#
-	# Ojo: esto no borra nada, solo evita que nodos visuales/scripts
-	# dentro de Gameplay sigan procesando mientras están ocultos.
+	# Ojo:
+	# En el modo nuevo de cutscene no apagamos Gameplay entero,
+	# porque usamos su AnimatedSprite3D real.
 	if root == null:
 		return
 
@@ -569,18 +641,81 @@ func _set_process_tree(root: Node, enabled: bool) -> void:
 
 
 # =========================================================
+# CUTSCENE GAMEPLAY NODE HIDING
+# =========================================================
+#
+# En el modo nuevo no ocultamos Gameplay entero.
+# Solo ocultamos nodos puntuales: Weapon, AimDebugLayer, DashSmear, etc.
+# =========================================================
+
+func _hide_gameplay_nodes_for_cutscene() -> void:
+	_cutscene_hidden_gameplay_nodes_state.clear()
+
+	for path in gameplay_nodes_to_hide_in_cutscene:
+		if path == NodePath():
+			continue
+
+		var node := get_node_or_null(path)
+
+		if node == null:
+			continue
+
+		if not is_instance_valid(node):
+			continue
+
+		if _cutscene_hidden_gameplay_nodes_state.has(node):
+			continue
+
+		_cutscene_hidden_gameplay_nodes_state[node] = _get_node_visible_generic(node)
+		_set_node_visible_generic(node, false)
+
+
+func _restore_gameplay_nodes_after_cutscene() -> void:
+	for node in _cutscene_hidden_gameplay_nodes_state.keys():
+		if node == null:
+			continue
+
+		if not is_instance_valid(node):
+			continue
+
+		var was_visible: bool = bool(_cutscene_hidden_gameplay_nodes_state[node])
+		_set_node_visible_generic(node, was_visible)
+
+	_cutscene_hidden_gameplay_nodes_state.clear()
+
+
+func _get_node_visible_generic(node: Node) -> bool:
+	if node == null:
+		return false
+
+	if _node_has_property(node, "visible"):
+		return bool(node.get("visible"))
+
+	return true
+
+
+func _set_node_visible_generic(node: Node, visible_value: bool) -> void:
+	if node == null:
+		return
+
+	if _node_has_property(node, "visible"):
+		node.set("visible", visible_value)
+
+
+# =========================================================
 # CUTSCENE MOVEMENT
 # =========================================================
 #
-# Helpers simples para que una futura CutsceneDirector pueda decir:
+# Helpers simples para que el CutsceneDirector pueda decir:
 #
 # await player.cutscene_walk_to(marker.global_position)
 # player.cutscene_play_anim("Talk")
 # player.cutscene_face_direction(Vector3.LEFT)
-#
 # =========================================================
 
 func _physics_process_cutscene(delta: float) -> void:
+	var lamp_input_dir := Vector2.ZERO
+
 	if cutscene_is_walking:
 		var to_target := cutscene_walk_target - global_position
 		to_target.y = 0.0
@@ -597,6 +732,10 @@ func _physics_process_cutscene(delta: float) -> void:
 
 			cutscene_play_anim("Idle")
 			cutscene_walk_finished.emit()
+
+			if use_gameplay_visuals_in_cutscene:
+				update_lamp_swing(delta, Vector2.ZERO)
+
 			return
 
 		var dir := to_target.normalized()
@@ -606,9 +745,17 @@ func _physics_process_cutscene(delta: float) -> void:
 
 		cutscene_face_direction(dir)
 		cutscene_play_anim("Walk")
+
+		lamp_input_dir = Vector2(dir.x, dir.z)
 	else:
 		velocity = Vector3.ZERO
 		move_and_slide()
+		cutscene_play_anim("Idle")
+
+	# Si usamos el visual de gameplay durante cutscene,
+	# permitimos un balanceo suave de lámpara durante caminata.
+	if use_gameplay_visuals_in_cutscene:
+		update_lamp_swing(delta, lamp_input_dir)
 
 
 func cutscene_walk_to(target_position: Vector3, walk_speed: float = 2.5) -> void:
@@ -644,10 +791,6 @@ func cutscene_stop_walk() -> void:
 	# para destrabar cualquier await pendiente en:
 	#
 	# await player.cutscene_walk_to(...)
-	#
-	# Sin esto, si el director cancela mientras el player está caminando,
-	# el trigger podría quedar esperando para siempre.
-
 	cutscene_is_walking = false
 	velocity = Vector3.ZERO
 	cutscene_play_anim("Idle")
@@ -656,6 +799,29 @@ func cutscene_stop_walk() -> void:
 
 
 func cutscene_play_anim(anim_name: String) -> void:
+	# ---------------------------------------------------------
+	# Modo nuevo:
+	# usar el AnimatedSprite3D real de Gameplay.
+	# ---------------------------------------------------------
+	if use_gameplay_visuals_in_cutscene:
+		if anim_sprite == null:
+			return
+
+		if anim_sprite.sprite_frames == null:
+			return
+
+		if not anim_sprite.sprite_frames.has_animation(anim_name):
+			return
+
+		if anim_sprite.animation != anim_name:
+			anim_sprite.play(anim_name)
+
+		return
+
+	# ---------------------------------------------------------
+	# Modo viejo:
+	# usar Cutscene/AnimatedSprite3D.
+	# ---------------------------------------------------------
 	if cutscene_anim_sprite == null:
 		return
 
@@ -670,16 +836,29 @@ func cutscene_play_anim(anim_name: String) -> void:
 
 
 func cutscene_face_direction(direction: Vector3) -> void:
-	# Flip simple horizontal para el sprite de cutscene.
-	#
-	# Si después armás animaciones por dirección tipo:
-	# IdleUp, IdleDown, IdleSide, etc.,
-	# acá podemos expandirlo.
-	if cutscene_anim_sprite == null:
+	if abs(direction.x) <= 0.01:
 		return
 
-	if abs(direction.x) > 0.01:
-		var facing_left := direction.x < 0.0
+	var facing_left := direction.x < 0.0
+
+	# ---------------------------------------------------------
+	# Modo nuevo:
+	# flip del visual real de Gameplay.
+	# ---------------------------------------------------------
+	if use_gameplay_visuals_in_cutscene:
+		if sprites != null:
+			sprites.scale.x = 1.0 if facing_left else -1.0
+
+		if anim_sprite != null:
+			anim_sprite.flip_h = facing_left
+
+		return
+
+	# ---------------------------------------------------------
+	# Modo viejo:
+	# flip del sprite alternativo de Cutscene.
+	# ---------------------------------------------------------
+	if cutscene_anim_sprite != null:
 		cutscene_anim_sprite.flip_h = facing_left
 
 
@@ -722,7 +901,6 @@ func _start_gameplay_fade_in() -> void:
 		# -----------------------------------------------------
 		# Nodos visuales con modulate
 		# -----------------------------------------------------
-		# Sprite3D, AnimatedSprite3D, CanvasItem, etc.
 		if _node_has_property(node, "modulate"):
 			var modulate_value = node.get("modulate")
 
@@ -750,8 +928,6 @@ func _start_gameplay_fade_in() -> void:
 		# -----------------------------------------------------
 		# Luces 3D
 		# -----------------------------------------------------
-		# Para que la lámpara/luz del arma no aparezca seca,
-		# fadeamos light_energy.
 		elif node is Light3D:
 			var light := node as Light3D
 			var original_energy := light.light_energy
@@ -824,35 +1000,20 @@ func _collect_gameplay_fade_targets(root: Node, result: Array[Node]) -> void:
 	if root == null:
 		return
 
-	# ---------------------------------------------------------
-	# EXCLUSIONES
-	# ---------------------------------------------------------
-	# Si el nodo está en el grupo de exclusión, no se fadea.
-	# Igual seguimos revisando sus hijos, por si alguno sí debería fadearse.
 	var skip_this_node := false
 
 	if gameplay_fade_excluded_group != &"" and root.is_in_group(gameplay_fade_excluded_group):
 		skip_this_node = true
 
-	# Evitar fade en AnimatedSprite3D.
-	# Esto normalmente afecta al sprite principal del player.
 	if exclude_animated_sprites_from_gameplay_fade and root is AnimatedSprite3D:
 		skip_this_node = true
 
-	# ---------------------------------------------------------
-	# COLECCIÓN DE TARGETS
-	# ---------------------------------------------------------
 	if not skip_this_node:
-		# Si el nodo tiene modulate, probablemente pueda fadearse.
-		# Ej: Sprite3D, MeshInstance3D con modulate, CanvasItem, etc.
 		if _node_has_property(root, "modulate"):
 			result.append(root)
-
-		# Luces 3D.
 		elif root is Light3D:
 			result.append(root)
 
-	# Revisamos hijos.
 	for child in root.get_children():
 		_collect_gameplay_fade_targets(child, result)
 
@@ -866,7 +1027,7 @@ func _node_has_property(node: Object, property_name: String) -> bool:
 			return true
 
 	return false
-	
+
 
 # =========================================================
 # DASH
@@ -919,13 +1080,6 @@ func update_cursor() -> void:
 
 	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
 
-	# -----------------------------------------------------
-	# Deadzone en pantalla
-	# -----------------------------------------------------
-	# Si el mouse está encima del cuerpo del jugador,
-	# no actualizamos aim_dir ni aim_angle.
-	# Mantenemos la última dirección válida.
-	# -----------------------------------------------------
 	var player_screen_pos: Vector2 = camera.unproject_position(global_position + Vector3(0.0, 0.8, 0.0))
 	var mouse_to_player_px: float = mouse_pos.distance_to(player_screen_pos)
 
@@ -952,7 +1106,6 @@ func update_cursor() -> void:
 
 
 func handle_flip(dir: Vector3) -> void:
-	# El personaje se espeja según mire a izquierda o derecha.
 	var facing_left = dir.x < 0.0
 	sprites.scale.x = 1.0 if facing_left else -1.0
 	anim_sprite.flip_h = facing_left
@@ -963,11 +1116,9 @@ func handle_flip(dir: Vector3) -> void:
 # =========================================================
 
 func apply_knockback(dir: Vector3, force: float = 4.5) -> void:
-	# Si está muerto, ignoramos knockback nuevo.
 	if is_dead:
 		return
 
-	# Durante cutscene ignoramos knockback para que no rompa la puesta en escena.
 	if is_cutscene_mode:
 		return
 
@@ -983,16 +1134,12 @@ func apply_knockback(dir: Vector3, force: float = 4.5) -> void:
 
 
 func apply_shotgun_recoil(dir: Vector3, force: float = 3.0) -> void:
-	# Si está muerto, ignoramos recoil nuevo.
 	if is_dead:
 		return
 
-	# Durante cutscene no debería haber recoil.
 	if is_cutscene_mode:
 		return
 
-	# Si está dashing, mejor no sumar recoil
-	# para no mezclar dos impulsos fuertes.
 	if is_dashing:
 		return
 
@@ -1001,75 +1148,56 @@ func apply_shotgun_recoil(dir: Vector3, force: float = 3.0) -> void:
 	if dir.length_squared() <= 0.0001:
 		return
 
-	# En vez de pisar completamente el knockback actual,
-	# sumamos un impulso corto.
 	knockback_velocity += dir.normalized() * force
 
 
 func take_damage(amount: int) -> void:
-	# Si ya está muerto, ignorar daño.
 	if is_dead:
 		return
 
-	# Durante cutscene, por ahora ignoramos daño.
-	# Más adelante se puede hacer configurable por cutscene.
 	if is_cutscene_mode:
 		return
 
-	# Durante Sapukai, el gaucho es inmune al daño.
 	if is_sapukai_invulnerable():
 		return
 
 	hp = max(hp - amount, 0)
 	hp_changed.emit(hp, max_hp)
 
-	# Reintentar encontrar screen_fx si se perdió la referencia.
 	if not is_instance_valid(screen_fx):
 		screen_fx = get_tree().get_first_node_in_group("screen_fx")
 
-	# Reproducir feedback visual si existe.
 	if screen_fx and screen_fx.has_method("play_damage_feedback"):
 		screen_fx.play_damage_feedback()
 
-	# Aumenta furia al recibir daño.
 	sapukai.add_fury_from_damage_taken(amount)
 
-	# Si la vida llegó a 0 o menos, morir.
 	if hp <= 0:
 		die()
 
 
 func die() -> void:
-	# Evitar ejecutar la muerte más de una vez.
 	if is_dead:
 		return
 
 	is_dead = true
 
-	# Frenar completamente el movimiento.
 	velocity = Vector3.ZERO
 	knockback_velocity = Vector3.ZERO
-
-	# Si muere en cutscene, salimos del movimiento de cutscene.
 	cutscene_is_walking = false
 
-	# Delegar al componente el apagado visual / lógico del arma.
 	if weapon_component != null:
 		weapon_component.cancel_attack_visuals()
 
-	# Ocultar el arma completa al morir.
 	if weapon_pivot != null:
 		weapon_pivot.visible = false
 
-	# Ocultar lámpara al morir.
 	if light_sprite != null:
 		light_sprite.visible = false
 
-	# Ocultar cursor para que no siga "apuntando".
 	if cursor != null:
 		cursor.visible = false
 
-	# Reproducir animación de muerte.
 	if anim_sprite != null:
 		anim_sprite.play("Died")
 
@@ -1079,11 +1207,9 @@ func die() -> void:
 # =========================================================
 
 func update_animation(input_dir: Vector2) -> void:
-	# No tocar animaciones de locomoción si está muerto.
 	if is_dead:
 		return
 
-	# En cutscene usamos cutscene_anim_sprite, no anim_sprite.
 	if is_cutscene_mode:
 		return
 
@@ -1103,9 +1229,6 @@ func update_pivot_light() -> void:
 	if is_cutscene_mode:
 		return
 
-	# Mueve la luz de la lámpara junto con la posición del mouse.
-	# El facón sigue siendo el arma visual base, así que el componente
-	# devuelve el radio de reposo correspondiente.
 	var offset := Vector3(0.0, 0.8, weapon_component.get_current_weapon_radius())
 	offset = offset.rotated(Vector3.UP, aim_angle)
 	weapon_light.position = offset
@@ -1115,11 +1238,10 @@ func update_lamp_swing(delta: float, input_dir: Vector2) -> void:
 	if lamp_visual == null:
 		return
 
-	# En cutscene el nodo Gameplay está oculto.
-	if is_cutscene_mode:
+	# Si estamos en cutscene con el modo viejo, Gameplay está oculto.
+	if is_cutscene_mode and not use_gameplay_visuals_in_cutscene:
 		return
 
-	# Si está muerto, que vuelva a la posición normal.
 	if is_dead:
 		lamp_current_angle_rad = lerp_angle(
 			lamp_current_angle_rad,
@@ -1130,17 +1252,12 @@ func update_lamp_swing(delta: float, input_dir: Vector2) -> void:
 		lamp_visual.set_manual_angle_radians(lamp_current_angle_rad)
 		return
 
-	# Si el player se está moviendo, aplicamos balanceo.
 	if input_dir.length() > 0.0:
 		lamp_swing_time += delta * lamp_swing_speed
 
-		# Balanceo con seno.
 		var swing_angle_rad := deg_to_rad(lamp_swing_angle_deg) * sin(lamp_swing_time)
-
-		# Ángulo final de la lámpara.
 		var target_angle := lamp_base_angle_rad + swing_angle_rad
 
-		# Interpolación suave.
 		lamp_current_angle_rad = lerp_angle(
 			lamp_current_angle_rad,
 			target_angle,
@@ -1149,7 +1266,6 @@ func update_lamp_swing(delta: float, input_dir: Vector2) -> void:
 
 		lamp_visual.set_manual_angle_radians(lamp_current_angle_rad)
 	else:
-		# Si no se mueve, vuelve suavemente al centro.
 		lamp_current_angle_rad = lerp_angle(
 			lamp_current_angle_rad,
 			lamp_base_angle_rad,
@@ -1193,14 +1309,11 @@ func play_dash_smear(direction: Vector3) -> void:
 	dash_smear.visible = true
 	dash_smear.modulate.a = 0.45
 
-	# Posición global, no local.
 	dash_smear.global_position = global_position + Vector3(0.0, 0.8, 0.0) + back_offset
 
-	# Rotación horizontal según la dirección del dash.
 	dash_smear.rotation = Vector3.ZERO
 	dash_smear.rotation.y = atan2(dir.x, dir.z)
 
-	# Escala tipo estela.
 	dash_smear.scale = Vector3(0.8, 1.0, 2.2)
 
 	dash_smear_tween = create_tween()

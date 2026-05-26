@@ -1,9 +1,12 @@
 [gd_scene format=3 uid="uid://cnp5mwp4mcaw8"]
 
+[ext_resource type="Script" uid="uid://da70twjokky06" path="res://scripts/survivor_mode_manager.gd" id="1_0rl1p"]
 [ext_resource type="Texture2D" uid="uid://cq1ly5mewga7d" path="res://textures/floor.png" id="1_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://dfwvskldv0ksq" path="res://player/player.tscn" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://6yl8qhrda7v2" path="res://models/Rancho_LVL01_V2.glb" id="2_jq2sk"]
 [ext_resource type="Environment" uid="uid://kk1k3kd6nma6" path="res://enviroments/test_enviroment.tres" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://boayxkcxy57ig" path="res://cutscenes/level_1_scene_2.gd" id="5_facbu"]
+[ext_resource type="Script" uid="uid://xwftv0ubwudg" path="res://cutscenes/level_1_scene_3.gd" id="6_b1qrp"]
 [ext_resource type="Script" uid="uid://dnx4n1en4ks0x" path="res://scripts/screen_fx.gd" id="8_4c57u"]
 [ext_resource type="PackedScene" uid="uid://dy352efhy7nbg" path="res://props/bonfire.tscn" id="9_bonfire"]
 [ext_resource type="Shader" uid="uid://blyv065bw88rg" path="res://shaders/retro.gdshader" id="10_efxa6"]
@@ -30,10 +33,12 @@
 [ext_resource type="Script" uid="uid://cm80n46eknbiu" path="res://ui/level_up_panel.gd" id="26_a6jrf"]
 [ext_resource type="FontFile" uid="uid://c7s8vcmspnt02" path="res://fonts/GoogleSansCode-Regular.ttf" id="28_htxhm"]
 [ext_resource type="Script" uid="uid://vyy3o3uydmja" path="res://scripts/dialogue_box.gd" id="28_jq2sk"]
-[ext_resource type="Script" uid="uid://6hq457ot8aei" path="res://cutscenes/test_cutscene_trigger.gd" id="29_kq58d"]
 [ext_resource type="PackedScene" uid="uid://cb2ku74srsttc" path="res://props/tree_3.tscn" id="29_qsp4k"]
 [ext_resource type="Script" uid="uid://dhr3qqwgf68vc" path="res://scripts/cutscene_director.gd" id="31_seu75"]
 [ext_resource type="Script" uid="uid://d20cqxavfm1hu" path="res://cutscenes/level_1_scene_1.gd" id="34_4k2k6"]
+[ext_resource type="PackedScene" uid="uid://dt6h12kf4uwrx" path="res://enemies/pajaro_fantasma/pajaro_fantasma.tscn" id="36_ok6jj"]
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_facbu"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_color = Color(0.85882354, 0.8745098, 1, 0.36862746)
@@ -112,9 +117,6 @@ border_blend = true
 shadow_color = Color(0, 0, 0, 0.23529412)
 shadow_size = 6
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_kq58d"]
-size = Vector3(3.758667, 1, 2.6152344)
-
 [node name="Main" type="Node3D" unique_id=1046872265]
 
 [node name="CutsceneDirector" type="Node" parent="." unique_id=777504864]
@@ -122,12 +124,29 @@ script = ExtResource("31_seu75")
 hud_fade_out_duration = 1.0
 hud_fade_in_duration = 0.5
 
+[node name="SurvivorModeManager" type="Node" parent="." unique_id=2047732145]
+script = ExtResource("1_0rl1p")
+
 [node name="IntroCutscene" type="Node" parent="." unique_id=241376135]
 script = ExtResource("34_4k2k6")
 play_on_ready = true
+play_follow_up_cutscene = true
+follow_up_cutscene_path = NodePath("../SecondRadioCutscene")
+follow_up_delay_seconds = 5.0
 
 [node name="CutsceneTarget1" type="Marker3D" parent="IntroCutscene" unique_id=1621748028]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4427524, 0, -30.901625)
+
+[node name="SecondRadioCutscene" type="Node" parent="." unique_id=1259587903]
+script = ExtResource("5_facbu")
+enemy_scene = ExtResource("36_ok6jj")
+dynamic_enemy_spawn_distance = 12.0
+dynamic_enemy_spawn_mode = "player_left"
+dynamic_enemy_spawn_random_arc_degrees = 320.0
+enemy_spawn_marker_path = NodePath("")
+
+[node name="ThirdRadioCutscene" type="Node" parent="." unique_id=805125740]
+script = ExtResource("6_b1qrp")
 
 [node name="Lighting" type="Node3D" parent="." unique_id=162552155]
 
@@ -168,6 +187,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4728205, 0.14137536, -28.98
 
 [node name="Colliders" type="NavigationRegion3D" parent="." unique_id=1482664797]
 transform = Transform3D(0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 1.1641532e-10, 0, -4.656613e-10)
+navigation_mesh = SubResource("NavigationMesh_facbu")
 
 [node name="Terrain" type="MeshInstance3D" parent="Colliders" unique_id=1772764079]
 transform = Transform3D(86.079796, 0, 0, 0, 30.000011, 0, 0, 0, 86.079796, -0.011594296, 0.007929803, -0.0026178358)
@@ -175,7 +195,6 @@ material_override = SubResource("StandardMaterial3D_0xm2m")
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_7dm0k")
 surface_material_override/0 = SubResource("StandardMaterial3D_7dm0k")
-metadata/_edit_lock_ = true
 
 [node name="Rancho" parent="Colliders" unique_id=2107584091 instance=ExtResource("2_jq2sk")]
 transform = Transform3D(0.9000002, 0, 0, 0, 0.9000002, 0, 0, 0, 0.9000002, 3.5951164, 0, -36.178867)
@@ -295,7 +314,7 @@ grow_horizontal = 2
 
 [node name="BossTimerLabel" type="Label" parent="HUD/CanvasLayer/UI/TopUI/TopCenterContainer" unique_id=453275658]
 layout_mode = 2
-text = "Jefe en 5:28"
+text = "Jefe en 55:28"
 horizontal_alignment = 1
 
 [node name="BottomLeftUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=2036296828]
@@ -487,6 +506,7 @@ grow_horizontal = 2
 texture = SubResource("AnimatedTexture_jq2sk")
 
 [node name="BottomRightUI" type="Control" parent="HUD/CanvasLayer/UI" unique_id=1155947597]
+visible = false
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -623,9 +643,9 @@ vertical_alignment = 1
 [node name="FPSCounter" type="Label" parent="HUD/CanvasLayer/UI" unique_id=282869717]
 layout_mode = 0
 offset_left = 8.0
-offset_top = 15.0
+offset_top = 19.0
 offset_right = 88.0
-offset_bottom = 38.0
+offset_bottom = 42.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.48235294)
 theme_override_font_sizes/font_size = 8
 text = "60"
@@ -838,6 +858,7 @@ vertical_alignment = 1
 autowrap_mode = 3
 
 [node name="DialogueBox" type="Control" parent="HUD/CanvasLayer" unique_id=1788802973]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -876,7 +897,7 @@ size_flags_vertical = 4
 theme_override_constants/margin_left = 25
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 25
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_bottom = 25
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HUD/CanvasLayer/DialogueBox/MarginContainer/PanelContainer/MarginContainer" unique_id=1367024119]
 layout_mode = 2
@@ -901,16 +922,30 @@ theme_override_fonts/normal_font = ExtResource("28_htxhm")
 theme_override_font_sizes/normal_font_size = 17
 text = "Permite hacer un dash para escapar de los enemigos rápidamente. Esto es una prueba de una segunda línea de texto a ver cómo queda."
 
+[node name="Dots" type="Label" parent="HUD/CanvasLayer/DialogueBox" unique_id=1490479738]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 937.0
+offset_top = -78.0
+offset_right = -243.0
+offset_bottom = -57.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 0.49411765)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7529412)
+theme_override_fonts/font = ExtResource("28_htxhm")
+theme_override_font_sizes/font_size = 16
+text = "..."
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=554653491]
 environment = ExtResource("3_h2yge")
-
-[node name="TestCutsceneTrigger" type="Area3D" parent="." unique_id=1544678157]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22.146776)
-script = ExtResource("29_kq58d")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="TestCutsceneTrigger" unique_id=438482820]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3793335, 0.5196028, 0.8076172)
-shape = SubResource("BoxShape3D_kq58d")
 
 [node name="Tree3" parent="." unique_id=131978818 instance=ExtResource("29_qsp4k")]
 transform = Transform3D(1.3251815, 0, 0, 0, 1.3012912, 0, 0, 0, 1, -0.14745092, 1.2000017, -22.833376)

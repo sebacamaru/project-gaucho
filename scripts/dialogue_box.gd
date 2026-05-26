@@ -12,6 +12,7 @@ class_name DialogueBox
 # - mostrar texto con efecto typewriter
 # - completar texto al apretar tecla / click
 # - avanzar cuando el texto ya terminó
+# - indicador animado de avance con puntitos
 # - fade in / fade out suave
 # - force_close robusto para skip completo de cutscene
 # - pausas internas dentro del texto mediante tags:
@@ -31,16 +32,20 @@ class_name DialogueBox
 # Estructura esperada:
 #
 # DialogueBox
-# └── MarginContainer
-#     └── PanelContainer
-#         └── MarginContainer
-#             └── VBoxContainer
-#                 ├── SpeakerLabel
-#                 └── TextLabel
+# ├── MarginContainer
+# │   └── PanelContainer
+# │       └── MarginContainer
+# │           └── VBoxContainer
+# │               ├── SpeakerLabel
+# │               └── TextLabel
+# └── Dots
 #
 # TextLabel puede ser:
 # - Label
 # - RichTextLabel
+#
+# Dots debe ser:
+# - Label
 # =========================================================
 
 
@@ -50,6 +55,10 @@ class_name DialogueBox
 
 @export var speaker_label_path: NodePath = ^"MarginContainer/PanelContainer/MarginContainer/VBoxContainer/SpeakerLabel"
 @export var text_label_path: NodePath = ^"MarginContainer/PanelContainer/MarginContainer/VBoxContainer/TextLabel"
+
+# Label que aparece cuando el texto terminó.
+# Sirve como indicador visual de "tocá para avanzar".
+@export var dots_label_path: NodePath = ^"Dots"
 
 
 # =========================================================
@@ -86,6 +95,40 @@ class_name DialogueBox
 
 
 # =========================================================
+# CONFIGURACIÓN: INDICADOR DE AVANCE
+# =========================================================
+#
+# El indicador aparece cuando el typewriter terminó y el diálogo
+# está esperando input.
+#
+# Hace loop:
+# .
+# ..
+# ...
+# =========================================================
+
+# Si está activo, muestra el indicador al terminar cada línea.
+@export var show_advance_dots: bool = true
+
+# Frames del loop.
+@export var advance_dots_frames: Array[String] = [
+	"",
+	".",
+	"..",
+	"..."
+]
+
+# Tiempo entre cada frame del loop de puntitos.
+@export_range(0.05, 2.0, 0.01) var advance_dots_step_seconds: float = 0.35
+
+# Fade in del indicador.
+@export_range(0.0, 2.0, 0.01) var advance_dots_fade_in_duration: float = 0.18
+
+# Fade out del indicador.
+@export_range(0.0, 2.0, 0.01) var advance_dots_fade_out_duration: float = 0.08
+
+
+# =========================================================
 # CONFIGURACIÓN: FADE
 # =========================================================
 
@@ -102,6 +145,8 @@ class_name DialogueBox
 
 @onready var speaker_label: Label = get_node_or_null(speaker_label_path) as Label
 @onready var text_label: Node = get_node_or_null(text_label_path)
+
+@onready var dots_label: Label = get_node_or_null(dots_label_path) as Label
 
 
 # =========================================================
@@ -136,6 +181,15 @@ var _force_close_requested: bool = false
 var _fade_tween: Tween = null
 var _fade_waiting: bool = false
 
+# Tween del indicador de avance.
+var _dots_tween: Tween = null
+
+# Controla si el loop de puntitos está activo.
+var _dots_loop_active: bool = false
+
+# Evita crear dos loops al mismo tiempo.
+var _dots_loop_running: bool = false
+
 
 # =========================================================
 # SEÑALES
@@ -157,8 +211,19 @@ func _ready() -> void:
 	# Queremos capturar input solo mientras el diálogo está activo.
 	set_process_unhandled_input(false)
 
-	# Evita que clicks pasen a cosas detrás de la UI mientras el diálogo está visible.
+	# El root del DialogueBox debe frenar el mouse cuando está visible.
+	# Así el click no pasa al gameplay.
 	mouse_filter = Control.MOUSE_FILTER_STOP
+
+	# Muchos hijos UI, como PanelContainer / MarginContainer,
+	# pueden interceptar el mouse.
+	#
+	# Los ponemos en PASS para que el click pueda llegar al root DialogueBox
+	# y activar _gui_input().
+	_set_children_mouse_filter_to_pass(self)
+
+	# Estado inicial del indicador de avance.
+	_setup_advance_dots()
 
 	_clear_text()
 
@@ -168,6 +233,13 @@ func _ready() -> void:
 # =========================================================
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Captura inputs que no fueron consumidos por la UI.
+	#
+	# Esto sirve para:
+	# - teclado
+	# - acciones tipo ui_accept
+	# - clicks que no caen encima de un Control que los consuma
+
 	if not visible:
 		return
 
@@ -176,8 +248,31 @@ func _unhandled_input(event: InputEvent) -> void:
 		_request_advance()
 
 
+func _gui_input(event: InputEvent) -> void:
+	# Captura input específico de UI.
+	#
+	# En Godot, cuando clickeás sobre un Control,
+	# el evento suele pasar por _gui_input()
+	# antes que por _unhandled_input().
+	#
+	# Por eso agregamos este método:
+	# - click sobre la caja de diálogo completa texto
+	# - click sobre la caja de diálogo avanza/cierra
+	#
+	# accept_event() evita que el click pase al gameplay.
+
+	if not visible:
+		return
+
+	if _is_advance_event(event):
+		accept_event()
+		_request_advance()
+
+
 func _is_advance_event(event: InputEvent) -> bool:
-	# Teclado / acciones.
+	# ---------------------------------------------------------
+	# Teclado / acciones
+	# ---------------------------------------------------------
 	for action in advance_actions:
 		if action == &"":
 			continue
@@ -185,7 +280,9 @@ func _is_advance_event(event: InputEvent) -> bool:
 		if InputMap.has_action(action) and event.is_action_pressed(action):
 			return true
 
-	# Mouse.
+	# ---------------------------------------------------------
+	# Mouse
+	# ---------------------------------------------------------
 	if advance_with_mouse_click:
 		var mouse_event := event as InputEventMouseButton
 
@@ -207,6 +304,10 @@ func _request_advance() -> void:
 	# Si el texto ya terminó, el siguiente input avanza/cierra.
 	if _is_waiting_for_advance:
 		_is_waiting_for_advance = false
+
+		# Ocultamos el indicador apenas el jugador avanza.
+		_hide_advance_dots(true)
+
 		advance_requested.emit()
 
 
@@ -218,6 +319,7 @@ func say(speaker: String, text: String, close_after: bool = true) -> void:
 	# Muestra una línea de diálogo completa:
 	# - abre la caja
 	# - tipea el texto
+	# - muestra indicador de avance
 	# - espera input
 	# - opcionalmente cierra la caja
 	#
@@ -237,6 +339,9 @@ func say(speaker: String, text: String, close_after: bool = true) -> void:
 	if _force_close_requested:
 		return
 
+	# El texto ya terminó: mostramos el indicador.
+	_show_advance_dots()
+
 	_is_waiting_for_advance = true
 	await advance_requested
 
@@ -254,6 +359,8 @@ func open_box() -> void:
 	_force_close_requested = false
 	_is_open = true
 	visible = true
+
+	# Activamos input global mientras el diálogo está abierto.
 	set_process_unhandled_input(true)
 
 	await _fade_to(1.0, fade_in_duration)
@@ -268,6 +375,9 @@ func close_box() -> void:
 	_is_waiting_for_advance = false
 	_skip_typewriter_requested = false
 	_typewriter_pauses.clear()
+
+	# Apagamos el indicador antes de cerrar la caja.
+	_hide_advance_dots(false)
 
 	await _fade_to(0.0, fade_out_duration)
 
@@ -289,6 +399,7 @@ func force_close() -> void:
 	# - await advance_requested
 	# - typewriter en progreso
 	# - pausa inline en progreso
+	# - indicador de avance en loop
 
 	_force_close_requested = true
 
@@ -297,6 +408,9 @@ func force_close() -> void:
 
 	# Cortar fade pendiente y destrabar su await.
 	_kill_fade_tween()
+
+	# Cortar puntitos.
+	_hide_advance_dots(false)
 
 	_is_open = false
 	_is_typing = false
@@ -330,6 +444,10 @@ func complete_current_text() -> void:
 # =========================================================
 
 func _type_text(text: String) -> void:
+	# Arranca una nueva línea, así que ocultamos el indicador
+	# de avance de la línea anterior.
+	_hide_advance_dots(false)
+
 	# Antes de tipear, parseamos tags inline.
 	#
 	# Ejemplo de entrada:
@@ -338,6 +456,7 @@ func _type_text(text: String) -> void:
 	# Resultado:
 	# _full_text = "Hola  mundo"
 	# _typewriter_pauses = {5: 0.5}
+
 	var parsed_text := _parse_pause_tags(text)
 
 	_full_text = str(parsed_text.get("text", ""))
@@ -481,8 +600,8 @@ func _parse_pause_tag_seconds(tag: String) -> float:
 	#
 	# Ejemplos:
 	#
-	# "pause"     => default_inline_pause_seconds
-	# "p"         => default_inline_pause_seconds
+	# "pause"      => default_inline_pause_seconds
+	# "p"          => default_inline_pause_seconds
 	# "pause=0.5" => 0.5
 	# "p=0.5"     => 0.5
 
@@ -599,6 +718,191 @@ func _set_visible_characters(amount: int) -> void:
 
 func _get_text_length(text: String) -> int:
 	return text.length()
+
+
+# =========================================================
+# ADVANCE DOTS
+# =========================================================
+
+func _setup_advance_dots() -> void:
+	# Estado inicial del indicador de avance.
+	#
+	# Arranca oculto y transparente.
+	# Se muestra recién cuando el texto terminó de escribirse.
+
+	if dots_label == null:
+		return
+
+	dots_label.visible = false
+	dots_label.modulate.a = 0.0
+
+	if advance_dots_frames.is_empty():
+		advance_dots_frames = [
+			".",
+			"..",
+			"..."
+		]
+
+	dots_label.text = advance_dots_frames[0]
+
+
+func _show_advance_dots() -> void:
+	if not show_advance_dots:
+		return
+
+	if dots_label == null:
+		return
+
+	if advance_dots_frames.is_empty():
+		return
+
+	_kill_dots_tween()
+
+	_dots_loop_active = true
+
+	dots_label.visible = true
+	dots_label.text = advance_dots_frames[0]
+
+	# Fade in.
+	if advance_dots_fade_in_duration <= 0.0:
+		dots_label.modulate.a = 1.0
+	else:
+		dots_label.modulate.a = 0.0
+
+		_dots_tween = create_tween()
+		_dots_tween.set_trans(Tween.TRANS_SINE)
+		_dots_tween.set_ease(Tween.EASE_OUT)
+		_dots_tween.tween_property(
+			dots_label,
+			"modulate:a",
+			1.0,
+			advance_dots_fade_in_duration
+		)
+
+	# Arrancamos loop si no está corriendo.
+	_start_advance_dots_loop()
+
+
+func _hide_advance_dots(animate: bool = true) -> void:
+	_dots_loop_active = false
+
+	if dots_label == null:
+		return
+
+	_kill_dots_tween()
+
+	if not animate or advance_dots_fade_out_duration <= 0.0:
+		dots_label.visible = false
+		dots_label.modulate.a = 0.0
+		return
+
+	_dots_tween = create_tween()
+	_dots_tween.set_trans(Tween.TRANS_SINE)
+	_dots_tween.set_ease(Tween.EASE_OUT)
+	_dots_tween.tween_property(
+		dots_label,
+		"modulate:a",
+		0.0,
+		advance_dots_fade_out_duration
+	)
+
+	_dots_tween.finished.connect(_on_advance_dots_fade_out_finished)
+
+
+func _on_advance_dots_fade_out_finished() -> void:
+	if dots_label == null:
+		return
+
+	if _dots_loop_active:
+		return
+
+	dots_label.visible = false
+	dots_label.modulate.a = 0.0
+
+
+func _start_advance_dots_loop() -> void:
+	# Llamamos una función con await sin awaitarla.
+	# Eso deja corriendo la corrutina del loop internamente.
+	_run_advance_dots_loop()
+
+
+func _run_advance_dots_loop() -> void:
+	if _dots_loop_running:
+		return
+
+	if dots_label == null:
+		return
+
+	_dots_loop_running = true
+
+	var frame_index := 0
+
+	while _dots_loop_active:
+		if dots_label == null:
+			break
+
+		if advance_dots_frames.is_empty():
+			break
+
+		dots_label.text = advance_dots_frames[frame_index % advance_dots_frames.size()]
+		frame_index += 1
+
+		await _wait_dots_seconds(advance_dots_step_seconds)
+
+	_dots_loop_running = false
+
+
+func _wait_dots_seconds(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+
+	var elapsed := 0.0
+
+	while elapsed < seconds:
+		if not _dots_loop_active:
+			return
+
+		if _force_close_requested:
+			return
+
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+
+
+func _kill_dots_tween() -> void:
+	if _dots_tween != null and _dots_tween.is_valid():
+		_dots_tween.kill()
+
+	_dots_tween = null
+
+
+# =========================================================
+# MOUSE FILTER HELPERS
+# =========================================================
+
+func _set_children_mouse_filter_to_pass(root: Node) -> void:
+	# Muchos nodos UI como PanelContainer, MarginContainer, VBoxContainer,
+	# Labels, etc. pueden capturar eventos de mouse.
+	#
+	# Si un hijo consume el click, el DialogueBox raíz no recibe _gui_input().
+	#
+	# Dejamos los hijos en MOUSE_FILTER_PASS para que:
+	# - puedan seguir existiendo normalmente
+	# - el evento pueda subir hasta el DialogueBox root
+	# - el root pueda llamar accept_event()
+	#
+	# No cambiamos el mouse_filter del root acá.
+	# El root queda en MOUSE_FILTER_STOP.
+
+	if root == null:
+		return
+
+	for child in root.get_children():
+		if child is Control:
+			var control := child as Control
+			control.mouse_filter = Control.MOUSE_FILTER_PASS
+
+		_set_children_mouse_filter_to_pass(child)
 
 
 # =========================================================

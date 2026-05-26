@@ -19,17 +19,13 @@ class_name CutsceneEvent
 #    - Si play_on_ready está activo,
 #      dispara la cutscene al cargar la escena.
 #
+# Además, soporta follow-up cutscene:
+# - una cutscene puede disparar otra después de X segundos
+# - ese tiempo cuenta solo como gameplay libre
+# - no cuenta si el árbol está pausado
+# - no cuenta si otra cutscene está corriendo
+#
 # La cutscene concreta se define sobreescribiendo get_commands().
-#
-# Ejemplo:
-#
-# func get_commands() -> Array:
-#     return [
-#         {"type": "camera_zoom", "value": 28.0, "duration": 0.45},
-#         {"type": "say", "speaker": "Rick", "text": "Texto..."},
-#         {"type": "walk_player_to_marker", "marker_path": ^"CutsceneTarget"},
-#         {"type": "camera_restore", "duration": 0.45}
-#     ]
 # =========================================================
 
 
@@ -37,10 +33,6 @@ class_name CutsceneEvent
 # CONFIGURACIÓN: DIRECTOR
 # =========================================================
 
-# Director de cutscenes.
-# Podés asignarlo desde el Inspector.
-#
-# Si lo dejás vacío, busca por grupo "cutscene_director".
 @export var director_path: NodePath
 @export var director_group: StringName = &"cutscene_director"
 
@@ -49,12 +41,6 @@ class_name CutsceneEvent
 # CONFIGURACIÓN: PLAYER
 # =========================================================
 
-# Player a controlar.
-# Podés asignarlo desde el Inspector.
-#
-# Si lo dejás vacío:
-# - en modo trigger usa el body que entró
-# - en modo autorun busca por grupo "player"
 @export var player_path: NodePath
 @export var player_group: StringName = &"player"
 
@@ -63,30 +49,62 @@ class_name CutsceneEvent
 # CONFIGURACIÓN: DISPARO
 # =========================================================
 
-# Dispara la cutscene automáticamente al cargar la escena.
 @export var play_on_ready: bool = false
-
-# Cantidad de frames a esperar antes del autorun.
-#
-# Esto evita problemas típicos al cargar escena:
-# - cámara todavía no activa
-# - HUD todavía no listo
-# - Player todavía acomodándose
 @export_range(0, 10, 1) var ready_delay_frames: int = 2
 
-# Si este script está puesto en un Area3D,
-# puede dispararse cuando entra el Player.
 @export var trigger_on_body_entered: bool = true
-
-# Si está activo, el evento solo se puede ejecutar una vez.
 @export var trigger_once: bool = true
 
-# Acción opcional de debug.
-# Si existe en Input Map, dispara la cutscene manualmente.
 @export var debug_action: StringName = &"debug_cutscene"
-
-# Debug.
 @export var print_debug: bool = true
+
+
+# =========================================================
+# CONFIGURACIÓN: FOLLOW-UP CUTSCENE
+# =========================================================
+#
+# Permite encadenar otra cutscene después de que esta termine.
+#
+# Ejemplo:
+#
+# IntroCutscene termina
+# → el jugador queda libre
+# → pasan 30 segundos de gameplay real
+# → se dispara SecondRadioCutscene
+#
+# Esto sirve para evitar repetir el mismo override en cada cutscene.
+# =========================================================
+
+# Si está activo, al terminar esta cutscene dispara otra.
+@export var play_follow_up_cutscene: bool = false
+
+# Cutscene siguiente.
+#
+# Debe ser otro nodo que extienda CutsceneEvent
+# o al menos tenga run_cutscene().
+#
+# Ejemplo si ambos son hijos de Main:
+#   ^"../SecondRadioCutscene"
+@export var follow_up_cutscene_path: NodePath
+
+# Tiempo de gameplay libre antes de disparar la follow-up.
+@export_range(0.0, 600.0, 0.1) var follow_up_delay_seconds: float = 30.0
+
+# Si está activo, la follow-up solo se dispara si esta cutscene
+# terminó normalmente.
+#
+# Si el jugador skipea/cancela, no se dispara.
+@export var follow_up_only_if_completed: bool = true
+
+# Si está activo, el delay solo cuenta cuando:
+# - el juego no está pausado
+# - no hay otra cutscene corriendo
+#
+# Recomendado dejarlo activo.
+@export var follow_up_counts_only_gameplay_time: bool = true
+
+# Si está activo, le pasa el mismo player a la follow-up.
+@export var pass_player_to_follow_up: bool = true
 
 
 # =========================================================
@@ -95,6 +113,7 @@ class_name CutsceneEvent
 
 var _is_running: bool = false
 var _already_used: bool = false
+var _follow_up_running: bool = false
 
 
 # =========================================================
@@ -119,11 +138,8 @@ func _connect_area_trigger_if_possible() -> void:
 	# - un Node común con play_on_ready
 	# - un Area3D como trigger
 	#
-	# Pero como la clase base es Node, no podemos hacer:
-	#   self is Area3D
-	#
-	# Entonces detectamos dinámicamente si este nodo tiene
-	# la señal "body_entered", que es lo que necesitamos.
+	# Como la clase base es Node, no casteamos a Area3D.
+	# Detectamos dinámicamente si existe la señal body_entered.
 	if not has_signal("body_entered"):
 		return
 
@@ -180,15 +196,12 @@ func _body_can_trigger(body: Node3D) -> bool:
 
 	var configured_player := _get_configured_player()
 
-	# Si hay player configurado por path, solo ese body puede disparar.
 	if configured_player != null:
 		return body == configured_player
 
-	# Si no hay path, usamos grupo.
 	if player_group != &"" and body.is_in_group(player_group):
 		return true
 
-	# Fallback: aceptamos un body que parezca Player.
 	return body.has_method("set_cutscene_mode") and body.has_method("cutscene_walk_to")
 
 
@@ -237,23 +250,104 @@ func run_cutscene(player_override: Node = null) -> void:
 	if print_debug:
 		print("CutsceneEvent: finished ", name, " completed=", completed)
 
+	# ---------------------------------------------------------
+	# FOLLOW-UP CUTSCENE
+	# ---------------------------------------------------------
+	# Importante:
+	# Esto corre después de que director.run_commands() terminó.
+	# Si auto_end estaba activo, el Director ya liberó al player.
+	# Por eso el delay cuenta como gameplay real.
+	# ---------------------------------------------------------
+	if _should_play_follow_up(completed):
+		await _run_follow_up_flow(player)
+
 
 # =========================================================
 # COMANDOS
 # =========================================================
 
 func get_commands() -> Array:
-	# Esta función se sobreescribe en cada cutscene concreta.
-	#
-	# Ejemplo:
-	#
-	# func get_commands() -> Array:
-	#     return [
-	#         {"type": "camera_zoom", "value": 28.0, "duration": 0.45},
-	#         {"type": "say", "speaker": "Gaucho", "text": "La noche está rara."},
-	#         {"type": "camera_restore", "duration": 0.45}
-	#     ]
 	return []
+
+
+# =========================================================
+# FOLLOW-UP CUTSCENE
+# =========================================================
+
+func _should_play_follow_up(completed: bool) -> bool:
+	if not play_follow_up_cutscene:
+		return false
+
+	if _follow_up_running:
+		return false
+
+	if follow_up_cutscene_path == NodePath():
+		return false
+
+	if follow_up_only_if_completed and not completed:
+		return false
+
+	return true
+
+
+func _run_follow_up_flow(player: Node = null) -> void:
+	_follow_up_running = true
+
+	if follow_up_delay_seconds > 0.0:
+		await _wait_before_follow_up(follow_up_delay_seconds)
+
+	var follow_up := get_node_or_null(follow_up_cutscene_path)
+
+	if follow_up == null:
+		push_warning("%s: no se encontró la follow-up cutscene." % name)
+		_follow_up_running = false
+		return
+
+	if not follow_up.has_method("run_cutscene"):
+		push_warning("%s: la follow-up cutscene no tiene run_cutscene()." % name)
+		_follow_up_running = false
+		return
+
+	if print_debug:
+		print("CutsceneEvent: follow-up start ", name, " -> ", follow_up.name)
+
+	if pass_player_to_follow_up:
+		await follow_up.run_cutscene(player)
+	else:
+		await follow_up.run_cutscene()
+
+	_follow_up_running = false
+
+
+func _wait_before_follow_up(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+
+	var elapsed := 0.0
+
+	while elapsed < seconds:
+		await get_tree().process_frame
+
+		if follow_up_counts_only_gameplay_time:
+			if get_tree().paused:
+				continue
+
+			if _is_any_cutscene_running():
+				continue
+
+		elapsed += get_process_delta_time()
+
+
+func _is_any_cutscene_running() -> bool:
+	var director := get_tree().get_first_node_in_group("cutscene_director")
+
+	if director == null:
+		return false
+
+	if "is_running" in director:
+		return bool(director.is_running)
+
+	return false
 
 
 # =========================================================

@@ -73,6 +73,7 @@ size = Vector3(0.9042969, 1.1567383, 0.98535156)
 
 [node name="Enemy" type="Node3D" unique_id=740511559 groups=["enemy"]]
 script = ExtResource("1_okdph")
+exp_reward = 10
 is_flying_type = true
 flying_hover_amplitude = 0.42
 flying_hover_speed = 12.0

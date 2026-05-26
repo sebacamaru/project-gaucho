@@ -2,7 +2,7 @@ extends CutsceneEvent
 class_name IntroCutscene
 
 # =========================================================
-# INTRO CUTSCENE
+# CUTSCENE
 # =========================================================
 
 func get_commands() -> Array:
@@ -57,8 +57,7 @@ func get_commands() -> Array:
 		{
 			"type": "say",
 			"speaker": "Luisón",
-			"text": "Te copio.[p] Acá tampoco hay movimiento.[p] Demasiado tranquilo comparado
-con el pueblo,[p] ¿no?"
+			"text": "Te copio.[p] Acá tampoco hay movimiento.[p] Demasiado tranquilo comparado\ncon el pueblo,[p] ¿no?"
 		},
 		{
 			"type": "wait",
@@ -121,16 +120,16 @@ con el pueblo,[p] ¿no?"
 		},
 		{
 			"type": "wait",
-			"seconds": 1.00
+			"seconds": 0.40
 		},
 		{
 			"type": "say",
 			"speaker": "Luisón",
-			"text": "No.[p] ¿Qué cosa?[p] ¿que pasa por “ai”?"
+			"text": "No.[p] ¿Qué cosa?[p] ¿qué pasa por “ai”?"
 		},
 		{
 			"type": "wait",
-			"seconds": 1.00
+			"seconds": 1.30
 		},
 		{
 			"type": "say",
@@ -139,7 +138,7 @@ con el pueblo,[p] ¿no?"
 		},
 		{
 			"type": "wait",
-			"seconds": 1.00
+			"seconds": 0.40
 		},
 		{
 			"type": "say",
@@ -148,7 +147,7 @@ con el pueblo,[p] ¿no?"
 		},
 		{
 			"type": "wait",
-			"seconds": 1.00
+			"seconds": 1.30
 		},
 		{
 			"type": "say",

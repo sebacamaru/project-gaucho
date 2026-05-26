@@ -53,6 +53,7 @@ class_name CutsceneDirector
 # {"type": "player_face_direction", "direction": "left"}
 # {"type": "face_player_direction", "direction": Vector3.RIGHT}
 # "type": "close_dialogue"}
+# "type": "start_survivor_level"}
 
 # =========================================================
 # CONFIGURACIÓN: PLAYER
@@ -175,6 +176,14 @@ class_name CutsceneDirector
 
 # Si se cancela la cutscene, restaura la cámara instantáneamente.
 @export var restore_camera_on_cancel: bool = true
+
+
+# =========================================================
+# CONFIGURACIÓN: SURVIVOR MODE
+# =========================================================
+
+@export var survivor_manager_path: NodePath
+@export var survivor_manager_group: StringName = &"survivor_mode_manager"
 
 
 # =========================================================
@@ -614,7 +623,10 @@ func _run_cutscene_command(command_data: Variant, command_owner: Node = null) ->
 
 		"close_dialogue":
 			await close_dialogue()
-
+			
+		"start_survivor_level":
+			_command_start_survivor_level(command)
+			
 		_:
 			push_warning("CutsceneDirector: tipo de comando desconocido: %s" % type)
 
@@ -756,6 +768,54 @@ func _command_player_face_direction(command: Dictionary) -> void:
 
 	player_face_direction(direction)
 
+
+# =========================================================
+# COMMAND: START SURVIVOR MODE
+# =========================================================
+
+func _command_start_survivor_level(command: Dictionary) -> void:
+	var survivor_manager := _resolve_survivor_manager()
+
+	if survivor_manager == null:
+		push_warning("CutsceneDirector: no se encontró SurvivorModeManager.")
+		return
+
+	if not survivor_manager.has_method("start_level"):
+		push_warning("CutsceneDirector: SurvivorModeManager no tiene start_level().")
+		return
+
+	var duration: float = float(command.get("duration", -1.0))
+
+	print("")
+	print("========== DEBUG START SURVIVOR LEVEL ==========")
+	print("CutsceneDirector path: ", get_path())
+	print("Command recibido: ", command)
+	print("Duration leído del command: ", duration)
+	print("SurvivorManager encontrado: ", survivor_manager.get_path())
+	print("SurvivorManager script: ", survivor_manager.get_script())
+	print("================================================")
+	print("")
+
+	# IMPORTANTE:
+	# Como sacaste level del SurvivorModeManager,
+	# ahora llamamos SOLO con duration.
+	survivor_manager.start_level(duration)
+
+
+func _resolve_survivor_manager() -> Node:
+	if survivor_manager_path != NodePath():
+		var manager_from_path := get_node_or_null(survivor_manager_path)
+
+		if manager_from_path != null:
+			return manager_from_path
+
+	if survivor_manager_group != &"":
+		var grouped_manager := get_tree().get_first_node_in_group(survivor_manager_group)
+
+		if grouped_manager != null:
+			return grouped_manager
+
+	return null
 
 # =========================================================
 # COMMAND HELPERS
