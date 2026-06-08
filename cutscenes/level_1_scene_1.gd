@@ -8,6 +8,13 @@ class_name IntroCutscene
 func get_commands() -> Array:
 	return [
 		{
+			"type": "play_loop",
+			"id": "ambiente",
+			"sound_path": "res://sound/ambient/noche_1.mp3",
+			"volume_pct": 10,
+			"fade_in": 1.5
+		},
+		{
 			"type": "wait",
 			"seconds": 1.30
 		},
@@ -86,8 +93,13 @@ func get_commands() -> Array:
 			"text": "Es psicológico.[p] La noche,[p] la oscuridad nos hace pensar lo que no es."
 		},
 		{
+			"type": "play_sound",
+			"stream": preload("res://sound/sfx/enemies/llorona/loop_llorona.mp3"),
+			"volume_pct": 3
+		},
+		{
 			"type": "wait",
-			"seconds": 2.00
+			"seconds": 5.00
 		},
 		{
 			"type": "player_face_direction",

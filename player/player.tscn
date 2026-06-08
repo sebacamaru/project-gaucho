@@ -34,7 +34,7 @@ height = 1.1818542
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yw30f"]
 transparency = 1
 shading_mode = 0
-albedo_color = Color(0, 0, 0, 0.21568628)
+albedo_color = Color(0, 0, 0, 0.24705882)
 albedo_texture = ExtResource("3_g1dw6")
 texture_repeat = false
 billboard_keep_scale = true

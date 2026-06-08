@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://dy352efhy7nbg"]
 
 [ext_resource type="Script" uid="uid://cnadjcpkvxaxo" path="res://scripts/fire_light.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c3qs7v02ssy33" path="res://textures/fogata_troncos.png" id="2_asreb"]
+[ext_resource type="Texture2D" uid="uid://br2xq5fnipmuk" path="res://textures/llama_sheet.png" id="3_5to6b"]
 
 [sub_resource type="Gradient" id="Gradient_sparks"]
 offsets = PackedFloat32Array(0, 0.35, 0.75, 1)
@@ -34,6 +36,42 @@ billboard_mode = 1
 material = SubResource("StandardMaterial3D_sparks")
 size = Vector2(0.03, 0.03)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_68axy"]
+atlas = ExtResource("3_5to6b")
+region = Rect2(0, 0, 472, 472)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1evjk"]
+atlas = ExtResource("3_5to6b")
+region = Rect2(472, 0, 472, 472)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_smekn"]
+atlas = ExtResource("3_5to6b")
+region = Rect2(944, 0, 472, 472)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g544y"]
+atlas = ExtResource("3_5to6b")
+region = Rect2(1416, 0, 472, 472)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_q1mxa"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_68axy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1evjk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_smekn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g544y")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]
+
 [node name="Bonfire" type="Node3D" unique_id=177662689]
 
 [node name="Sparks" type="GPUParticles3D" parent="." unique_id=1668640727]
@@ -51,10 +89,8 @@ process_material = SubResource("ParticleProcessMaterial_sparks")
 draw_pass_1 = SubResource("QuadMesh_sparks")
 
 [node name="FireLight" type="OmniLight3D" parent="." unique_id=1033822666]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54217947, 0)
 light_color = Color(1, 0.5, 0.14, 1)
-light_energy = 1.8
-light_volumetric_fog_energy = 1.8
 shadow_enabled = true
 omni_range = 6.006795
 omni_attenuation = 1.5
@@ -62,3 +98,19 @@ script = ExtResource("1_script")
 flicker_min = 2.0
 flicker_max = 4.0
 noise_speed = 8.0
+
+[node name="Logs" type="Sprite3D" parent="." unique_id=140476212]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0.07225378, 0.20766282)
+billboard = 1
+shaded = true
+texture = ExtResource("2_asreb")
+region_enabled = true
+region_rect = Rect2(83.999565, 573.1544, 954.4975, 420.1864)
+
+[node name="Fire" type="AnimatedSprite3D" parent="." unique_id=401570634]
+transform = Transform3D(0.17, 0, 0, 0, 0.17, 0, 0, 0, 0.17, 0, 0.45519856, 0.034591675)
+billboard = 1
+shaded = true
+sprite_frames = SubResource("SpriteFrames_q1mxa")
+autoplay = "default"
+frame_progress = 0.6271777

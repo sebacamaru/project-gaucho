@@ -272,6 +272,11 @@ func run_cutscene(player_override: Node = null) -> void:
 func get_commands_before_enemy_spawn() -> Array:
 	return [
 		{
+			"type": "play_sound",
+			"stream": preload("res://sound/sfx/enemies/pajaro_fantasma/canto_2.mp3"),
+			"volume_pct": 5
+		},
+		{
 			"type": "wait",
 			"seconds": 1.30
 		},
@@ -283,6 +288,10 @@ func get_commands_before_enemy_spawn() -> Array:
 		{
 			"type": "player_face_direction",
 			"direction": "right"
+		},
+		{
+			"type": "wait",
+			"seconds": 1.00
 		},
 		{
 			"type": "say",
@@ -324,7 +333,12 @@ func get_commands_before_enemy_spawn() -> Array:
 			"type": "say",
 			"speaker": "Diego",
 			"text": "No me des bola hermano...[p] es solo un animal que se acerca,[p] estoy\nimaginándome todo."
-		}
+		},
+		{
+			"type": "play_sound",
+			"stream": preload("res://sound/sfx/enemies/pajaro_fantasma/canto_2.mp3"),
+			"volume_pct": 15
+		},
 	]
 
 

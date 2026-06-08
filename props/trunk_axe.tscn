@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://d0aw77hjp0or7"]
+
+[ext_resource type="Texture2D" uid="uid://c3qs7v02ssy33" path="res://textures/fogata_troncos.png" id="1_u412f"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_u412f"]
+size = Vector3(0.9645996, 0.38134766, 0.34277344)
+
+[node name="TrunkAxe" type="Node3D" unique_id=826930988]
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1678165147]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0.46382445, -0.03997445)
+billboard = 2
+shaded = true
+alpha_cut = 1
+texture = ExtResource("1_u412f")
+region_enabled = true
+region_rect = Rect2(1084.2416, 962.4472, 1051.3739, 913.97614)
+
+[node name="Area3D" type="Area3D" parent="." unique_id=337528956]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=891970404]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.047698975, 0.30932617, 0)
+shape = SubResource("BoxShape3D_u412f")

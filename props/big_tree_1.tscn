@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://def2xmkaaoi3b"]
+
+[ext_resource type="Texture2D" uid="uid://h26fscg0tg1e" path="res://textures/arboles_grandes_con_copa.png" id="3_iwiej"]
+
+[node name="BigTree" type="Node3D" unique_id=43117942]
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=618868550]
+transform = Transform3D(0.9173957, 0, 0, 0, 0.91859883, 0, 0, 0, 0.5, 0, 5.064892, 0)
+billboard = 2
+shaded = true
+texture = ExtResource("3_iwiej")
+region_enabled = true
+region_rect = Rect2(11.908325, 12.423462, 549.87366, 1086.7783)
