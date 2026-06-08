@@ -56,6 +56,13 @@ class_name CutsceneDirector
 # "type": "start_survivor_level"}
 # {"type": "play_sound", "sound_path": "res://sounds/radio_estatica.ogg"}
 # {"type": "play_sound", "stream": preload("res://sounds/aullido.ogg"), "volume_db": -4.0, "wait_for_finish": true}
+# {"type": "play_sound", "sound_path": "res://sounds/golpe.ogg", "volume_pct": 70}
+# {"type": "play_loop", "id": "ambiente", "sound_path": "res://sounds/viento.ogg", "volume_db": -8.0, "fade_in": 1.5}
+# {"type": "set_loop_volume", "id": "ambiente", "volume_pct": 100, "fade": 0.8}
+# {"type": "stop_loop", "id": "ambiente", "fade_out": 1.0}
+#
+# Volumen: todos los comandos de audio aceptan volume_db (decibeles, 0 = original)
+# o, como alternativa, volume_pct (porcentaje lineal: 100 = original, 50 ≈ mitad, 200 = doble).
 
 # =========================================================
 # CONFIGURACIÓN: PLAYER
@@ -203,6 +210,15 @@ var current_dialogue_box: Node = null
 
 # True cuando el usuario pidió saltear/cancelar la cutscene.
 var _skip_requested: bool = false
+
+# Loops de audio de fondo activos (música/ambiente del nivel).
+#
+# Mapea id (String) -> AudioStreamPlayer.
+#
+# Estos players viven como hijos del director, NO se limpian al terminar
+# una cutscene ni con el skip, así que persisten todo el nivel hasta que
+# alguien llame stop_loop.
+var _active_loops: Dictionary = {}
 
 # Guarda el estado original de cada nodo del HUD.
 #
@@ -632,6 +648,15 @@ func _run_cutscene_command(command_data: Variant, command_owner: Node = null) ->
 		"play_sound", "sound":
 			await _command_play_sound(command)
 
+		"play_loop":
+			await _command_play_loop(command)
+
+		"set_loop_volume":
+			_command_set_loop_volume(command)
+
+		"stop_loop":
+			_command_stop_loop(command)
+
 		_:
 			push_warning("CutsceneDirector: tipo de comando desconocido: %s" % type)
 
@@ -828,8 +853,9 @@ func _resolve_survivor_manager() -> Node:
 # =========================================================
 
 # Reproduce un sonido durante la cutscene. Acepta un AudioStream precargado
-# (stream/sound) o una ruta res:// (stream_path/sound_path/path). Si
-# wait_for_finish es true, la cutscene espera (cancelable) a que termine.
+# (stream/sound) o una ruta res:// (stream_path/sound_path/path). El volumen
+# se setea con volume_db o volume_pct (porcentaje, ver _command_get_volume_db).
+# Si wait_for_finish es true, la cutscene espera (cancelable) a que termine.
 func _command_play_sound(command: Dictionary) -> void:
 	if _skip_requested:
 		return
@@ -840,7 +866,7 @@ func _command_play_sound(command: Dictionary) -> void:
 		push_warning("CutsceneDirector: play_sound no pudo resolver el stream.")
 		return
 
-	var volume_db := _command_get_float(command, ["volume_db", "volume"], 0.0)
+	var volume_db := _command_get_volume_db(command, 0.0)
 	var pitch := _command_get_float(command, ["pitch", "pitch_scale"], 1.0)
 	var bus := str(command.get("bus", "Master"))
 	var wait_for_finish: bool = bool(command.get("wait_for_finish", command.get("wait", false)))
@@ -872,6 +898,164 @@ func _command_play_sound(command: Dictionary) -> void:
 
 
 # =========================================================
+# COMMAND: PLAY LOOP (música / ambiente de nivel)
+# =========================================================
+#
+# A diferencia de play_sound, el loop queda guardado por "id" y persiste
+# todo el nivel (sobrevive a cutscenes y al skip). Lo controlás después con
+# set_loop_volume y stop_loop usando el mismo id.
+#
+# Ejemplos:
+#
+#   # Arrancar ambiente de fondo con fade in de 1.5s
+#   {"type": "play_loop", "id": "ambiente", "sound_path": "res://sounds/viento.ogg",
+#    "volume_db": -8.0, "fade_in": 1.5}
+#
+#   # Música con stream precargado, a media potencia (volumen por porcentaje)
+#   {"type": "play_loop", "id": "musica", "stream": preload("res://sounds/tema_nivel.ogg"), "volume_pct": 50}
+#
+#   # Por defecto, si el id ya está sonando NO se reinicia (evita cortes si la
+#   # cutscene se re-dispara). Pasá "replace": true para forzar el reemplazo.
+#   {"type": "play_loop", "id": "musica", "sound_path": "res://sounds/otro_tema.ogg", "replace": true}
+
+# Arranca un loop de fondo identificado por "id". Acepta los mismos parámetros
+# de audio que play_sound (stream/sound_path, volume_db, pitch, bus) más
+# fade_in (segundos) y replace (bool). Si el id ya existe y replace es false,
+# no hace nada para no cortar el audio en curso.
+func _command_play_loop(command: Dictionary) -> void:
+	var id := str(command.get("id", "default")).strip_edges()
+
+	if id == "":
+		push_warning("CutsceneDirector: play_loop necesita un id.")
+		return
+
+	var replace: bool = bool(command.get("replace", false))
+
+	# Si ya hay un loop con ese id sonando y no se pidió reemplazar, lo dejamos.
+	if _active_loops.has(id) and is_instance_valid(_active_loops[id]):
+		if not replace:
+			return
+
+		_stop_loop_player(id, 0.0)
+
+	var stream := _command_resolve_audio_stream(command)
+
+	if stream == null:
+		push_warning("CutsceneDirector: play_loop no pudo resolver el stream.")
+		return
+
+	var volume_db := _command_get_volume_db(command, 0.0)
+	var pitch := _command_get_float(command, ["pitch", "pitch_scale"], 1.0)
+	var bus := str(command.get("bus", "Master"))
+	var fade_in := _command_get_float(command, ["fade_in", "fade"], 0.0)
+
+	# Forzamos loop sobre una COPIA del stream para no mutar el recurso cacheado
+	# (que podría usarse en otros sonidos).
+	var loop_stream := _make_stream_looping(stream)
+
+	var player := AudioStreamPlayer.new()
+	player.stream = loop_stream
+	player.pitch_scale = pitch
+	player.bus = bus
+	player.process_mode = Node.PROCESS_MODE_ALWAYS  # sigue sonando aunque el árbol se pause
+	add_child(player)
+
+	_active_loops[id] = player
+
+	if fade_in > 0.0:
+		# Arranca en silencio y sube al volumen objetivo.
+		player.volume_db = -60.0
+		player.play()
+
+		var tween := create_tween()
+		tween.tween_property(player, "volume_db", volume_db, fade_in)
+	else:
+		player.volume_db = volume_db
+		player.play()
+
+
+# =========================================================
+# COMMAND: SET LOOP VOLUME
+# =========================================================
+#
+# Cambia el volumen de un loop activo, con fade opcional.
+#
+# Ejemplos:
+#
+#   # Subir el ambiente de golpe
+#   {"type": "set_loop_volume", "id": "ambiente", "volume_db": 0.0}
+#
+#   # Bajar la música suavemente en 0.8s
+#   {"type": "set_loop_volume", "id": "musica", "volume_db": -12.0, "fade": 0.8}
+#
+#   # Mismo control pero por porcentaje (25% del volumen original)
+#   {"type": "set_loop_volume", "id": "musica", "volume_pct": 25, "fade": 0.8}
+
+# Ajusta el volumen de un loop activo identificado por "id", vía volume_db o
+# volume_pct (porcentaje). Si fade > 0, hace la transición con un tween; si no,
+# el cambio es instantáneo.
+func _command_set_loop_volume(command: Dictionary) -> void:
+	var id := str(command.get("id", "default")).strip_edges()
+
+	if not _active_loops.has(id) or not is_instance_valid(_active_loops[id]):
+		push_warning("CutsceneDirector: set_loop_volume no encontró el loop '%s'." % id)
+		return
+
+	var player: AudioStreamPlayer = _active_loops[id]
+	var volume_db := _command_get_volume_db(command, 0.0)
+	var fade := _command_get_float(command, ["fade", "duration"], 0.0)
+
+	if fade > 0.0:
+		var tween := create_tween()
+		tween.tween_property(player, "volume_db", volume_db, fade)
+	else:
+		player.volume_db = volume_db
+
+
+# =========================================================
+# COMMAND: STOP LOOP
+# =========================================================
+#
+# Para un loop activo, con fade out opcional.
+#
+# Ejemplos:
+#
+#   # Cortar el ambiente de una
+#   {"type": "stop_loop", "id": "ambiente"}
+#
+#   # Apagar la música con fade out de 1s
+#   {"type": "stop_loop", "id": "musica", "fade_out": 1.0}
+
+# Detiene y libera el loop identificado por "id", con fade out opcional.
+func _command_stop_loop(command: Dictionary) -> void:
+	var id := str(command.get("id", "default")).strip_edges()
+	var fade_out := _command_get_float(command, ["fade_out", "fade", "duration"], 0.0)
+
+	_stop_loop_player(id, fade_out)
+
+
+# Helper interno: para el player de un loop por id y lo saca del registro.
+# Con fade_out > 0 baja el volumen y recién ahí lo libera.
+func _stop_loop_player(id: String, fade_out: float) -> void:
+	if not _active_loops.has(id):
+		return
+
+	var player = _active_loops[id]
+	_active_loops.erase(id)
+
+	if not is_instance_valid(player):
+		return
+
+	if fade_out > 0.0:
+		var tween := create_tween()
+		tween.tween_property(player, "volume_db", -60.0, fade_out)
+		tween.tween_callback(player.queue_free)
+	else:
+		player.stop()
+		player.queue_free()
+
+
+# =========================================================
 # COMMAND HELPERS
 # =========================================================
 
@@ -881,6 +1065,23 @@ func _command_get_float(command: Dictionary, keys: Array, default_value: float) 
 			return float(command[key])
 
 	return default_value
+
+
+# Resuelve el volumen en dB de un comando de audio. Acepta dos formas:
+#   - volume_db / volume: decibeles directos (0 = original, negativos bajan).
+#   - volume_pct / volume_percent: porcentaje lineal (100 = volumen original,
+#     50 ≈ mitad, 200 = doble). Se convierte a dB con linear_to_db().
+# El porcentaje tiene prioridad si está presente. 0% o menos = silencio.
+func _command_get_volume_db(command: Dictionary, default_db: float) -> float:
+	for key in ["volume_pct", "volume_percent", "volume_percentage"]:
+		if command.has(key):
+			var pct := float(command[key])
+			if pct <= 0.0:
+				return -80.0  # silencio
+
+			return linear_to_db(pct / 100.0)
+
+	return _command_get_float(command, ["volume_db", "volume"], default_db)
 
 
 # Resuelve el AudioStream de un comando play_sound: acepta un recurso ya
@@ -900,6 +1101,23 @@ func _command_resolve_audio_stream(command: Dictionary) -> AudioStream:
 					return res
 
 	return null
+
+
+# Devuelve una COPIA del stream con el loop activado, según su tipo
+# (loop_mode en WAV, propiedad loop en Ogg/MP3). Trabajamos sobre una copia
+# para no mutar el recurso cacheado, que puede compartirse con otros sonidos.
+func _make_stream_looping(stream: AudioStream) -> AudioStream:
+	if stream == null:
+		return stream
+
+	var copy: AudioStream = stream.duplicate()
+
+	if copy is AudioStreamWAV:
+		(copy as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+	elif "loop" in copy:
+		copy.set("loop", true)
+
+	return copy
 
 
 func _command_resolve_node3d(command: Dictionary, command_owner: Node = null) -> Node3D:
