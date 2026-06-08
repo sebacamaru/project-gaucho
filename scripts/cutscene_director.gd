@@ -54,6 +54,8 @@ class_name CutsceneDirector
 # {"type": "face_player_direction", "direction": Vector3.RIGHT}
 # "type": "close_dialogue"}
 # "type": "start_survivor_level"}
+# {"type": "play_sound", "sound_path": "res://sounds/radio_estatica.ogg"}
+# {"type": "play_sound", "stream": preload("res://sounds/aullido.ogg"), "volume_db": -4.0, "wait_for_finish": true}
 
 # =========================================================
 # CONFIGURACIÓN: PLAYER
@@ -626,7 +628,10 @@ func _run_cutscene_command(command_data: Variant, command_owner: Node = null) ->
 			
 		"start_survivor_level":
 			_command_start_survivor_level(command)
-			
+
+		"play_sound", "sound":
+			await _command_play_sound(command)
+
 		_:
 			push_warning("CutsceneDirector: tipo de comando desconocido: %s" % type)
 
@@ -817,6 +822,55 @@ func _resolve_survivor_manager() -> Node:
 
 	return null
 
+
+# =========================================================
+# COMMAND: PLAY SOUND
+# =========================================================
+
+# Reproduce un sonido durante la cutscene. Acepta un AudioStream precargado
+# (stream/sound) o una ruta res:// (stream_path/sound_path/path). Si
+# wait_for_finish es true, la cutscene espera (cancelable) a que termine.
+func _command_play_sound(command: Dictionary) -> void:
+	if _skip_requested:
+		return
+
+	var stream := _command_resolve_audio_stream(command)
+
+	if stream == null:
+		push_warning("CutsceneDirector: play_sound no pudo resolver el stream.")
+		return
+
+	var volume_db := _command_get_float(command, ["volume_db", "volume"], 0.0)
+	var pitch := _command_get_float(command, ["pitch", "pitch_scale"], 1.0)
+	var bus := str(command.get("bus", "Master"))
+	var wait_for_finish: bool = bool(command.get("wait_for_finish", command.get("wait", false)))
+
+	var sfx := AudioStreamPlayer.new()
+	sfx.stream = stream
+	sfx.volume_db = volume_db
+	sfx.pitch_scale = pitch
+	sfx.bus = bus
+	sfx.process_mode = Node.PROCESS_MODE_ALWAYS  # suena aunque el árbol se pause
+	add_child(sfx)
+	sfx.play()
+
+	if not wait_for_finish:
+		# Fire-and-forget: se libera solo al terminar.
+		sfx.finished.connect(sfx.queue_free)
+		return
+
+	# Espera cancelable, mismo patrón que wait_seconds().
+	while is_instance_valid(sfx) and sfx.playing:
+		if _skip_requested or not is_running:
+			break
+
+		await get_tree().process_frame
+
+	if is_instance_valid(sfx):
+		sfx.stop()
+		sfx.queue_free()
+
+
 # =========================================================
 # COMMAND HELPERS
 # =========================================================
@@ -827,6 +881,25 @@ func _command_get_float(command: Dictionary, keys: Array, default_value: float) 
 			return float(command[key])
 
 	return default_value
+
+
+# Resuelve el AudioStream de un comando play_sound: acepta un recurso ya
+# cargado (stream/sound) o una ruta res:// que se carga con load().
+func _command_resolve_audio_stream(command: Dictionary) -> AudioStream:
+	for key in ["stream", "sound", "audio"]:
+		var v = command.get(key, null)
+		if v is AudioStream:
+			return v
+
+	for key in ["stream_path", "sound_path", "path"]:
+		if command.has(key):
+			var p := str(command[key]).strip_edges()
+			if p != "" and ResourceLoader.exists(p):
+				var res = load(p)
+				if res is AudioStream:
+					return res
+
+	return null
 
 
 func _command_resolve_node3d(command: Dictionary, command_owner: Node = null) -> Node3D:
